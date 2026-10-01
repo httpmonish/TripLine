@@ -1,0 +1,29 @@
+version: v1
+
+identity:
+  api_key: $ARMORIQ_API_KEY
+  user_id: default
+  agent_id: tripline-maintainer
+
+environment: sandbox
+
+proxy:
+  url: https://proxy.armoriq.ai
+  timeout: 30
+  max_retries: 3
+
+mcp_servers:
+  - id: tripline-mcp
+    url: https://YOUR-MCP-HOST/mcp
+    description: Tripline safe test MCP
+    auth:
+      type: none
+
+policy:
+  allow:
+    - tripline-mcp.hello_tool
+  deny: []
+
+intent:
+  ttl_seconds: 300
+  require_csrg: true

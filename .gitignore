@@ -1,0 +1,23 @@
+# Python
+.venv/
+.venv313/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets / credentials
+.env
+.env.*
+.armoriq/
+armoriq.yaml
+
+# Runtime logs
+*.log
+
+# Temporary files
+*~
+.DS_Store
+
+# Cloudflare binary/archive
+cloudflared
+cloudflared.tgz
