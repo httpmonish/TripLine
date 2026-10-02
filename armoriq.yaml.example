@@ -25,6 +25,7 @@ policy:
     - tripline-mcp.echo_marker
     - tripline-mcp.clear_markers
     - tripline-mcp.list_markers
+    - tripline-mcp.read_file
   deny: []
 
 intent:

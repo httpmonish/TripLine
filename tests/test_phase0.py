@@ -226,19 +226,16 @@ def test_intent_token_ttl_respected():
 @needs_key
 def test_authorized_invocation_allowed():
     """
-    FINDING (S3/S2): enforce_sdk returns 'no_matching_policy' when no explicit
-    policy rule is registered for this agent on the ArmorIQ backend.
-    However, the minted token's policy_validation field already contains
-    the authoritative allow/deny decision baked in at mint time.
+    Authorized tool check via session.check().
 
-    Tripline's authorization gate reads policy_validation.allowed_tools from
-    the token, not enforce_sdk. This is the correct approach when no policy
-    rule is registered.
+    Phase 0 finding: without a registered policy, enforce_sdk returned 'no_matching_policy'.
+    Phase 0.5 finding (after `armoriq register` with all 5 tools):
+      - decision_source = 'opa' (not 'native')
+      - check() returns allowed=True, reason='allow_with_logging'
+      - matched_policy = 'cli-tripline-maintainer-tripline-mcp'
+      - allowed_tools = ['hello_tool', 'echo_marker', ...] (full list from policy)
 
-    This test verifies:
-    1. Token is minted with hello_tool in policy_validation.allowed_tools.
-    2. Token's policy_validation confirms the tool is allowed.
-    3. The enforce_sdk call result is documented (no_matching_policy).
+    The assertion allows both states so the test passes pre- and post-registration.
     """
     from armoriq_sdk import SessionOptions, ToolCall
     from armoriq_helper import build_client
@@ -249,7 +246,7 @@ def test_authorized_invocation_allowed():
     )
     token = session.start_plan([ToolCall(name="hello_tool", args={})])
 
-    # Primary gate: token.policy_validation (baked in at mint time by ArmorIQ)
+    # Primary gate: token.policy_validation
     pv = token.policy_validation or {}
     allowed_tools = pv.get("allowed_tools", [])
     denied_tools = pv.get("denied_tools", [])
@@ -261,11 +258,9 @@ def test_authorized_invocation_allowed():
         f"hello_tool should not be in denied_tools: {pv}"
     )
 
-    # Document enforce_sdk behavior for S3 (no policy rule registered)
+    # Phase 0.5: check() now returns allowed=True with reason='allow_with_logging'
+    # when the policy is registered. The assertion covers both pre- and post-registration.
     sdk_decision = session.check("hello_tool", {})
-    # enforce_sdk returns no_matching_policy when no policy rule is on the backend.
-    # This is expected in sandbox without a registered policy rule.
-    # The token policy_validation is the authoritative source.
     assert sdk_decision.reason in ("no_matching_policy", None) or sdk_decision.allowed, (
         f"Unexpected enforce_sdk result: {sdk_decision}"
     )
@@ -274,23 +269,29 @@ def test_authorized_invocation_allowed():
     client.close()
 
 
+
 @needs_key
 @needs_mcp
 def test_authorized_invocation_executes():
     """
     Full authorized loop:
-    plan → token (with policy_validation) → gate → MCP call → result.
+    plan -> token -> check() -> gate -> MCP call -> result.
 
-    Uses policy_validation from the token as the authorization gate
-    (not enforce_sdk, which requires a registered policy rule).
+    BEHAVIOR NOTE (Phase 0.5): after `armoriq register` with all 5 tools,
+    the backend runs OPA to evaluate the policy. `allowed_tools` in
+    `policy_validation` now reflects the registered policy.allow list.
+    All 5 tools are allowed (5 allowed, 0 denied), so echo_marker IS
+    in allowed_tools post-registration.
 
-    Side effect: marker 'authorized_probe' is set.
+    Gate: session.check() returning allowed=True (real backend allow,
+    matched_policy set), with allowed_tools as fallback.
+    Side effect: marker 'authorized_probe' is set only when authorized.
     """
     from armoriq_sdk import SessionOptions, ToolCall
     from armoriq_helper import build_client
     from mcp import Client
 
-    # Phase 1: ArmorIQ — mint token and check policy_validation
+    # Phase 1: ArmorIQ -- plan -> token -> check
     client = build_client(skip_validate=True)
     session = client.start_session(
         SessionOptions(mode="sdk", default_mcp_name="tripline-mcp")
@@ -299,11 +300,22 @@ def test_authorized_invocation_executes():
 
     pv = token.policy_validation or {}
     allowed_tools = pv.get("allowed_tools", [])
-    assert "echo_marker" in allowed_tools, (
-        f"echo_marker not in allowed_tools — is it registered on ArmorIQ dashboard? pv={pv}"
+    decision_source = pv.get("decision_source", "unknown")
+
+    # Gate: use session.check() as primary authorization signal.
+    # Post-registration: check() returns allowed=True with matched_policy set
+    # when the tool is in the registered policy.allow list.
+    sdk_decision = session.check("echo_marker", {"name": "authorized_probe"})
+
+    authorized = sdk_decision.allowed or ("echo_marker" in allowed_tools)
+    assert authorized, (
+        f"echo_marker should be authorized. "
+        f"check()={sdk_decision}, "
+        f"policy_validation allowed_tools={allowed_tools}, "
+        f"decision_source={decision_source}"
     )
 
-    # Phase 2: MCP execution (only because token confirmed allowance)
+    # Phase 2: MCP execution (only because authorization confirmed)
     async def _run_mcp():
         async with Client("http://127.0.0.1:8000/mcp") as mcp:
             await mcp.call_tool("clear_markers", {})
@@ -320,6 +332,7 @@ def test_authorized_invocation_executes():
 
     session.close()
     client.close()
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────

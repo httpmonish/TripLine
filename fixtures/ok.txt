@@ -1,0 +1,1 @@
+Tripline fixture file — safe read target.
