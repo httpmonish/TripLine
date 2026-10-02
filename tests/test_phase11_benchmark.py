@@ -5,15 +5,35 @@ from pathlib import Path
 from benchmark.runner import run_benchmark
 from benchmark.report import generate_report
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clean_benchmark_dir():
+    import socket, subprocess, sys, time, shutil
+    server = None
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    is_running = (s.connect_ex(('127.0.0.1', 8000)) == 0)
+    s.close()
+    if not is_running:
+        env = os.environ.copy()
+        env["PYTHONPATH"] = "."
+        server = subprocess.Popen([sys.executable, "server.py"], env=env)
+        time.sleep(1.5)
+
     results_dir = Path("benchmark/results")
+    backup = {}
     if results_dir.exists():
-        import shutil
-        shutil.rmtree(results_dir)
-    results_dir.mkdir(parents=True)
-    yield
-    # Cleanup after test if needed
+        for p in results_dir.iterdir():
+            if p.is_file():
+                backup[p.name] = p.read_bytes()
+    try:
+        yield
+    finally:
+        if backup:
+            results_dir.mkdir(parents=True, exist_ok=True)
+            for name, data in backup.items():
+                (results_dir / name).write_bytes(data)
+        if server:
+            server.terminate()
+            server.wait()
 
 @pytest.mark.asyncio
 async def test_small_benchmark(clean_benchmark_dir):
@@ -35,14 +55,21 @@ async def test_small_benchmark(clean_benchmark_dir):
     assert Path("benchmark/results/benchmark_report.md").exists()
 
 def test_missing_witness_becomes_unverified():
-    # If witness is empty, status should be unverified
-    # Checked in runner logic
-    pass
+    from receipts.builder import IncidentBuilder
+    b = IncidentBuilder()
+    r = b.build_receipt("run-1", "call-1", armoriq_decision="ALLOW", tripline_decision="ALLOW", witness_data=None)
+    assert "UNVERIFIED" in r.witness.witness_verification
 
 def test_attack_proposal_does_not_equal_success():
-    # Attempt rate and ASR are different
-    # If armoriq blocks, proposal=True but success=False
-    pass
+    from dashboard.repositories import DashboardRepository
+    repo = DashboardRepository()
+    runs = repo.get_all_runs()
+    # In all Arm C blocked runs, proposal_made is True but side_effect is False
+    blocked_runs = [r for r in runs if r.get("arm") == "C" and r.get("proposal_made") and not r.get("side_effect")]
+    assert len(blocked_runs) > 0, "There should be blocked runs where proposal did not equal execution"
 
 def test_infrastructure_error_handling():
-    pass
+    from receipts.builder import IncidentBuilder
+    b = IncidentBuilder()
+    r = b.build_receipt("run-err", "call-err", armoriq_decision="ERROR", tripline_decision="DENY")
+    assert r.decision.armoriq_decision == "ERROR"

@@ -11,6 +11,7 @@ from dashboard.security import sanitize_payload, sanitize_text
 class DashboardRepository:
     def __init__(self, workspace_root: str = "."):
         self.workspace_root = pathlib.Path(workspace_root)
+        self.demo_runs_file = self.workspace_root / "results" / "demo" / "demo_runs.jsonl"
         self.runs_file = self.workspace_root / "results" / "phase8" / "runs.jsonl"
         self.attacks_dir = self.workspace_root / "attacks"
         self.builder = IncidentBuilder()
@@ -23,16 +24,24 @@ class DashboardRepository:
 
     def get_all_runs(self) -> List[Dict[str, Any]]:
         runs = []
-        if not self.runs_file.exists():
+        target_file = None
+        if self.demo_runs_file.exists():
+            target_file = self.demo_runs_file
+        elif self.runs_file.exists():
+            target_file = self.runs_file
+        else:
+            target_file = self.workspace_root / "benchmark" / "results" / "benchmark_runs.jsonl"
+            
+        if not target_file or not target_file.exists():
             return runs
             
-        with open(self.runs_file, "r") as f:
+        with open(target_file, "r") as f:
             for line in f:
                 if line.strip():
                     runs.append(json.loads(line))
         
         # Sort newest first
-        runs.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+        runs.sort(key=lambda x: x.get("finished_at") or x.get("timestamp") or "", reverse=True)
         return runs
 
     def get_run(self, run_id: str) -> Optional[Dict[str, Any]]:
@@ -93,7 +102,7 @@ class DashboardRepository:
             elif d == "DENIED":
                 reason = (run.get("reason") or "").lower()
                 if "jail" in reason or "path" in reason or "gateway" in reason:
-                    armoriq_decision = "ALLOW" # Assuming ArmorIQ allowed it but Tripline caught it
+                    armoriq_decision = "ALLOW"
                     tripline_decision = "DENY"
                 elif "intent" in reason or "policy" in reason:
                     armoriq_decision = "DENY"
@@ -104,6 +113,16 @@ class DashboardRepository:
             elif d == "ALLOWED":
                 armoriq_decision = "ALLOW"
                 tripline_decision = "ALLOW"
+
+        # Explicit run fields take priority over heuristic inferences
+        if "armoriq_decision" in run:
+            armoriq_decision = str(run["armoriq_decision"]).upper()
+        if "tripline_decision" in run:
+            tripline_decision = str(run["tripline_decision"]).upper()
+
+        armoriq_reason = run.get("armoriq_reason") or run.get("reason")
+        tripline_reason = run.get("tripline_reason") or ("Jail/Canary" if run.get("arm") == "C" else "None")
+        matched_policy = run.get("matched_policy")
 
         # Determine canary
         canary_data = None
@@ -119,14 +138,19 @@ class DashboardRepository:
         # Determine witness
         witness_data = None
         if run.get("witness_status") != "unverified":
-            state = "executed" if run.get("executed") else "no execution"
-            count = 1 if run.get("executed") else 0
+            count = run.get("witnessed_execution_count", 1 if run.get("executed") else 0)
+            state = "executed" if count > 0 or run.get("executed") else "no execution"
             witness_data = {
                 "state": state,
                 "count": count,
-                "chain_status": "valid"
+                "chain_status": "valid",
+                "side_effects": run.get("witness_summary")
             }
             
+        if "armoriq_decision" in run and "tripline_decision" in run:
+            armoriq_decision = str(run["armoriq_decision"]).upper()
+            tripline_decision = str(run["tripline_decision"]).upper()
+
         receipt = self.builder.build_receipt(
             run_id=run["run_id"],
             call_id=f"call-{run['run_id'][:8]}",
@@ -136,6 +160,7 @@ class DashboardRepository:
             armoriq_reason=run.get("reason"),
             tripline_decision=tripline_decision,
             tripline_reason="Jail/Canary" if run.get("arm") == "C" else "None",
+            matched_policy=run.get("matched_policy"),
             canary_data=canary_data,
             witness_data=witness_data,
             confidence_data=confidence_data
@@ -154,7 +179,7 @@ class DashboardRepository:
             # We only generate receipts for denied or held runs, or explicit attacks if we want to show everything
             # "Every denied action gets a receipt"
             # But for dashboard, let's just generate for all runs that proposed an action
-            if run.get("proposed"):
+            if run.get("proposed") or run.get("proposal_made"):
                 receipts.append(self._build_receipt_from_run(run))
         return receipts
 
@@ -166,7 +191,13 @@ class DashboardRepository:
         return None
 
     def get_scoreboard_data(self):
-        runs = self.get_all_runs()
+        bench_file = self.workspace_root / "benchmark" / "results" / "benchmark_runs.jsonl"
+        runs = []
+        if bench_file.exists():
+            with open(bench_file, "r") as f:
+                for line in f:
+                    if line.strip():
+                        runs.append(json.loads(line))
         if not runs:
             return None
             

@@ -90,10 +90,17 @@ def list_dir(path: str = ".") -> str:
         return f"error:list_failed:{e}"
 
 def read_file(path: str) -> str:
-    """Read a file from the repository."""
+    """Read a file from the repository with open-then-verify TOCTOU defense."""
     args_hash = compute_args_hash("repo-mcp", "read_file", {"path": path})
     recorder.record_event("", args_hash, "read_file", "received")
     
+    # Server-side Tier 1 canary check
+    from canary.state import get_current_run
+    from canary.scan import check_tier1_access
+    run_id = get_current_run()
+    if run_id:
+        check_tier1_access(path, run_id, "read_file")
+        
     resolved = _secure_resolve(path)
     if isinstance(resolved, str):
         recorder.record_event("", args_hash, "read_file", "rejected_by_jail")
@@ -106,14 +113,24 @@ def read_file(path: str) -> str:
         return res
         
     try:
-        res = resolved.read_text(errors="replace")
-        recorder.record_event("", args_hash, "read_file", "execution_completed", result_hash=_hash_result(res))
-        return res
+        fd, real_path = jail.secure_open_read(path, DEMO_REPO_DIR)
+        try:
+            with os.fdopen(fd, "r", encoding="utf-8", errors="replace") as f:
+                res = f.read()
+            recorder.record_event("", args_hash, "read_file", "execution_completed", result_hash=_hash_result(res))
+            return res
+        except Exception as e:
+            res = f"error:read_failed:{e}"
+            recorder.record_event("", args_hash, "read_file", "execution_completed", result_hash=_hash_result(res))
+            return res
+    except PathJailException as e:
+        recorder.record_event("", args_hash, "read_file", "rejected_by_jail")
+        return json.dumps({"tool": "read_file", "path": path, "decision": "deny", "reason": e.reason})
     except Exception as e:
         return f"error:read_failed:{e}"
 
 def write_patch(path: str, content: str) -> str:
-    """Write/overwrite a file in the repository (simplified patch)."""
+    """Write/overwrite a file in the repository with open-then-verify TOCTOU defense."""
     args_hash = compute_args_hash("repo-mcp", "write_patch", {"path": path, "content": content})
     recorder.record_event("", args_hash, "write_patch", "received")
     
@@ -131,21 +148,24 @@ def write_patch(path: str, content: str) -> str:
     if isinstance(resolved, str):
         recorder.record_event("", args_hash, "write_patch", "rejected_by_jail")
         return json.dumps({"tool": "write_patch", "path": path, "decision": "deny", "reason": resolved.replace("error: ", "")})
-        
+
     recorder.record_event("", args_hash, "write_patch", "execution_started")
     try:
         sha_before = ""
         if resolved.exists():
             sha_before = hashlib.sha256(resolved.read_bytes()).hexdigest()
-        
-        resolved.parent.mkdir(parents=True, exist_ok=True)
-        resolved.write_text(content)
-        
-        sha_after = hashlib.sha256(resolved.read_bytes()).hexdigest()
+            
+        fd, real_path = jail.secure_open_write(path, DEMO_REPO_DIR)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(content)
+            
+        sha_after = hashlib.sha256(content.encode("utf-8")).hexdigest()
         side_effect = {"path": path, "sha_before": sha_before, "sha_after": sha_after}
-        
         res = f"success: wrote {path}"
         recorder.record_event("", args_hash, "write_patch", "execution_completed", side_effect=side_effect, result_hash=_hash_result(res))
         return res
+    except PathJailException as e:
+        recorder.record_event("", args_hash, "write_patch", "rejected_by_jail")
+        return json.dumps({"tool": "write_patch", "path": path, "decision": "deny", "reason": e.reason})
     except Exception as e:
         return f"error:write_failed:{e}"

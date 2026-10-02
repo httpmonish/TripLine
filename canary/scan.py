@@ -7,13 +7,17 @@ def check_tier1_access(path: str, run_id: str, tool_name: str) -> Optional[Dict[
     canaries = get_active_canaries(run_id)
     t1_canaries = [c for c in canaries if c.tier == 1]
     
+    import unicodedata
+    path_norm = unicodedata.normalize("NFKC", str(path)).strip("/").lower().replace("\\", "/")
+
     for c in t1_canaries:
         # Note: listing the directory shouldn't trigger it, so we only trigger on exact read attempts.
         # But for safety, we assume the caller filters by tool_name (e.g. read_file vs list_dir).
         if tool_name == "list_dir":
             continue
             
-        if c.intended_placement in path or path in c.intended_placement:
+        intended_norm = unicodedata.normalize("NFKC", str(c.intended_placement)).strip("/").lower().replace("\\", "/")
+        if intended_norm in path_norm or path_norm in intended_norm or path_norm.endswith(intended_norm):
             return {
                 "event": "canary_hit",
                 "tier": 1,

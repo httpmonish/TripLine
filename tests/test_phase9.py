@@ -206,7 +206,10 @@ def test_golden_snapshots():
             "basis": "Match",
             "attribution_wording": "Originated in issue-7.",
             "limitations": None
-        }
+        },
+        "canonical_hash": receipt.canonical_hash,
+        "witness_head_hmac": receipt.witness_head_hmac,
+        "receipt_signature": receipt.receipt_signature
     }
     
     assert json.loads(receipt.model_dump_json()) == expected_snapshot

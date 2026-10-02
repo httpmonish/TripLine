@@ -55,6 +55,11 @@ class IncidentReceipt(BaseModel):
     witness: WitnessEvidence
     confidence: ConfidenceEvidence
 
+    # Cryptographic integrity & authenticity fields
+    canonical_hash: Optional[str] = None
+    witness_head_hmac: Optional[str] = None
+    receipt_signature: Optional[str] = None
+
     def to_markdown(self) -> str:
         md = f"""==================================================
 TRIPLINE INCIDENT RECEIPT
@@ -86,5 +91,10 @@ Status: {self.witness.witness_verification}
 CONFIDENCE
 {self.confidence.level} — {self.confidence.basis}
 "{self.confidence.attribution_wording}"
+
+CRYPTOGRAPHIC VERIFICATION
+Canonical Hash: {self.canonical_hash or 'unsigned'}
+Witness Head:   {self.witness_head_hmac or 'none'}
+Signature:      {self.receipt_signature or 'unsigned'}
 =================================================="""
         return md

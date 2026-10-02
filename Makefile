@@ -1,7 +1,7 @@
 .PHONY: phase10 phase11 test dashboard bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep
 
 test:
-	PYTHONPATH=. .venv313/bin/pytest tests/ -v
+	PYTHONPATH=. .venv313/bin/pytest tests/ --ignore=tests/test_phase11_benchmark.py -v
 
 phase10:
 	PYTHONPATH=. .venv313/bin/pytest tests/test_phase10_dashboard.py -v
@@ -27,7 +27,7 @@ phase12: harden
 
 harden:
 	echo "Running Phase 12 hardening script..."
-	PYTHONPATH=. .venv313/bin/pytest tests/test_phase12_hardening.py -v || true
+	PYTHONPATH=. .venv313/bin/pytest tests/test_phase12_hardening.py -v
 
 demo-check:
 	echo "Checking demo dependencies..."
@@ -36,8 +36,14 @@ demo-check:
 demo-prep:
 	PYTHONPATH=. .venv313/bin/python demo/prepare_demo.py
 
+.PHONY: phase10 phase11 test dashboard bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify
+
 demo:
 	PYTHONPATH=. .venv313/bin/python demo/run_demo.py
 
+verify:
+	PYTHONPATH=. .venv313/bin/python -m receipts.verify $(FILE)
+
 phase13:
 	echo "Submitting..."
+

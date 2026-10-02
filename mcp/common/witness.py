@@ -29,6 +29,10 @@ def get_witness_key() -> bytes:
         KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
         # Create a default random test key if none exists
         KEY_FILE.write_bytes(os.urandom(32))
+    try:
+        os.chmod(KEY_FILE, 0o600)
+    except OSError:
+        pass
     return KEY_FILE.read_bytes()
 
 def compute_hmac(key: bytes, record: Dict[str, Any]) -> str:

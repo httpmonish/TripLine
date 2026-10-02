@@ -22,5 +22,6 @@ armoriq.yaml
 cloudflared
 cloudflared.tgz
 
-# DB
+# DB / Runtime Artifacts
 .tripline/
+results/

@@ -24,6 +24,7 @@ class IncidentBuilder:
         armoriq_reason: Optional[str] = None,
         tripline_decision: Optional[str] = None,
         tripline_reason: Optional[str] = None,
+        matched_policy: Optional[str] = None,
         canary_data: Optional[Dict[str, Any]] = None,
         witness_data: Optional[Dict[str, Any]] = None,
         confidence_data: Optional[Dict[str, Any]] = None
@@ -53,7 +54,8 @@ class IncidentBuilder:
             armoriq_decision=armoriq_decision or "unavailable",
             armoriq_reason=armoriq_reason,
             tripline_decision=tripline_decision or "unavailable",
-            tripline_reason=tripline_reason
+            tripline_reason=tripline_reason,
+            matched_policy=matched_policy
         )
         
         # CANARY
@@ -82,17 +84,36 @@ class IncidentBuilder:
             limitations=confidence_data.get("limitations") if confidence_data else None
         )
         
+        receipt_dict = {
+            "receipt_id": receipt_id,
+            "incident_id": f"INC-{uuid.uuid4().hex[:8]}",
+            "run_id": run_id,
+            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "source": source.model_dump() if hasattr(source, "model_dump") else source.dict(),
+            "proposal": proposal.model_dump() if hasattr(proposal, "model_dump") else proposal.dict(),
+            "decision": decision.model_dump() if hasattr(decision, "model_dump") else decision.dict(),
+            "canary": canary.model_dump() if hasattr(canary, "model_dump") else canary.dict(),
+            "witness": witness.model_dump() if hasattr(witness, "model_dump") else witness.dict(),
+            "confidence": confidence.model_dump() if hasattr(confidence, "model_dump") else confidence.dict()
+        }
+        
+        from receipts.verify import sign_receipt_fields
+        c_hash, w_head, sig = sign_receipt_fields(receipt_dict)
+
         return IncidentReceipt(
-            receipt_id=receipt_id,
-            incident_id=f"INC-{uuid.uuid4().hex[:8]}",
-            run_id=run_id,
-            created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            receipt_id=receipt_dict["receipt_id"],
+            incident_id=receipt_dict["incident_id"],
+            run_id=receipt_dict["run_id"],
+            created_at=receipt_dict["created_at"],
             source=source,
             proposal=proposal,
             decision=decision,
             canary=canary,
             witness=witness,
-            confidence=confidence
+            confidence=confidence,
+            canonical_hash=c_hash,
+            witness_head_hmac=w_head,
+            receipt_signature=sig
         )
 
     def _determine_witness_status(self, witness_data: Optional[Dict[str, Any]], armoriq_decision: Optional[str], tripline_decision: Optional[str]) -> str:

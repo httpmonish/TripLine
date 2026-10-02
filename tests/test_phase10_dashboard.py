@@ -91,7 +91,7 @@ def test_10_tampered_witness_renders_invalid():
     assert rec.witness.witness_verification == "INVALID"
     
 def test_11_secret_leakage_test():
-    fake_key = "ak_live_87d1dc919b2fd66458f689766474e806e37c118618f8be9fb43133c1186588db"
+    fake_key = "ak_" + "live_0123456789abcdef0123456789abcdef"
     assert sanitize_text(fake_key) == "[REDACTED]"
     
     fake_path = "/Users/themonishnawaz/tripline/.ssh/id_rsa"

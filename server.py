@@ -195,23 +195,73 @@ def _build_transport_security() -> TransportSecuritySettings | None:
     )
 
 
-if __name__ == "__main__":
-    transport_security = _build_transport_security()
+import importlib.util
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
+def _load_proof():
+    spec = importlib.util.spec_from_file_location("proof", str(pathlib.Path(__file__).parent / "mcp" / "common" / "proof.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+def _load_witness():
+    spec = importlib.util.spec_from_file_location("witness", str(pathlib.Path(__file__).parent / "mcp" / "common" / "witness.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+class DecisionProofMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app):
+        super().__init__(app)
+        self.proof_mod = _load_proof()
+        self.witness_mod = _load_witness()
+
+    async def dispatch(self, request, call_next):
+        if request.method == "POST" and request.url.path == "/mcp":
+            body_bytes = await request.body()
+            import json
+            try:
+                msg = json.loads(body_bytes)
+            except Exception:
+                msg = None
+            if isinstance(msg, dict) and msg.get("method") == "tools/call":
+                proof_header = request.headers.get("x-tripline-decision-proof")
+                params = msg.get("params", {})
+                tool_name = params.get("name", "")
+                tool_args = params.get("arguments", {})
+                key = self.witness_mod.get_witness_key()
+                
+                is_valid = False
+                fail_reason = "MISSING_DECISION_PROOF"
+                for mcp_cand in ("tripline-mcp", "repo-mcp", "issues-mcp", "sandbox-mcp"):
+                    args_hash = self.witness_mod.compute_args_hash(mcp_cand, tool_name, tool_args)
+                    v, r = self.proof_mod.verify_decision_proof(proof_header, args_hash, key, max_age=60.0)
+                    if v:
+                        is_valid = True
+                        break
+                    else:
+                        fail_reason = r
+                if not is_valid:
+                    return JSONResponse(status_code=403, content={"jsonrpc": "2.0", "id": msg.get("id"), "error": {"code": -32000, "message": f"MCP Bypass Rejected: {fail_reason}"}})
+        return await call_next(request)
+
+def create_app():
+    transport_security = _build_transport_security()
+    starlette_app = mcp.streamable_http_app(
+        transport_security=transport_security,
+        json_response=True,
+        stateless_http=True,
+        host="127.0.0.1",
+    )
+    starlette_app.add_middleware(DecisionProofMiddleware)
+    return starlette_app
+
+if __name__ == "__main__":
+    import uvicorn
     # Create fixtures directory with a sample file so read_file tests work
     _FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
     (_FIXTURES_DIR / "ok.txt").write_text("Tripline fixture file — safe read target.\n")
 
-    mcp.run(
-        transport="streamable-http",
-        host="127.0.0.1",
-        port=8000,
-        json_response=True,
-        stateless_http=True,
-        transport_security=transport_security,
-        # transport_security=None  → SDK auto-sets localhost-only host allowlist.
-        # transport_security=<settings>  → uses TRIPLINE_ALLOWED_HOSTS env var.
-        # To run behind a Cloudflare tunnel:
-        #   export TRIPLINE_ALLOWED_HOSTS="your-tunnel-name.trycloudflare.com"
-        #   python server.py
-    )
+    app = create_app()
+    uvicorn.run(app, host="127.0.0.1", port=8000)

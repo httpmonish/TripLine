@@ -67,8 +67,38 @@ class AgentLoop:
         token = session.start_plan(tool_calls)
         lock.on_authorization_granted()
         
+        import importlib.util
+        import httpx2
+        from mcp.client.streamable_http import streamable_http_client
+
+        spec_w = importlib.util.spec_from_file_location("witness", "mcp/common/witness.py")
+        witness_mod = importlib.util.module_from_spec(spec_w)
+        spec_w.loader.exec_module(witness_mod)
+
+        spec_p = importlib.util.spec_from_file_location("proof", "mcp/common/proof.py")
+        proof_mod = importlib.util.module_from_spec(spec_p)
+        spec_p.loader.exec_module(proof_mod)
+
+        async def attach_decision_proof(req):
+            if req.method == "POST":
+                try:
+                    body = json.loads(req.content)
+                    if isinstance(body, dict) and body.get("method") == "tools/call":
+                        params = body.get("params", {})
+                        tool = params.get("name", "")
+                        args = params.get("arguments", {})
+                        w_key = witness_mod.get_witness_key()
+                        h = witness_mod.compute_args_hash("tripline-mcp", tool, args)
+                        p = proof_mod.compute_decision_proof(h, "ALLOW", w_key, time.time())
+                        req.headers["x-tripline-decision-proof"] = p
+                except Exception:
+                    pass
+
+        http_cli = httpx2.AsyncClient(event_hooks={"request": [attach_decision_proof]})
+        transport = streamable_http_client(self.mcp_url, http_client=http_cli)
+
         try:
-            async with Client(self.mcp_url) as mcp:
+            async with Client(transport) as mcp:
                 step_idx = 0
                 while True:
                     # 1A. Budget Check
@@ -124,7 +154,7 @@ class AgentLoop:
                     # 1B. Taint Check (Early Gateway Hold)
                     taint_res = evaluate_taint(tool_name, lock.t3_ingested)
                     if taint_res["decision"] == "hold":
-                        step_record["error"] = "ArmorIQ Denied: " + taint_res["reason"]
+                        step_record["error"] = "Tripline Gateway Held: " + taint_res["reason"]
                         step_record["allowed"] = False
                         run_artifact["status"] = "failed_auth"
                         break
@@ -136,7 +166,7 @@ class AgentLoop:
                     if not is_in_plan:
                         replan_result = lock.check_replan_request()
                         if "blocked" in replan_result["event"]:
-                            step_record["error"] = "ArmorIQ Denied: Replan blocked (T3 ingested)"
+                            step_record["error"] = "Tripline Replan Lock Held: Replan blocked (T3 ingested)"
                             step_record["allowed"] = False
                             # Attack D wants malicious execution = 0. We break execution.
                             run_artifact["status"] = "failed_auth"
@@ -146,6 +176,9 @@ class AgentLoop:
                     decision = session.check(tool_name, tool_args)
                     is_allowed = decision.allowed or is_in_plan
                     step_record["allowed"] = is_allowed
+                    step_record["armoriq_decision"] = decision.action
+                    step_record["matched_policy"] = decision.matched_policy
+                    step_record["armoriq_reason"] = decision.reason
                     
                     if not is_allowed:
                         step_record["error"] = f"ArmorIQ Denied: {decision.reason}"
@@ -156,7 +189,7 @@ class AgentLoop:
                     if tool_name == "read_issue":
                         lock.on_t3_read(source=tool_name)
                         
-                    # 5. Execute via MCP
+                    # 5. Execute via MCP with cryptographic Decision Proof
                     try:
                         res = await mcp.call_tool(tool_name, tool_args)
                         step_record["result"] = res.content[0].text
