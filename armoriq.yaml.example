@@ -1,7 +1,7 @@
 version: v1
 
 identity:
-  api_key: $ARMORIQ_API_KEY
+  api_key: $ARMORIQ_API_KEY   # export ARMORIQ_API_KEY=ak_live_... before running
   user_id: default
   agent_id: tripline-maintainer
 
@@ -14,7 +14,7 @@ proxy:
 
 mcp_servers:
   - id: tripline-mcp
-    url: https://YOUR-MCP-HOST/mcp
+    url: https://YOUR-MCP-HOST/mcp   # replace with your Cloudflare Quick Tunnel URL
     description: Tripline safe test MCP
     auth:
       type: none
@@ -22,8 +22,25 @@ mcp_servers:
 policy:
   allow:
     - tripline-mcp.hello_tool
+    - tripline-mcp.echo_marker
+    - tripline-mcp.clear_markers
+    - tripline-mcp.list_markers
   deny: []
 
 intent:
   ttl_seconds: 300
   require_csrg: true
+
+# ─── Phase 0 Notes ────────────────────────────────────────────────────────────
+#
+# The proxy.url is used ONLY in proxy mode (mode="proxy").
+# Phase 0 uses mode="sdk" which calls /iap/sdk/enforce directly — no proxy-to-MCP
+# network path is required, which avoids the 421 / 502 errors from Phase 0 R&D.
+#
+# If you want to test proxy mode:
+#   1. Start the MCP server:  python server.py
+#   2. Open a Cloudflare Quick Tunnel:
+#        cloudflared tunnel --url http://127.0.0.1:8000
+#   3. Copy the tunnel URL into mcp_servers[0].url above.
+#   4. Do NOT add TransportSecuritySettings to server.py for proxy-mode testing
+#      (or add 'proxy.armoriq.ai' to the allowed_hosts list).
