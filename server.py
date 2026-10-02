@@ -35,6 +35,13 @@ mcp = MCPServer("tripline-mcp")
 # non-execution without touching the filesystem.
 _markers: dict[str, bool] = {}
 
+# In-memory execution counters for Phase 1 proof
+_execution_counters: dict[str, int] = {
+    "hello_tool": 0,
+    "read_project_info": 0,
+    "perform_test_action": 0,
+}
+
 # Fixtures directory — read_file is sandboxed to this path.
 _FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 
@@ -42,7 +49,37 @@ _FIXTURES_DIR = pathlib.Path(__file__).parent / "fixtures"
 @mcp.tool()
 def hello_tool() -> str:
     """Return a safe test message. Deterministic. No side effects."""
+    _execution_counters["hello_tool"] = _execution_counters.get("hello_tool", 0) + 1
     return "Hello from Tripline MCP!"
+
+
+@mcp.tool()
+def read_project_info() -> str:
+    """Return fixed/mock project information. Harmless."""
+    _execution_counters["read_project_info"] = _execution_counters.get("read_project_info", 0) + 1
+    return '{"project": "Tripline", "role": "evidence_layer", "status": "active"}'
+
+
+@mcp.tool()
+def perform_test_action() -> str:
+    """Harmless but observable action. Increments counter."""
+    _execution_counters["perform_test_action"] = _execution_counters.get("perform_test_action", 0) + 1
+    return "test_action_performed"
+
+
+@mcp.tool()
+def get_execution_counters() -> str:
+    """Return JSON string of execution counters."""
+    import json
+    return json.dumps(_execution_counters)
+
+
+@mcp.tool()
+def reset_execution_counters() -> str:
+    """Reset all execution counters to 0."""
+    for k in _execution_counters:
+        _execution_counters[k] = 0
+    return "counters_reset"
 
 
 @mcp.tool()
@@ -71,40 +108,53 @@ def list_markers() -> str:
 
 @mcp.tool()
 def read_file(path: str) -> str:
-    """
-    Read a file from the ./fixtures directory only.
+    """Read a file from the repository."""
+    return repo_mod.read_file(path)
 
-    S2 (parameter enforcement) test tool: Tripline enforces the path constraint
-    here at the application layer. ArmorIQ enforces only at the tool level (it
-    cannot see path parameter values). This demonstrates the parameter-level gap
-    documented in Phase 0.5 / S2.
 
-    Returns the file contents, or an error string if the path is outside ./fixtures,
-    is absolute, or the file does not exist. Never raises an exception.
-    """
-    _FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Reject absolute paths immediately
-    if pathlib.Path(path).is_absolute():
-        return f"error:absolute_path_rejected:{path}"
+import importlib.util
+import pathlib
 
-    # Resolve relative to fixtures and check it stays inside
-    try:
-        resolved = (_FIXTURES_DIR / path).resolve()
-        fixtures_resolved = _FIXTURES_DIR.resolve()
-        resolved.relative_to(fixtures_resolved)  # raises ValueError if escaping
-    except ValueError:
-        return f"error:path_traversal_rejected:{path}"
-    except Exception as e:
-        return f"error:path_resolution_failed:{e}"
+def load_tool_module(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
-    if not resolved.exists():
-        return f"error:file_not_found:{path}"
+issues_mod = load_tool_module("issues_tool", str(pathlib.Path(__file__).parent / "mcp" / "issues_mcp" / "tool.py"))
+repo_mod = load_tool_module("repo_tool", str(pathlib.Path(__file__).parent / "mcp" / "repo_mcp" / "tool.py"))
+sandbox_mod = load_tool_module("sandbox_tool", str(pathlib.Path(__file__).parent / "mcp" / "sandbox_mcp" / "tool.py"))
 
-    try:
-        return resolved.read_text(errors="replace")
-    except Exception as e:
-        return f"error:read_failed:{e}"
+@mcp.tool()
+def list_issues() -> str:
+    """List all open issues."""
+    return issues_mod.list_issues()
+
+@mcp.tool()
+def read_issue(issue_id: str) -> str:
+    """Read full details of a specific issue."""
+    return issues_mod.read_issue(issue_id)
+
+@mcp.tool()
+def comment_issue(issue_id: str, text: str) -> str:
+    """Add a comment to an issue."""
+    return issues_mod.comment_issue(issue_id, text)
+
+@mcp.tool()
+def list_dir(path: str = ".") -> str:
+    """List directory contents in the repository."""
+    return repo_mod.list_dir(path)
+
+@mcp.tool()
+def write_patch(path: str, content: str) -> str:
+    """Write/overwrite a file in the repository (simplified patch)."""
+    return repo_mod.write_patch(path, content)
+
+@mcp.tool()
+def run_tests(test_selector: str) -> str:
+    """Run pytest with the given selector (e.g. 'test_issue_1'). Executed in sandbox with NO network."""
+    return sandbox_mod.run_tests(test_selector)
 
 
 def _build_transport_security() -> TransportSecuritySettings | None:

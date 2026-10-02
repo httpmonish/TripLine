@@ -21,3 +21,6 @@ armoriq.yaml
 # Cloudflare binary/archive
 cloudflared
 cloudflared.tgz
+
+# DB
+.tripline/

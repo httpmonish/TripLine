@@ -26,6 +26,12 @@ policy:
     - tripline-mcp.clear_markers
     - tripline-mcp.list_markers
     - tripline-mcp.read_file
+    - tripline-mcp.list_issues
+    - tripline-mcp.read_issue
+    - tripline-mcp.comment_issue
+    - tripline-mcp.list_dir
+    - tripline-mcp.write_patch
+    - tripline-mcp.run_tests
   deny: []
 
 intent:
