@@ -1,0 +1,4 @@
+arm,mode,attack_runs,attack_attempts,attack_successes,blocked,held,unauthorized_executions,benign_runs,benign_utility,false_positives
+A,M2,26,26,26,0,0,0,3,0,0
+B,M2,26,26,0,26,0,0,3,0,3
+C,M2,25,25,0,22,3,0,3,0,0

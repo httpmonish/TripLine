@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="border: 2px solid #333; padding: 20px; background: white; margin-bottom: 20px;">
+    <h2 style="text-align: center; margin-top: 0; border-bottom: 2px solid #ccc; padding-bottom: 10px;">
+        TRIPLINE INCIDENT RECEIPT<br>
+        <small style="font-size: 14px; color: #666;">{{ receipt.receipt_id }}</small>
+    </h2>
+
+    <div class="card" style="background: #f8f9fa; border-left: 4px solid #0056b3;">
+        <h3>SUMMARY</h3>
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="border: none;"><strong>SOURCE:</strong></td>
+                <td style="border: none;">{{ receipt.source.source_id }}</td>
+                <td style="border: none;"><strong>{{ receipt.confidence.level }}</strong></td>
+            </tr>
+            <tr>
+                <td style="border: none;"><strong>PROPOSAL:</strong></td>
+                <td style="border: none;">{{ receipt.proposal.tool }}.{{ receipt.proposal.action }}</td>
+                <td style="border: none;">{{ receipt.proposal.normalized_proposal }}</td>
+            </tr>
+            <tr>
+                <td style="border: none;"><strong>ARMORIQ:</strong></td>
+                <td style="border: none;" colspan="2"><span class="badge {{ receipt.decision.armoriq_decision | lower }}">{{ receipt.decision.armoriq_decision }}</span></td>
+            </tr>
+            <tr>
+                <td style="border: none;"><strong>TRIPLINE:</strong></td>
+                <td style="border: none;" colspan="2"><span class="badge {{ receipt.decision.tripline_decision | lower }}">{{ receipt.decision.tripline_decision }}</span></td>
+            </tr>
+            <tr>
+                <td style="border: none;"><strong>CANARY:</strong></td>
+                <td style="border: none;" colspan="2"><span class="badge {{ 'deny' if receipt.canary.hit else 'unverified' }}">{{ 'TIER-' ~ receipt.canary.tier ~ ' FIRED' if receipt.canary.hit else 'NO CANARY HIT' }}</span></td>
+            </tr>
+            <tr>
+                <td style="border: none;"><strong>WITNESS:</strong></td>
+                <td style="border: none;" colspan="2"><span class="badge {{ 'allow' if 'VERIFIED' in receipt.witness.witness_verification else 'unverified' }}">{{ receipt.witness.execution_count }} EXECUTIONS &mdash; {{ receipt.witness.witness_verification }}</span></td>
+            </tr>
+            <tr>
+                <td style="border: none;"><strong>CONFIDENCE:</strong></td>
+                <td style="border: none;" colspan="2"><strong>{{ receipt.confidence.level }}</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <h4>SOURCE</h4>
+    <hr>
+    <p>
+        Origin: {{ receipt.source.source_id }}<br>
+        Source type: {{ receipt.source.source_type }}<br>
+        Trust: {{ receipt.source.trust_level }}<br>
+        Attribution: {{ receipt.source.provenance_evidence }}
+    </p>
+
+    <h4>PROPOSAL</h4>
+    <hr>
+    <p>
+        Tool: {{ receipt.proposal.tool }}<br>
+        Action: {{ receipt.proposal.action }}<br>
+        Arguments: <br>
+        <pre>{{ receipt.proposal.arguments_summary | tojson(indent=2) }}</pre>
+    </p>
+
+    <div style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+            <h4>ARMORIQ</h4>
+            <hr>
+            <p>
+                Decision: <strong>{{ receipt.decision.armoriq_decision }}</strong><br>
+                Reason: {{ receipt.decision.armoriq_reason or 'None' }}
+            </p>
+        </div>
+        <div style="flex: 1;">
+            <h4>TRIPLINE</h4>
+            <hr>
+            <p>
+                Decision: <strong>{{ receipt.decision.tripline_decision }}</strong><br>
+                Reason: {{ receipt.decision.tripline_reason or 'None' }}
+            </p>
+        </div>
+    </div>
+
+    <h4>CANARY</h4>
+    <hr>
+    <p>
+        {% if receipt.canary.hit %}
+        TIER-{{ receipt.canary.tier }} CANARY FIRED<br>
+        ID: {{ receipt.canary.canary_id }}<br>
+        Location: {{ receipt.canary.detection_location }}<br>
+        Trigger: {{ receipt.canary.trigger }}
+        {% else %}
+        NO CANARY HIT
+        {% endif %}
+    </p>
+
+    <h4>WITNESS</h4>
+    <hr>
+    <p>
+        Execution: <strong>{{ receipt.witness.execution_count }} executions &mdash; {{ receipt.witness.witness_verification }}</strong><br>
+        State: {{ receipt.witness.execution_state }}<br>
+        Chain: {{ receipt.witness.chain_status }}
+    </p>
+
+    <h4>CONFIDENCE / ATTRIBUTION</h4>
+    <hr>
+    <p>
+        Tier: <strong>{{ receipt.confidence.level }}</strong><br>
+        Basis: {{ receipt.confidence.basis }}<br>
+        "{{ receipt.confidence.attribution_wording }}"
+    </p>
+</div>
+{% endblock %}

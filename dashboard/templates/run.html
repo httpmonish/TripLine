@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Run Details: {{ run.run_id }}</h2>
+<div class="card">
+    <p><strong>Attack ID:</strong> {{ run.attack_id }}</p>
+    <p><strong>Class:</strong> {{ run.class }}</p>
+    <p><strong>Arm:</strong> {{ run.arm }}</p>
+    <p><strong>Mode:</strong> {{ run.mode }}</p>
+    <p><strong>Timestamp:</strong> {{ run.timestamp }}</p>
+</div>
+
+<h3>Chronological View</h3>
+<div style="border-left: 2px solid #ccc; padding-left: 20px; margin-left: 10px;">
+    {% for step in steps %}
+    <div style="margin-bottom: 15px;">
+        <strong>{{ step.name }}</strong><br>
+        {{ step.action }}<br>
+        <span class="badge {{ step.status | lower }}">{{ step.status }}</span>
+        
+        {% if step.receipt_id %}
+        <br><br>
+        <a href="/receipts/{{ step.receipt_id }}">[View Receipt]</a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

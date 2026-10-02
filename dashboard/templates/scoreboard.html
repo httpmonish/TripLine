@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>TRIPLINE SECURITY SCOREBOARD</h2>
+{% if stats %}
+<table>
+    <thead>
+        <tr>
+            <th>Metric</th>
+            <th>Arm A<br><small>No Defense</small></th>
+            <th>Arm B<br><small>ArmorIQ Only</small></th>
+            <th>Arm C<br><small>ArmorIQ + Tripline</small></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Attacks</td>
+            <td>{{ stats.A.attacks }}</td>
+            <td>{{ stats.B.attacks }}</td>
+            <td>{{ stats.C.attacks }}</td>
+        </tr>
+        <tr>
+            <td>Succeeded (Unauthorized)</td>
+            <td>{{ stats.A.succeeded }}</td>
+            <td>{{ stats.B.succeeded }}</td>
+            <td>{{ stats.C.succeeded }}</td>
+        </tr>
+        <tr>
+            <td>Blocked (ArmorIQ/Gateway)</td>
+            <td>{{ stats.A.blocked }}</td>
+            <td>{{ stats.B.blocked }}</td>
+            <td>{{ stats.C.blocked }}</td>
+        </tr>
+        <tr>
+            <td>Held (Tripline Egress)</td>
+            <td>{{ stats.A.held }}</td>
+            <td>{{ stats.B.held }}</td>
+            <td>{{ stats.C.held }}</td>
+        </tr>
+        <tr>
+            <td>Benign Utility</td>
+            <td>{{ stats.A.utility }}</td>
+            <td>{{ stats.B.utility }}</td>
+            <td>{{ stats.C.utility }}</td>
+        </tr>
+        <tr>
+            <td>False Positive</td>
+            <td>{{ stats.A.fp }}</td>
+            <td>{{ stats.B.fp }}</td>
+            <td>{{ stats.C.fp }}</td>
+        </tr>
+    </tbody>
+</table>
+{% else %}
+<p>NO BENCHMARK DATA AVAILABLE</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>TRIPLINE</h1>
+<p>An evidence layer for agent actions.</p>
+
+<div class="grid">
+    <div class="card">
+        <h3>Summary</h3>
+        <p>Receipts: {{ total_receipts }}</p>
+        <p>Runs: {{ total_runs }}</p>
+        <p>Benchmark Runs: {{ total_runs }}</p>
+    </div>
+    
+    <div class="card">
+        <h3>Latest Incidents</h3>
+        {% if receipts %}
+        <ul>
+            {% for r in receipts %}
+            <li><a href="/receipts/{{ r.receipt_id }}">{{ r.receipt_id }}</a> - {{ r.proposal.tool }}.{{ r.proposal.action }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No incidents recorded.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

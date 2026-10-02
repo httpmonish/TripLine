@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Incident Receipts</h2>
+{% if receipts %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Task/Tool</th>
+            <th>ArmorIQ</th>
+            <th>Tripline</th>
+            <th>Canary</th>
+            <th>Witness</th>
+            <th>Confidence</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in receipts %}
+        <tr>
+            <td><a href="/receipts/{{ r.receipt_id }}">{{ r.receipt_id }}</a></td>
+            <td>{{ r.proposal.tool }}</td>
+            <td>
+                <span class="badge {{ r.decision.armoriq_decision | lower }}">{{ r.decision.armoriq_decision }}</span>
+            </td>
+            <td>
+                <span class="badge {{ r.decision.tripline_decision | lower }}">{{ r.decision.tripline_decision }}</span>
+            </td>
+            <td>
+                <span class="badge {{ 'deny' if r.canary.hit else 'unverified' }}">{{ 'FIRED' if r.canary.hit else 'NO-HIT' }}</span>
+            </td>
+            <td>
+                <span class="badge {{ 'allow' if 'VERIFIED' in r.witness.witness_verification else 'unverified' }}">{{ r.witness.witness_verification }}</span>
+            </td>
+            <td>{{ r.confidence.level }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No receipts have been generated yet.</p>
+{% endif %}
+{% endblock %}
