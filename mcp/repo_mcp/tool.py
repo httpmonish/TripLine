@@ -18,6 +18,20 @@ FIXTURES_DIR = pathlib.Path(__file__).parent.parent.parent / "fixtures"
 DEMO_REPO_DIR = FIXTURES_DIR / "demo_repo"
 
 def _secure_resolve(path: str) -> pathlib.Path | str:
+    # Server-side Tier 1 check
+    from canary.state import get_current_run
+    from canary.scan import check_tier1_access
+    
+    run_id = get_current_run()
+    if run_id:
+        t1_hit = check_tier1_access(path, run_id, "read_file")
+        if t1_hit:
+            # We just log it or we could block it, but Jail will block it anyway if outside.
+            # "The canary signal should still be recorded even if the jail later rejects the request."
+            # "SECURITY DECISION = jail/ArmorIQ". So we let jail do the rejection, or if jail allows it, we deny it?
+            # "CANARY HIT = YES, SECURITY DECISION = jail/ArmorIQ"
+            pass
+
     try:
         resolved = canonicalize_path(path, DEMO_REPO_DIR)
         return resolved
@@ -61,6 +75,15 @@ def read_file(path: str) -> str:
 
 def write_patch(path: str, content: str) -> str:
     """Write/overwrite a file in the repository (simplified patch)."""
+    # Server-side Tier 2 check
+    from canary.state import get_current_run
+    from canary.scan import scan_egress_payload
+    run_id = get_current_run()
+    if run_id:
+        t2_hit = scan_egress_payload(content, run_id, "write_patch")
+        if t2_hit:
+            return json.dumps({"tool": "write_patch", "decision": "hold", "reason": "egress_canary_hit"})
+
     resolved = _secure_resolve(path)
     if isinstance(resolved, str):
         return json.dumps({"tool": "write_patch", "path": path, "decision": "deny", "reason": resolved.replace("error: ", "")})

@@ -26,4 +26,13 @@ def read_issue(issue_id: str) -> str:
 
 def comment_issue(issue_id: str, text: str) -> str:
     """Add a comment to an issue."""
+    # Server-side Tier 2 check
+    from canary.state import get_current_run
+    from canary.scan import scan_egress_payload
+    run_id = get_current_run()
+    if run_id:
+        t2_hit = scan_egress_payload(text, run_id, "comment_issue")
+        if t2_hit:
+            return json.dumps({"tool": "comment_issue", "decision": "hold", "reason": "egress_canary_hit"})
+            
     return f"comment added to {issue_id}"

@@ -106,6 +106,20 @@ class AgentLoop:
                     if c1_evidence:
                         run_artifact["provenance"].append(c1_evidence)
                         step_record["c1_match"] = c1_evidence
+                        
+                    # PROVENANCE/CANARY: Tier 2 Gateway Early Egress Scan
+                    from canary.scan import scan_egress_payload
+                    t2_evidence = scan_egress_payload(str(tool_args), run_id, tool_name)
+                    if t2_evidence:
+                        # Append the event to provenance/artifact
+                        run_artifact["provenance"].append(t2_evidence)
+                        
+                        # Decide action based on tool
+                        if tool_name in ["comment_issue", "write_patch"]:
+                            step_record["error"] = "Gateway Denied: egress_canary_hit"
+                            step_record["allowed"] = False
+                            run_artifact["status"] = "failed_auth"
+                            break
 
                     # 1B. Taint Check (Early Gateway Hold)
                     taint_res = evaluate_taint(tool_name, lock.t3_ingested)
