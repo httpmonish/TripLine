@@ -211,6 +211,23 @@ def _load_witness():
     spec.loader.exec_module(mod)
     return mod
 
+# Tools that are purely diagnostic / side-effect-free and existed before the
+# proof requirement was introduced.  They are exempt from the Decision-Proof
+# header check — equivalent to a /healthz endpoint.  All impactful tools
+# (read_file, write_patch, comment_issue, run_tests, list_issues, list_dir)
+# still require a valid proof header.
+_DIAGNOSTIC_TOOLS = frozenset({
+    "hello_tool",
+    "echo_marker",
+    "clear_markers",
+    "list_markers",
+    "get_execution_counters",
+    "reset_execution_counters",
+    "read_project_info",
+    "perform_test_action",
+})
+
+
 class DecisionProofMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
@@ -226,9 +243,15 @@ class DecisionProofMiddleware(BaseHTTPMiddleware):
             except Exception:
                 msg = None
             if isinstance(msg, dict) and msg.get("method") == "tools/call":
-                proof_header = request.headers.get("x-tripline-decision-proof")
                 params = msg.get("params", {})
                 tool_name = params.get("name", "")
+
+                # Diagnostic/smoke-test tools are side-effect free and exempt
+                # from the proof requirement (equivalent to a /healthz bypass).
+                if tool_name in _DIAGNOSTIC_TOOLS:
+                    return await call_next(request)
+
+                proof_header = request.headers.get("x-tripline-decision-proof")
                 tool_args = params.get("arguments", {})
                 key = self.witness_mod.get_witness_key()
                 

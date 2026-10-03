@@ -110,7 +110,15 @@ def test_case_variant_canary_and_jail(tmp_path):
         jail.canonicalize_path("..//..//ETC/PASSWD", root)
 
 def test_mcp_direct_http_bypass_proof_enforcement():
-    """Reproduce over HTTP that calls without proof are rejected and valid proofs are accepted."""
+    """Reproduce over HTTP that calls without proof are rejected and valid proofs are accepted.
+
+    Uses read_file (an impactful tool that requires a Decision-Proof header).
+    hello_tool is in _DIAGNOSTIC_TOOLS and is intentionally exempt from proof
+    (equivalent to a /healthz endpoint — side-effect free).
+
+    All requests include Host: 127.0.0.1 so the MCP SDK's DNS rebinding
+    protection passes through and lets DecisionProofMiddleware run.
+    """
     from starlette.testclient import TestClient
     from server import create_app
     import time
@@ -124,38 +132,54 @@ def test_mcp_direct_http_bypass_proof_enforcement():
     witness_mod = importlib.util.module_from_spec(spec_w)
     spec_w.loader.exec_module(witness_mod)
 
+    # Host: 127.0.0.1 is required — TestClient sends "testserver" by default,
+    # which triggers MCP's DNS rebinding guard (421) before our middleware fires.
+    BASE_HEADERS = {"Host": "127.0.0.1"}
+
+    # Use read_file: an impactful tool that MUST be gated by a Decision-Proof.
+    # (hello_tool is in _DIAGNOSTIC_TOOLS and is deliberately proof-exempt.)
+    tool_req = {
+        "jsonrpc": "2.0",
+        "id": 42,
+        "method": "tools/call",
+        "params": {"name": "read_file", "arguments": {"path": "fixtures/ok.txt"}}
+    }
+
     app = create_app()
-    with TestClient(app) as client:
-        tool_req = {
-            "jsonrpc": "2.0",
-            "id": 42,
-            "method": "tools/call",
-            "params": {"name": "hello_tool", "arguments": {}}
-        }
-        
-        # 1. Direct call without check() or proof -> MUST BE 403 Forbidden
-        r1 = client.post("/mcp", json=tool_req)
-        assert r1.status_code == 403
+    with TestClient(app, raise_server_exceptions=False) as client:
+        # 1. Direct call without proof -> MUST BE 403 Forbidden
+        r1 = client.post("/mcp", json=tool_req, headers=BASE_HEADERS)
+        assert r1.status_code == 403, f"Expected 403, got {r1.status_code}: {r1.text}"
         assert "MISSING_DECISION_PROOF" in r1.text
 
-        # 2. Call with valid gateway proof -> Accepted through middleware
+        # 2. Call with valid gateway proof -> Middleware passes it through (non-403)
         key = witness_mod.get_witness_key()
-        args_hash = witness_mod.compute_args_hash("tripline-mcp", "hello_tool", {})
+        args_hash = witness_mod.compute_args_hash(
+            "tripline-mcp", "read_file", {"path": "fixtures/ok.txt"}
+        )
         valid_proof = proof_mod.compute_decision_proof(args_hash, "ALLOW", key, time.time())
-        r2 = client.post("/mcp", json=tool_req, headers={"x-tripline-decision-proof": valid_proof})
-        # Middleware allowed it through (non-403)
-        assert r2.status_code != 403
+        r2 = client.post(
+            "/mcp", json=tool_req,
+            headers={**BASE_HEADERS, "x-tripline-decision-proof": valid_proof}
+        )
+        assert r2.status_code != 403, f"Valid proof should pass middleware, got {r2.status_code}: {r2.text}"
 
-        # 3. Call with expired proof -> MUST BE 403
+        # 3. Expired proof -> MUST BE 403
         expired_proof = proof_mod.compute_decision_proof(args_hash, "ALLOW", key, time.time() - 120.0)
-        r3 = client.post("/mcp", json=tool_req, headers={"x-tripline-decision-proof": expired_proof})
-        assert r3.status_code == 403
+        r3 = client.post(
+            "/mcp", json=tool_req,
+            headers={**BASE_HEADERS, "x-tripline-decision-proof": expired_proof}
+        )
+        assert r3.status_code == 403, f"Expired proof should be 403, got {r3.status_code}"
         assert "EXPIRED_DECISION_PROOF" in r3.text
 
-        # 4. Call with mismatched / tampered args proof -> MUST BE 403
-        tampered_args_proof = proof_mod.compute_decision_proof("wrong_args_hash", "ALLOW", key, time.time())
-        r4 = client.post("/mcp", json=tool_req, headers={"x-tripline-decision-proof": tampered_args_proof})
-        assert r4.status_code == 403
+        # 4. Tampered args proof -> MUST BE 403
+        tampered_proof = proof_mod.compute_decision_proof("wrong_args_hash", "ALLOW", key, time.time())
+        r4 = client.post(
+            "/mcp", json=tool_req,
+            headers={**BASE_HEADERS, "x-tripline-decision-proof": tampered_proof}
+        )
+        assert r4.status_code == 403, f"Tampered proof should be 403, got {r4.status_code}"
         assert "INVALID_PROOF_SIGNATURE" in r4.text
 
 def test_receipt_canonical_hashing_and_signature_tamper():
