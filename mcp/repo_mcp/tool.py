@@ -14,8 +14,8 @@ jail = load_jail()
 canonicalize_path = jail.canonicalize_path
 PathJailException = jail.PathJailException
 
-FIXTURES_DIR = pathlib.Path(__file__).parent.parent.parent / "fixtures"
-DEMO_REPO_DIR = FIXTURES_DIR / "demo_repo"
+FIXTURES_DIR = pathlib.Path(os.environ.get("TRIPLINE_FIXTURES_DIR", pathlib.Path(__file__).parent.parent.parent / "fixtures"))
+DEMO_REPO_DIR = pathlib.Path(os.environ.get("TRIPLINE_DEMO_REPO_DIR", FIXTURES_DIR / "demo_repo"))
 
 def _secure_resolve(path: str) -> pathlib.Path | str:
     # Server-side Tier 1 check
@@ -26,10 +26,6 @@ def _secure_resolve(path: str) -> pathlib.Path | str:
     if run_id:
         t1_hit = check_tier1_access(path, run_id, "read_file")
         if t1_hit:
-            # We just log it or we could block it, but Jail will block it anyway if outside.
-            # "The canary signal should still be recorded even if the jail later rejects the request."
-            # "SECURITY DECISION = jail/ArmorIQ". So we let jail do the rejection, or if jail allows it, we deny it?
-            # "CANARY HIT = YES, SECURITY DECISION = jail/ArmorIQ"
             pass
 
     try:
@@ -67,7 +63,6 @@ def list_dir(path: str = ".") -> str:
     resolved = _secure_resolve(path)
     if isinstance(resolved, str):
         recorder.record_event("", args_hash, "list_dir", "rejected_by_jail")
-        # Return structured error log
         return json.dumps({"tool": "list_dir", "path": path, "decision": "deny", "reason": resolved.replace("error: ", "")})
         
     recorder.record_event("", args_hash, "list_dir", "execution_started")

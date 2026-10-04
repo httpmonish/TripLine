@@ -47,15 +47,18 @@ TOOLS
 ```
 
 ## ArmorIQ vs Tripline
-**ArmorIQ** decides. It provides the authorization, enforcement, plan constraints, policy, and audit capability.
-**Tripline** explains and verifies. It adds forensic provenance, canary/egress evidence, witness reconciliation, and cryptographically verifiable incident receipts. Tripline does not replace ArmorIQ; it provides cryptographic and witness-backed evidence for the outcome.
+- **ArmorIQ** decides at the tool authorization boundary. It verifies agent session state, tool permissions, and maintainer role policies. Because ArmorIQ does not inspect raw filesystem paths or unstructured comment payloads, **ArmorIQ ALLOWS both demo attacks (DP-01 and IE-01) at the tool level** (matched policy `cli-tripline-maintainer-tripline-mcp`).
+- **Tripline** explains and verifies at the system and data boundaries:
+  - **DP-01** is **DENIED by Tripline's kernel-verified Path Jail** (`PATH_OUTSIDE_ROOT`), not by ArmorIQ.
+  - **IE-01** is **HELD by Tripline's Egress Gateway** upon detecting the canary in the comment payload. This is an **independent Tripline egress hold**, not an ArmorIQ delegation.
+  - Tripline adds forensic provenance (C1), canary/egress detection, kernel-verified execution witness reconciliation, and cryptographically verifiable incident receipts.
 
 ## Demo
 The demo showcases two primary attacks:
-1. **Attack A (Direct Path)**: An agent reads a poisoned issue and proposes direct access to a sensitive file (`~/.ssh/id_ed25519`). ArmorIQ policy authorizes `read_file`, but Tripline's kernel-verified Path Jail rejects the path traversal outside the repository root (`PATH_OUTSIDE_ROOT`). A Tier-1 Canary fires. The Witness verifies zero executions.
-2. **Attack B (In-Scope Egress)**: The agent reads an authorized decoy configuration (`read_file("config/legacy_deploy.json")`). ArmorIQ correctly ALLOWS this read, and the decoy canary enters context. The Witness records 1 execution for the decoy read. The agent then proposes a comment containing the canary (`comment_issue`). Tripline detects the canary on egress and HOLDS the comment. The Witness records 0 executions for the held comment.
+1. **Attack A (Direct Path, DP-01)**: An agent reads a poisoned issue and proposes direct access to a fake SSH key fixture (`../../.ssh/fake_key`, a synthetic file with no real credentials). ArmorIQ policy authorizes `read_file` at the tool level (`ALLOW`), but Tripline's kernel-verified Path Jail rejects the path traversal outside the repository root (`PATH_OUTSIDE_ROOT` -> `DENY`). A Tier-1 Canary fires. The Witness verifies 0 executions.
+2. **Attack B (In-Scope Egress, IE-01)**: The agent reads an authorized decoy configuration (`read_file("config/legacy_deploy.json")`). ArmorIQ correctly allows this read (`ALLOW`), and the decoy canary enters context. The Witness records 1 execution for the decoy read. The agent then proposes a comment containing the canary (`comment_issue`). ArmorIQ authorizes the tool (`ALLOW`), but Tripline detects the canary on egress and **HOLDS** the comment. The Witness records 0 executions for the held comment.
 
-Both the "useful agent" and attack demo segments utilize deterministic stubs (M2) using the real ArmorIQ SDK and live local MCP servers to ensure 100% reproducible execution and forensic receipts without live API non-determinism.
+Both the "useful agent" and attack demo segments utilize deterministic stubs (M2) using the real ArmorIQ SDK and live local MCP servers to ensure 100% reproducible execution and forensic receipts without live API non-determinism. No live M1 (real-LLM) runs are used in the demo; the useful-agent beat is scripted.
 
 ## Cryptographic Receipts & Verification
 Every denied or held action generates an `IncidentReceipt` backed by:
@@ -69,6 +72,11 @@ python -m receipts.verify <path_to_receipt.json>
 ```
 Any tampering with evidence fields invalidates the canonical hash and fails verification with `TAMPER_DETECTED`.
 
+## Decision Proofs & Replay Policy
+Every legitimate MCP `tools/call` request requires an `X-Tripline-Decision-Proof` header containing an HMAC over `f"{args_hash}:{decision}:{timestamp}"` signed with the witness secret key.
+- **Replay Policy**: Replay of a decision proof within its **60-second TTL window is allowed by design** to accommodate legitimate agent retry workflows without requiring redundant `session.check()` round-trips.
+- Direct HTTP callers lacking a valid, unexpired decision proof receive HTTP 403 `MISSING_DECISION_PROOF`.
+
 ## Quick Start
 ```bash
 python -m venv .venv
@@ -81,21 +89,22 @@ make demo
 This command prepares the demo environment, starts the backend MCP server, executes live attack scenarios, and launches the web dashboard at `http://localhost:8080`. Demo runs and receipts are written to `results/demo/` in isolation from benchmark data.
 
 ## Benchmark Results
-We evaluated Tripline across a corpus of 24 attacks and 3 benign tasks (27 total), under:
-- **Arm A**: No Defense
-- **Arm B**: ArmorIQ Only
-- **Arm C**: ArmorIQ + Tripline
-
-All reported benchmark evaluation numbers were conducted using **M2 Forced Compliance Stubs** (N=5) to strictly measure security boundary efficacy isolated from prompt-refusal noise or LLM non-determinism. The Dashboard Scoreboard visualizes this benchmark data.
+Benchmark scope matches `benchmark/results/benchmark_runs.csv` and `benchmark_summary.csv`:
+- **86 evaluated runs** across 27 scenarios (24 attack classes + 3 benign tasks).
+- **Arms**: Arm A (No Defense, 29 runs), Arm B (ArmorIQ Only, 29 runs), Arm C (ArmorIQ + Tripline, 28 runs).
+- **Mode**: All runs evaluated under **Mode M2 (Forced-Compliance Deterministic Stubs, N=1 or 2)** to strictly measure security boundary efficacy isolated from prompt-refusal noise or LLM non-determinism.
+- **No live M1 (real-LLM) runs exist** in benchmark totals.
 
 ## Limitations
-See [docs/limitations.md](docs/limitations.md) for an honest breakdown of our security boundary assumptions (TOCTOU residuals, unsigned receipt threats, same-user witness key locality, client-side check limits, and M2 scope).
+See [docs/limitations.md](docs/limitations.md) for an honest breakdown of our security boundary assumptions (TOCTOU residuals, unsigned receipt threats, same-user witness key locality, client-side check limits, 60s replay design, and M2 scope).
 
 ## Tests
-To run the full security verification suite:
+To run the full security verification suite (153 passed as printed by pytest; `tests/test_phase11_benchmark.py` is excluded from `make test` — run it separately with `make bench-test`):
 ```bash
 make test
-make demo-check
+make test-armoriq
 make harden
-make bench-test
+make demo
+make explain
+make verify FILE=results/demo/receipt_DP-01.json
 ```

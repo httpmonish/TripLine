@@ -100,6 +100,15 @@ class IncidentBuilder:
         from receipts.verify import sign_receipt_fields
         c_hash, w_head, sig = sign_receipt_fields(receipt_dict)
 
+        try:
+            from events.logger import emit_event
+            from canary.state import get_current_trace
+            t_id = get_current_trace() or run_id
+            s_num = 7 if ("DP-01" in receipt_id or "LIVE-A" in receipt_id) else 8
+            emit_event(t_id, stage=s_num, stage_name="RECEIPT", event="receipt_signed", receipt_id=receipt_dict["receipt_id"])
+        except Exception:
+            pass
+
         return IncidentReceipt(
             receipt_id=receipt_dict["receipt_id"],
             incident_id=receipt_dict["incident_id"],
@@ -129,13 +138,27 @@ class IncidentBuilder:
             
         count = witness_data.get("count", 0)
         
-        # Valid chain
+        # Build summary from per-tool execution counts if available
+        executions: dict = witness_data.get("executions") or {}
+        if executions:
+            parts = [f"{tool}: {n} executed" for tool, n in sorted(executions.items())]
+            summary = "; ".join(parts)
+            if count == 0:
+                return f"VERIFIED ZERO EXECUTIONS ({summary})"
+            else:
+                return f"VERIFIED PARTIAL EXECUTION ({summary})"
+        
+        # Fallback: use side_effects string if no per-tool dict
+        side_effects = witness_data.get("side_effects", "")
         if count == 0:
             return "VERIFIED ZERO EXECUTIONS"
         elif count > 0:
+            if side_effects:
+                return f"VERIFIED PARTIAL EXECUTION ({side_effects})"
             return "VERIFIED EXECUTED"
             
         return "UNVERIFIED"
+
 
     def _sanitize_args(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Redacts secrets and host paths."""

@@ -31,6 +31,11 @@ This document honestly outlines the boundaries, assumptions, cryptographic model
 - The agent loop calls `session.check(tool_name, tool_args)` via the ArmorIQ SDK before dispatching MCP tools.
 - To prevent direct HTTP bypass of the MCP server, the MCP server binds strictly to `127.0.0.1` and enforces `DecisionProofMiddleware`.
 - Every legitimate MCP `tools/call` request must carry an `X-Tripline-Decision-Proof` header containing an HMAC over `f"{args_hash}:{decision}:{timestamp}"` signed with the witness key (60-second TTL). Direct HTTP requests lacking a valid, unexpired proof are rejected with HTTP 403.
+- **Replay Policy Within TTL**: Replay of a decision proof within its 60-second TTL window is **allowed by design** to support agent retry loops without requiring redundant ArmorIQ round-trips. The middleware enforces timestamp validity and HMAC integrity, but does not maintain an ephemeral nonce cache.
+- **Authorization vs Enforcement Boundaries**:
+  - ArmorIQ checks maintainer role and tool authorization. It does **not** inspect filesystem path arguments or unstructured string payloads (e.g. comment text). Therefore, **ArmorIQ ALLOWS both demo attacks (DP-01 and IE-01) at the tool level**.
+  - **DP-01** is blocked by Tripline's kernel Path Jail (`PATH_OUTSIDE_ROOT`).
+  - **IE-01** is held by Tripline's Egress Gateway upon canary detection. This is an **independent Tripline egress hold, NOT an ArmorIQ delegation**.
 
 **Residual Limitation:**
 - **Boundary Limit:** The Decision-Proof header protects against **external / non-agent callers** on localhost attempting to access the MCP server without going through the gateway.
@@ -46,12 +51,12 @@ This document honestly outlines the boundaries, assumptions, cryptographic model
 
 ## 5. Benchmark Scope: M2 vs M1 Evaluation
 **Implementation:**
-- The primary evaluation (Phase 11 Benchmark, 27 attack scenarios across Arms A, B, and C) was conducted using **M2 (Forced-Compliance Deterministic Stubs)** with N=5 (and N=1 in quick regression suites).
+- The primary evaluation (recorded in `benchmark/results/benchmark_runs.csv` and `benchmark_runs.jsonl`, totaling 86 runs across 27 scenarios) was conducted using **M2 (Forced-Compliance Deterministic Stubs)** with N=1 or 2 per scenario.
 - M2 deterministically proposes the malicious action, allowing us to evaluate the exact security boundaries (ArmorIQ policy vs. Tripline Gateway vs. Jail vs. Witness) without non-deterministic LLM refusal, alignment training variance, or prompt flakiness.
 
 **Residual Limitation:**
-- The benchmark numbers do **not** reflect live, unconstrained M1 (real-LLM) runs. While Tripline includes an `LLMAdapter` for M1 models, live model runs exhibit high variability in attack execution. All reported benchmark numbers represent M2 evaluations.
-- In the demo, the "useful agent" and attack walkthroughs utilize scripted/deterministic stubs to guarantee 100% reproducible forensic receipts.
+- **No M1 (real-LLM) runs exist** in the benchmark or demo datasets. All 86 benchmark records and all demo runs are Mode M2 forced-compliance stubs.
+- In the demo, both the "useful agent" beat and the attack scenarios are scripted to guarantee 100% reproducible forensic receipts.
 
 ---
 

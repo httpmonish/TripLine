@@ -24,11 +24,15 @@ class AgentLoop:
         self.mcp_url = mcp_url
         self.max_steps = 10
 
-    async def run_task(self, task: str, issue_id: str) -> Dict[str, Any]:
+    async def run_task(self, task: str, issue_id: str, trace_id: str | None = None) -> Dict[str, Any]:
         llm = LLMAdapter(mode="cached")
         armoriq_client = build_client(skip_validate=True)
         session = armoriq_client.start_session(SessionOptions(mode="sdk", default_mcp_name="tripline-mcp"))
         run_id = str(uuid.uuid4())
+        from canary.state import get_current_trace, set_current_trace, set_current_run
+        trace_id = trace_id or get_current_trace() or f"TRPL-TRACE-{uuid.uuid4().hex[:8]}"
+        set_current_run(run_id)
+        set_current_trace(trace_id)
         
         lock = ReplanLock()
         planner = Planner()
@@ -91,6 +95,8 @@ class AgentLoop:
                         h = witness_mod.compute_args_hash("tripline-mcp", tool, args)
                         p = proof_mod.compute_decision_proof(h, "ALLOW", w_key, time.time())
                         req.headers["x-tripline-decision-proof"] = p
+                        if trace_id:
+                            req.headers["x-tripline-trace-id"] = trace_id
                 except Exception:
                     pass
 
@@ -149,6 +155,20 @@ class AgentLoop:
                             step_record["error"] = "Gateway Denied: egress_canary_hit"
                             step_record["allowed"] = False
                             run_artifact["status"] = "failed_auth"
+                            
+                            # Record witness event for the held egress action
+                            call_id = f"call-{uuid.uuid4().hex[:8]}"
+                            step_record["call_id"] = call_id
+                            args_h = witness_mod.compute_args_hash("tripline-mcp", tool_name, tool_args)
+                            w_rec = witness_mod.WitnessRecorder("tripline-mcp")
+                            w_rec.record_event(
+                                call_id=call_id,
+                                args_hash=args_h,
+                                tool=tool_name,
+                                state="held_by_gateway",
+                                side_effect="none",
+                                trace_id=trace_id
+                            )
                             break
 
                     # 1B. Taint Check (Early Gateway Hold)

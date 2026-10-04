@@ -67,7 +67,8 @@ class WitnessRecorder:
                      tool: str,
                      state: str,
                      side_effect: Any = "none",
-                     result_hash: Optional[str] = None):
+                     result_hash: Optional[str] = None,
+                     trace_id: Optional[str] = None):
         last = self.get_last_record()
         
         seq = 1
@@ -89,6 +90,8 @@ class WitnessRecorder:
             "ts_monotonic": time.monotonic(),
             "ts_wall": time.time()
         }
+        if trace_id:
+            record["trace_id"] = trace_id
         
         # Append-only write
         with open(self.logfile, "a", encoding="utf-8") as f:

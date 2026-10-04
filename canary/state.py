@@ -26,6 +26,7 @@ def get_active_canaries(run_id: str) -> List[CanaryRecord]:
 def set_current_run(run_id: str):
     """Sets the globally active run id for the MCP server context in demo mode."""
     p = CANARY_DB.parent / "current_run.txt"
+    p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(run_id)
 
 def get_current_run() -> str:
@@ -33,3 +34,28 @@ def get_current_run() -> str:
     if p.exists():
         return p.read_text().strip()
     return ""
+
+def set_current_trace(trace_id: str):
+    """Sets the active trace id for MCP and witness correlation."""
+    p = CANARY_DB.parent / "current_trace.txt"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(trace_id)
+
+def get_current_trace() -> str:
+    p = CANARY_DB.parent / "current_trace.txt"
+    if p.exists():
+        return p.read_text().strip()
+    return ""
+
+def set_current_call(call_id: str):
+    """Sets the active call id for MCP tool invocation."""
+    p = CANARY_DB.parent / "current_call.txt"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(call_id)
+
+def get_current_call() -> str:
+    p = CANARY_DB.parent / "current_call.txt"
+    if p.exists():
+        return p.read_text().strip()
+    return ""
+

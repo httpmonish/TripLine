@@ -23,31 +23,7 @@ _secure_resolve = repo_tool._secure_resolve
 DEMO_REPO_DIR = repo_tool.DEMO_REPO_DIR
 import fixtures.reset_demo_repo as reset_repo
 
-API_KEY = os.environ.get("ARMORIQ_API_KEY", "")
-HAS_KEY = bool(API_KEY)
-if not HAS_KEY:
-    try:
-        _cred_file = pathlib.Path.home() / ".armoriq" / "credentials.json"
-        if _cred_file.exists():
-            _data = json.loads(_cred_file.read_text())
-            _k = _data.get("apiKey", "")
-            if isinstance(_k, str) and _k.startswith("ak_"):
-                HAS_KEY = True
-    except Exception:
-        pass
-
-needs_key = pytest.mark.skipif(not HAS_KEY, reason="ARMORIQ_API_KEY not set")
-
-def _mcp_server_reachable() -> bool:
-    import socket
-    try:
-        s = socket.create_connection(("127.0.0.1", 8000), timeout=1.0)
-        s.close()
-        return True
-    except OSError:
-        return False
-
-needs_mcp = pytest.mark.skipif(not _mcp_server_reachable(), reason="MCP server not running")
+from tests.helpers import needs_key, needs_mcp, authenticated_mcp_client
 
 @pytest.fixture(autouse=True)
 def reset_fixtures():
@@ -61,6 +37,9 @@ def reset_fixtures():
     if link.exists() or link.is_symlink():
         link.unlink()
     os.symlink("../../outside.txt", str(link))
+    yield
+    if link.exists() or link.is_symlink():
+        link.unlink()
 
 def _check_jail(path: str) -> str:
     res = _secure_resolve(path)
@@ -130,6 +109,7 @@ def test_tool_budget():
     assert budget.check_and_increment()["decision"] == "deny"
 
 # ATTACK A
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_attack_a():
@@ -146,7 +126,7 @@ def test_attack_a():
         # BUT the test requires the server-side jail to be authoritative.
         # Let's ensure the MCP server itself rejects it by calling it directly.
         
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             res = await mcp.call_tool("read_file", {"path": "~/.ssh/fake_key"})
             out = res.content[0].text
             parsed = json.loads(out)

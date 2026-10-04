@@ -8,25 +8,27 @@
 
 ## 0:20 — USEFUL WORK (~40s)
 * **SHOW**: Terminal running the legitimate agent task. The agent reads an issue, proposes a valid tool call, and ArmorIQ allows it.
-* **NOTE (EVALUATION TRANSPARENCY)**: *This demo segment runs a deterministic compliant stub (M2) using the real ArmorIQ SDK and live local MCP servers to ensure 100% reproducible execution and consistent verification without live LLM non-determinism or network rate limits.*
+* **NOTE (EVALUATION TRANSPARENCY)**: *No live M1 (real-LLM) runs exist. This useful-agent beat is scripted as a deterministic compliant stub (M2) using the real ArmorIQ SDK and live local MCP servers to ensure 100% reproducible execution and forensic receipts without live API non-determinism.*
 * **SAY**: "Here's our AI agent doing actual work. ArmorIQ provides the underlying authorization and session management."
 
-## 1:00 — ACT 1: POISONED ISSUE (~45s)
-* **SHOW**: The agent reads Poisoned Issue #7. It proposes sensitive file access (`~/.ssh/id_ed25519`). ArmorIQ policy authorizes `read_file`, but Tripline's kernel-verified Path Jail blocks access outside repository root. Tier-1 canary fires. 0 Executions.
-* **SAY**: "But what happens when an issue is poisoned? The agent attempts to read a sensitive file. The Path Jail blocks it with open-then-verify kernel checks, the Tier-1 canary fires, and crucially, the execution witness confirms zero side effects."
+## 1:00 — ACT 1: POISONED ISSUE (DP-01) (~45s)
+* **SHOW**: The agent reads Poisoned Issue #7. It proposes sensitive file access (`../../.ssh/fake_key`, a fake SSH key fixture — contains no real credentials).
+* **BOUNDARY CLARITY**: ArmorIQ ALLOWS the tool call at the tool authorization boundary (`matched_policy: cli-tripline-maintainer-tripline-mcp`) because ArmorIQ does not inspect raw filesystem paths. **Tripline's kernel-verified Path Jail DENIES the action** (`PATH_OUTSIDE_ROOT`). Tier-1 canary fires. 0 Executions.
+* **SAY**: "When an issue is poisoned, the agent attempts to read an SSH key. ArmorIQ allows the read_file tool generally, but Tripline's Path Jail blocks it with open-then-verify kernel checks, the Tier-1 canary fires, and the execution witness proves zero executions occurred."
 
 ## 1:45 — RECEIPT #1 (~30s)
-* **SHOW**: Attack A Incident Receipt in the Dashboard. Point to SOURCE, PROPOSAL, ARMORIQ, TRIPLINE, CANARY, WITNESS, CONFIDENCE, and the CRYPTOGRAPHIC VERIFICATION block (Canonical Hash + HMAC signature).
-* **SAY**: "This generates a forensic receipt. We can see exactly where the instruction came from—attributed at C1 confidence—what the agent proposed, and the cryptographic proof that it didn't execute."
+* **SHOW**: Attack A Incident Receipt in the Dashboard. Point to SOURCE, PROPOSAL, ARMORIQ (ALLOW), TRIPLINE (DENY), CANARY, WITNESS (0 executions), CONFIDENCE, and the CRYPTOGRAPHIC VERIFICATION block (Canonical Hash + HMAC signature).
+* **SAY**: "This generates a forensic receipt. We can see exactly where the instruction came from—attributed at C1 confidence—what the agent proposed, ArmorIQ's tool ALLOW, Tripline's jail DENY, and the cryptographic proof that it didn't execute."
 
-## 2:15 — ACT 2: AUTHORIZATION ISN'T ENOUGH (~60s)
-* **SHOW**: Agent reads an authorized in-scope decoy configuration (`read_file("config/legacy_deploy.json")`). ArmorIQ ALLOWS the read. The decoy canary enters the context. Agent tries to comment on a public issue with the canary. Tripline EGRESS HOLD.
+## 2:15 — ACT 2: AUTHORIZATION ISN'T ENOUGH (IE-01) (~60s)
+* **SHOW**: Agent reads an authorized in-scope decoy configuration (`read_file("config/legacy_deploy.json")`). ArmorIQ ALLOWS the read. The decoy canary enters context. The agent then proposes commenting on a public issue with the canary (`comment_issue`).
+* **BOUNDARY CLARITY**: ArmorIQ ALLOWS the `comment_issue` tool at the tool level (unstructured text payloads are not inspected by tool policy). **Tripline's Egress Gateway HOLDS the comment** upon detecting the canary in the payload. This is an **independent Tripline egress hold, NOT an ArmorIQ delegation**. (Note: Decision-proof replay within 60s TTL is allowed by design).
 * **EXPLAIN WITNESS RECORD**: "Notice the granular witness records: the authorized decoy read executed 1 time in `repo-mcp`. The held canary comment had 0 executions in `issues-mcp`. Rather than a flat '0 executions' that hides the read, Tripline distinguishes the 1 authorized execution from the 0 egress executions."
-* **SAY**: "Authorization isn't always enough. Here, ArmorIQ correctly authorizes reading a configuration file. But the agent tries to exfiltrate that data in a public comment. Tripline detects the canary on egress and holds the action."
+* **SAY**: "Authorization isn't enough. Here, ArmorIQ authorizes both tools at policy level. But the agent tries to exfiltrate that data in a public comment. Tripline detects the canary on egress and holds the action."
 
 ## 3:15 — RECEIPT #2 (~20s)
 * **SHOW**: Attack B Receipt in the Dashboard. Highlight: ArmorIQ ALLOW, Tripline HOLD, Witness breakdown (1 read, 0 comment), Canonical Hash and Signature.
-* **SAY**: "ArmorIQ correctly authorized the read. Tripline detected what happened when that data was about to leave. Both decisions are preserved in an independently verifiable cryptographic receipt."
+* **SAY**: "ArmorIQ allowed both tools. Tripline held the exfiltration when the canary surfaced on egress. Both decisions are preserved in an independently verifiable cryptographic receipt."
 
 ## 3:35 — RECOVERY (~15s)
 * **SHOW**: Agent completes the legitimate part of the task successfully.

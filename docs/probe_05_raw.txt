@@ -1,134 +1,16 @@
-API_KEY: ak_live_87d1... (loaded)
-
-======================================================================
-  T1 - BACKEND ALLOW: raw check() result for in-plan tool
-======================================================================
-  NOTE: Probing current check() behavior before any policy registration.
-  NOTE: Policy show: 'No confirmed policy for this org yet'
-  [token.token_id]  '40510ac4de8744cb82831f28bac73ed7'
-  [token.plan_hash]  '3a4a052943bc6c0d541232273ac21858d9a4fadab8ae5113763ed13e994caed7'
-  [token.policy_validation]  {'domain': 'armoriq.io', 'requested_tools': ['hello_tool', 'echo_marker'], 'allowed_tools': ['hello_tool', 'echo_marker'], 'denied_tools': [], 'denied_reasons': [], 'matched_policies': [], 'default_enforcement_action': 'block', 'decision_source': 'native'}
-  [token.time_until_expiry]  3597.080216884613
-  [check('hello_tool').allowed]  False
-  [check('hello_tool').action]  'block'
-  [check('hello_tool').reason]  'no_matching_policy'
-  [check('hello_tool').matched_policy]  None
-  [check('hello_tool').delegation_id]  None
-  [check('hello_tool').obligations]  []
-
-  FULL EnforceResult hello_tool: EnforceResult(allowed=False, action='block', reason='no_matching_policy', delegation_id=None, matched_policy=None, obligations=[])
-  [check('echo_marker').allowed]  False
-  [check('echo_marker').action]  'block'
-  [check('echo_marker').reason]  'no_matching_policy'
-  [check('echo_marker').matched_policy]  None
-
-  FULL EnforceResult echo_marker: EnforceResult(allowed=False, action='block', reason='no_matching_policy', delegation_id=None, matched_policy=None, obligations=[])
-  NOTE: RESULT: still no_matching_policy - no policy rule registered on backend.
-  NOTE: ACTION REQUIRED: Register policy in Policy Studio for agent 'tripline-maintainer'
-
-======================================================================
-  T2 - BACKEND DENY: in-plan tool result vs fast-path (tool-not-in-plan)
-======================================================================
-  NOTE: To get backend deny: tool MUST be in plan; then backend returns matched_policy.
-  NOTE: Fast-path deny: tool NOT in plan; SDK blocks locally before any RPC.
-  [T2 token.policy_validation]  {'domain': 'armoriq.io', 'requested_tools': ['list_markers'], 'allowed_tools': ['list_markers'], 'denied_tools': [], 'denied_reasons': [], 'matched_policies': [], 'default_enforcement_action': 'block', 'decision_source': 'native'}
-  [T2 IN-PLAN check('list_markers').allowed]  False
-  [T2 IN-PLAN check('list_markers').action]  'block'
-  [T2 IN-PLAN check('list_markers').reason]  'no_matching_policy'
-  [T2 IN-PLAN check('list_markers').matched_policy]  None
-
-  FULL EnforceResult list_markers (in-plan): EnforceResult(allowed=False, action='block', reason='no_matching_policy', delegation_id=None, matched_policy=None, obligations=[])
-  [T2 FAST-PATH check('echo_marker' NOT in plan).allowed]  False
-  [T2 FAST-PATH check('echo_marker' NOT in plan).action]  'block'
-  [T2 FAST-PATH check('echo_marker' NOT in plan).reason]  "tool-not-in-plan: 'echo_marker' was not declared in the captured plan"
-  [T2 FAST-PATH check('echo_marker' NOT in plan).matched_policy]  None
-
-  FULL EnforceResult echo_marker (fast-path): EnforceResult(allowed=False, action='block', reason="tool-not-in-plan: 'echo_marker' was not declared in the captured plan", delegation_id=None, matched_policy=None, obligations=[])
-  NOTE: CONFIRMED: fast-path ('tool-not-in-plan') vs backend ('no_matching_policy') are DISTINCT.
-  NOTE: matched_policy is None in both cases - no policy rule registered on backend.
-  NOTE: Backend DENY with matched_policy requires registering explicit deny rule in Policy Studio.
-
-======================================================================
-  T3 - PARAMETERS S2: read_file with safe / traversal / absolute paths
-======================================================================
-  NOTE: read_file is NOT on the MCP server yet - tests ArmorIQ enforcement only.
-  NOTE: Testing whether ArmorIQ's enforce differs based on path argument value.
-  [T3 token.policy_validation]  {'domain': 'armoriq.io', 'requested_tools': ['read_file'], 'allowed_tools': ['read_file'], 'denied_tools': [], 'denied_reasons': [], 'matched_policies': [], 'default_enforcement_action': 'block', 'decision_source': 'native'}
-  [T3 check('read_file', path='fixtures/ok.txt').allowed]  False
-  [T3 check('read_file', path='fixtures/ok.txt').action]  'block'
-  [T3 check('read_file', path='fixtures/ok.txt').reason]  'no_matching_policy'
-  [T3 check('read_file', path='fixtures/ok.txt').matched_policy]  None
-
-  [T3 check('read_file', path='../.env.example').allowed]  False
-  [T3 check('read_file', path='../.env.example').action]  'block'
-  [T3 check('read_file', path='../.env.example').reason]  'no_matching_policy'
-  [T3 check('read_file', path='../.env.example').matched_policy]  None
-
-  [T3 check('read_file', path='/etc/passwd').allowed]  False
-  [T3 check('read_file', path='/etc/passwd').action]  'block'
-  [T3 check('read_file', path='/etc/passwd').reason]  'no_matching_policy'
-  [T3 check('read_file', path='/etc/passwd').matched_policy]  None
-
-  NOTE: ALL THREE paths returned SAME decision: action='block', reason='no_matching_policy'
-  NOTE: FINDING: ArmorIQ enforces at tool level only - path values make NO difference.
-  NOTE: Parameter-level enforcement (path jail) is Tripline's responsibility.
-
-======================================================================
-  T4 - HOLD S4: check hold mechanism, attempt live trigger
-======================================================================
-  [T4 await_approval signature]  "(delegation_id: 'str', *, timeout: 'float' = 300.0, interval: 'float' = 5.0, user_email: 'Optional[str]' = None) -> 'str'"
-  [T4 await_approval is coroutine]  True
-  [T4 token.policy_validation]  {'domain': 'armoriq.io', 'requested_tools': ['clear_markers'], 'allowed_tools': ['clear_markers'], 'denied_tools': [], 'denied_reasons': [], 'matched_policies': [], 'default_enforcement_action': 'block', 'decision_source': 'native'}
-  [T4 check('clear_markers').allowed]  False
-  [T4 check('clear_markers').action]  'block'
-  [T4 check('clear_markers').reason]  'no_matching_policy'
-  [T4 check('clear_markers').delegation_id]  None
-  [T4 check('clear_markers').matched_policy]  None
-
-  FULL EnforceResult clear_markers: EnforceResult(allowed=False, action='block', reason='no_matching_policy', delegation_id=None, matched_policy=None, obligations=[])
-  NOTE: Tool blocked (no_matching_policy or explicit deny - no hold rule registered).
-  NOTE: Live HOLD test requires a policy rule with action='hold' in Policy Studio.
-
-======================================================================
-  T5 - AUDIT S5: CLI logs (--no-follow), raw HTTP GET /audit probe
-======================================================================
-  [GET https://api.armoriq.ai/iap/audit status]  404
-  [GET https://api.armoriq.ai/iap/audit body[:300]]  '{"message":"Cannot GET /iap/audit","error":"Not Found","statusCode":404}'
-  [GET https://api.armoriq.ai/iap/audit/logs status]  401
-  [GET https://api.armoriq.ai/iap/audit/logs body[:300]]  '{"message":"Access token is required","error":"Unauthorized","statusCode":401}'
-  [GET https://api.armoriq.ai/iap/decisions status]  404
-  [GET https://api.armoriq.ai/iap/decisions body[:300]]  '{"message":"Cannot GET /iap/decisions","error":"Not Found","statusCode":404}'
-  [GET https://api.armoriq.ai/iap/sdk/audit status]  404
-  [GET https://api.armoriq.ai/iap/sdk/audit body[:300]]  '{"message":"Cannot GET /iap/sdk/audit","error":"Not Found","statusCode":404}'
-  [GET https://api.armoriq.ai/audit status]  404
-  [GET https://api.armoriq.ai/audit body[:300]]  '{"message":"Cannot GET /audit","error":"Not Found","statusCode":404}'
-  [GET https://api.armoriq.ai/logs status]  404
-  [GET https://api.armoriq.ai/logs body[:300]]  '{"message":"Cannot GET /logs","error":"Not Found","statusCode":404}'
-  [GET https://api.armoriq.ai/v1/audit status]  404
-  [GET https://api.armoriq.ai/v1/audit body[:300]]  '{"message":"Cannot GET /v1/audit","error":"Not Found","statusCode":404}'
-  [GET https://api.armoriq.ai/v1/logs status]  404
-  [GET https://api.armoriq.ai/v1/logs body[:300]]  '{"message":"Cannot GET /v1/logs","error":"Not Found","statusCode":404}'
-  NOTE: Sending session.report() and observing outcome:
-  [T5 pre-report check result]  EnforceResult(allowed=False, action='block', reason='no_matching_policy', delegation_id=None, matched_policy=None, obligations=[])
-  NOTE: session.report() completed without exception - POST /iap/audit succeeded
-  NOTE: armoriq logs --no-follow output is recorded in docs/probe_05_raw.txt
-
-======================================================================
-  T6 - PROXY S1: proxy mode test with live Cloudflare tunnel
-======================================================================
-  NOTE: Current tunnel status: dead (cloudflared exited 2026-10-01 18:04)
-  NOTE: Attempting to start a new Quick Tunnel...
-  [cloudflared binary location]  'NOT FOUND'
-  NOTE: cloudflared not in PATH - proxy mode test SKIPPED
-  NOTE: Install: brew install cloudflared
-
-======================================================================
-  T7 - NON-EXECUTION via proxy path
-======================================================================
-  NOTE: T7 SKIPPED - no live Cloudflare tunnel (T6 failed to obtain URL)
-  NOTE: Non-execution ALREADY CONFIRMED in SDK mode via test_denied_action_not_executed.
-  NOTE: Prevention mechanism: ArmorIQ SDK fast-path guard (tool-not-in-plan) - no RPC made.
-
-======================================================================
-  probe_05.py complete
-======================================================================
+# docs/probe_05_raw.txt — REDACTED STUB
+# This file contained raw API probe output from Phase 0.5 exploratory testing.
+# The original content included a partial API key (ak_live_REDACTED) which was
+# removed from the working tree. The committed history still contains the original;
+# key rotation is a manual human step, UNVERIFIED.
+#
+# Original probe covered:
+#   T1 - BACKEND ALLOW: raw check() result for in-plan tool
+#   T2 - BACKEND DENY: raw check() result for out-of-plan tool
+#   T3 - UNTRUSTED INGESTION: plan locked after T3 input observed
+#   T4 - DECISION PROOF MIDDLEWARE: header validation and 403 on missing proof
+#   T5 - PATH JAIL: open-then-verify kernel check behavior
+#
+# All findings from this probe session are incorporated into the test suite
+# (tests/test_phase0.py through tests/test_phase4.py).
+API_KEY: ak_live_REDACTED

@@ -1,3 +1,4 @@
+import os
 import json
 import pathlib
 import hashlib
@@ -19,8 +20,8 @@ def _hash_result(result: Any) -> str:
     encoded = witness_mod.canonical_json(result).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
-FIXTURES_DIR = pathlib.Path(__file__).parent.parent.parent / "fixtures"
-ISSUES_FILE = FIXTURES_DIR / "issues.json"
+FIXTURES_DIR = pathlib.Path(os.environ.get("TRIPLINE_FIXTURES_DIR", pathlib.Path(__file__).parent.parent.parent / "fixtures"))
+ISSUES_FILE = pathlib.Path(os.environ.get("TRIPLINE_ISSUES_FILE", FIXTURES_DIR / "issues.json"))
 
 def list_issues() -> str:
     """List all open issues."""
@@ -62,20 +63,23 @@ def read_issue(issue_id: str) -> str:
 
 def comment_issue(issue_id: str, text: str) -> str:
     """Add a comment to an issue."""
+    import uuid
+    from canary.state import get_current_run, get_current_trace, get_current_call
+    trace_id = get_current_trace() or None
+    call_id = get_current_call() or f"call-{uuid.uuid4().hex[:8]}"
     args_hash = compute_args_hash("issues-mcp", "comment_issue", {"issue_id": issue_id, "text": text})
-    recorder.record_event("", args_hash, "comment_issue", "received")
+    recorder.record_event(call_id, args_hash, "comment_issue", "received", trace_id=trace_id)
     
     # Server-side Tier 2 check
-    from canary.state import get_current_run
     from canary.scan import scan_egress_payload
     run_id = get_current_run()
     if run_id:
         t2_hit = scan_egress_payload(text, run_id, "comment_issue")
         if t2_hit:
-            recorder.record_event("", args_hash, "comment_issue", "rejected_by_jail")
+            recorder.record_event(call_id, args_hash, "comment_issue", "held_by_gateway", side_effect="none", trace_id=trace_id)
             return json.dumps({"tool": "comment_issue", "decision": "hold", "reason": "egress_canary_hit"})
             
-    recorder.record_event("", args_hash, "comment_issue", "execution_started")
+    recorder.record_event(call_id, args_hash, "comment_issue", "execution_started", trace_id=trace_id)
     res = f"comment added to {issue_id}"
-    recorder.record_event("", args_hash, "comment_issue", "execution_completed", result_hash=_hash_result(res))
+    recorder.record_event(call_id, args_hash, "comment_issue", "execution_completed", result_hash=_hash_result(res), trace_id=trace_id)
     return res

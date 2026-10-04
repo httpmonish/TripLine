@@ -6,34 +6,7 @@ from mcp import Client
 
 from agent.loop import AgentLoop
 import fixtures.reset_demo_repo as reset_repo
-
-API_KEY = os.environ.get("ARMORIQ_API_KEY", "")
-HAS_KEY = bool(API_KEY)
-if not HAS_KEY:
-    try:
-        import pathlib
-        _cred_file = pathlib.Path.home() / ".armoriq" / "credentials.json"
-        if _cred_file.exists():
-            import json
-            _data = json.loads(_cred_file.read_text())
-            _k = _data.get("apiKey", "")
-            if isinstance(_k, str) and _k.startswith("ak_"):
-                HAS_KEY = True
-    except Exception:
-        pass
-
-needs_key = pytest.mark.skipif(not HAS_KEY, reason="ARMORIQ_API_KEY not set")
-
-def _mcp_server_reachable() -> bool:
-    import socket
-    try:
-        s = socket.create_connection(("127.0.0.1", 8000), timeout=1.0)
-        s.close()
-        return True
-    except OSError:
-        return False
-
-needs_mcp = pytest.mark.skipif(not _mcp_server_reachable(), reason="MCP server not running")
+from tests.helpers import needs_key, needs_mcp, authenticated_mcp_client
 
 
 @pytest.fixture(autouse=True)
@@ -44,7 +17,7 @@ def reset_fixtures():
 @needs_mcp
 def test_sandbox_security():
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             # Valid test selector
             res = await mcp.call_tool("run_tests", {"test_selector": "test_issue_1"})
             out = res.content[0].text
@@ -64,7 +37,7 @@ def test_sandbox_security():
 @needs_mcp
 def test_mcp_schemas():
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             result = await mcp.list_tools()
             names = [t.name for t in result.tools]
             
@@ -76,11 +49,12 @@ def test_mcp_schemas():
     asyncio.run(_run())
 
 
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_agent_fixes_issue_3():
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             # 1. Confirm seeded issue fails
             res = await mcp.call_tool("run_tests", {"test_selector": "test_issue_3"})
             initial_test = res.content[0].text
@@ -102,11 +76,13 @@ def test_agent_fixes_issue_3():
             assert "passed" in final_test.lower()
     asyncio.run(_run())
 
+
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_benign_suite():
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             loop = AgentLoop()
             
             # Test issue 1

@@ -9,12 +9,6 @@ Tests:
   5. Multiple allowed calls (call allowed tool twice, counter=2)
   6. Server-side non-execution proof (execution counter strictly isolated)
   7. Invalid session/authorization state (invalid token/plan)
-
-Run:
-    source .venv313/bin/activate
-    export ARMORIQ_API_KEY=ak_...
-    # Terminal 1: python server.py
-    # Terminal 2: python -m pytest tests/test_phase1.py -v
 """
 
 import asyncio
@@ -27,33 +21,7 @@ from mcp import Client
 # Helpers and fixtures
 from armoriq_helper import build_client
 from armoriq_sdk import SessionOptions, ToolCall, EnforceResult
-
-API_KEY = os.environ.get("ARMORIQ_API_KEY", "")
-HAS_KEY = bool(API_KEY)
-if not HAS_KEY:
-    try:
-        import pathlib
-        _cred_file = pathlib.Path.home() / ".armoriq" / "credentials.json"
-        if _cred_file.exists():
-            _data = json.loads(_cred_file.read_text())
-            _k = _data.get("apiKey", "")
-            if isinstance(_k, str) and _k.startswith("ak_"):
-                HAS_KEY = True
-    except Exception:
-        pass
-
-needs_key = pytest.mark.skipif(not HAS_KEY, reason="ARMORIQ_API_KEY not set")
-
-def _mcp_server_reachable() -> bool:
-    import socket
-    try:
-        s = socket.create_connection(("127.0.0.1", 8000), timeout=1.0)
-        s.close()
-        return True
-    except OSError:
-        return False
-
-needs_mcp = pytest.mark.skipif(not _mcp_server_reachable(), reason="MCP server not running")
+from tests.helpers import needs_key, needs_mcp, authenticated_mcp_client
 
 
 async def get_counters(mcp: Client) -> dict[str, int]:
@@ -71,7 +39,7 @@ async def reset_counters(mcp: Client):
 @needs_mcp
 def test_mcp_connectivity():
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             result = await mcp.list_tools()
             names = [t.name for t in result.tools]
             
@@ -87,6 +55,7 @@ def test_mcp_connectivity():
 # ─────────────────────────────────────────────────────────────────────────────
 # TEST 2 — Authorized in-plan action
 # ─────────────────────────────────────────────────────────────────────────────
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_authorized_in_plan_action():
@@ -103,7 +72,7 @@ def test_authorized_in_plan_action():
 
     # Execute
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             await reset_counters(mcp)
             res = await mcp.call_tool("hello_tool", {})
             counters = await get_counters(mcp)
@@ -113,12 +82,14 @@ def test_authorized_in_plan_action():
     assert "Hello from Tripline MCP!" in result_text
     assert counters["hello_tool"] == 1, f"Expected 1 execution, got {counters['hello_tool']}"
 
+    session.close()
     client.close()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEST 3 — Out-of-plan action
 # ─────────────────────────────────────────────────────────────────────────────
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_out_of_plan_action():
@@ -134,7 +105,7 @@ def test_out_of_plan_action():
 
     # Verify MCP non-execution
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             await reset_counters(mcp)
             # We DO NOT execute since decision.allowed is False, but we verify counter is 0
             counters = await get_counters(mcp)
@@ -143,12 +114,14 @@ def test_out_of_plan_action():
     counters = asyncio.run(_run())
     assert counters["perform_test_action"] == 0
 
+    session.close()
     client.close()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEST 4 — Expired authorization
 # ─────────────────────────────────────────────────────────────────────────────
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_expired_authorization():
@@ -171,7 +144,7 @@ def test_expired_authorization():
     assert "expired" in (decision.reason or "").lower() or decision.action == "block"
 
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             await reset_counters(mcp)
             counters = await get_counters(mcp)
             return counters
@@ -179,12 +152,14 @@ def test_expired_authorization():
     counters = asyncio.run(_run())
     assert counters["hello_tool"] == 0
 
+    session.close()
     client.close()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEST 5 — Multiple allowed calls
 # ─────────────────────────────────────────────────────────────────────────────
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_multiple_allowed_calls():
@@ -197,7 +172,7 @@ def test_multiple_allowed_calls():
     assert decision.allowed or "hello_tool" in pv.get("allowed_tools", [])
 
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             await reset_counters(mcp)
             await mcp.call_tool("hello_tool", {})
             await mcp.call_tool("hello_tool", {})
@@ -207,12 +182,14 @@ def test_multiple_allowed_calls():
     counters = asyncio.run(_run())
     assert counters["hello_tool"] == 2
 
+    session.close()
     client.close()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEST 6 — Server-side non-execution proof
 # ─────────────────────────────────────────────────────────────────────────────
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_server_side_non_execution_proof():
@@ -221,7 +198,7 @@ def test_server_side_non_execution_proof():
     token = session.start_plan([ToolCall(name="hello_tool", args={})])
 
     async def _run():
-        async with Client("http://127.0.0.1:8000/mcp") as mcp:
+        async with authenticated_mcp_client() as mcp:
             await reset_counters(mcp)
             
             # CASE A: Allowed action
@@ -244,12 +221,14 @@ def test_server_side_non_execution_proof():
     assert counters["hello_tool"] == 1
     assert counters["perform_test_action"] == 0
 
+    session.close()
     client.close()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEST 7 — Invalid session/authorization state
 # ─────────────────────────────────────────────────────────────────────────────
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_invalid_session_state():
@@ -265,4 +244,5 @@ def test_invalid_session_state():
         # Expected to fail
         assert True
         
+    session.close()
     client.close()

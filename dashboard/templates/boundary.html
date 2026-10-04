@@ -32,6 +32,15 @@
             </marker>
         </defs>
     </svg>
+    <div style="max-width: 600px; margin: 15px auto; text-align: left; background: #f8f9fa; border: 1px solid #ddd; padding: 12px; font-size: 13px; border-radius: 4px;">
+        <strong>Boundary Responsibilities:</strong>
+        <ul style="margin: 5px 0 0 20px; padding: 0;">
+            <li><strong>ArmorIQ:</strong> Tool & role authorization. Path and payload not inspected; ArmorIQ returns <code>ALLOW</code> for both DP-01 and IE-01.</li>
+            <li><strong>Tripline Path Jail:</strong> Blocks file path traversal outside repository root (denies DP-01 with <code>PATH_OUTSIDE_ROOT</code>).</li>
+            <li><strong>Tripline Egress Gateway:</strong> Scans egress payloads for canaries (holds IE-01; independent Tripline hold, not an ArmorIQ delegation).</li>
+            <li><strong>Decision Proofs:</strong> Replay within 60s TTL is allowed by design to support agent retries.</li>
+        </ul>
+    </div>
 </div>
 
 <table>

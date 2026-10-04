@@ -16,18 +16,31 @@ def canonicalize_path(raw_path: str, trusted_root: pathlib.Path) -> pathlib.Path
     3. resolve path / canonicalize (symlinks)
     4. boundary check against trusted_root
     """
-    # 1. Percent encoding defense
-    try:
-        decoded_path = urllib.parse.unquote(raw_path, errors="strict")
-    except UnicodeDecodeError:
-        raise PathJailException("INVALID_ENCODED_PATH")
-        
-    # Extra check for percent encoding bypasses
-    if "%" in decoded_path: # Prevent double-encoding bypasses
+    if "\x00" in raw_path:
+        raise PathJailException("NULL_BYTE_IN_PATH")
+
+    # 1. Percent encoding defense (decode to fixpoint)
+    cur = raw_path
+    for _ in range(10):
+        try:
+            nxt = urllib.parse.unquote(cur, errors="strict")
+        except UnicodeDecodeError:
+            raise PathJailException("INVALID_ENCODED_PATH")
+        if nxt == cur:
+            break
+        cur = nxt
+    else:
         raise PathJailException("INVALID_ENCODED_PATH")
 
+    if "%" in cur:  # Unconsumed or malformed percent sequences
+        raise PathJailException("INVALID_ENCODED_PATH")
+    if "\x00" in cur:
+        raise PathJailException("NULL_BYTE_IN_PATH")
+
     import unicodedata
-    normalized_path = unicodedata.normalize("NFKC", decoded_path)
+    normalized_path = unicodedata.normalize("NFKC", cur)
+    if "\x00" in normalized_path:
+        raise PathJailException("NULL_BYTE_IN_PATH")
 
     path_obj = pathlib.Path(normalized_path)
     

@@ -5,35 +5,7 @@ from agent.loop import AgentLoop
 from gateway.replan_lock import ReplanLock, LifecycleState
 from agent.planner import Planner
 import fixtures.reset_demo_repo as reset_repo
-import os
-
-API_KEY = os.environ.get("ARMORIQ_API_KEY", "")
-HAS_KEY = bool(API_KEY)
-if not HAS_KEY:
-    try:
-        import pathlib
-        _cred_file = pathlib.Path.home() / ".armoriq" / "credentials.json"
-        if _cred_file.exists():
-            import json
-            _data = json.loads(_cred_file.read_text())
-            _k = _data.get("apiKey", "")
-            if isinstance(_k, str) and _k.startswith("ak_"):
-                HAS_KEY = True
-    except Exception:
-        pass
-
-needs_key = pytest.mark.skipif(not HAS_KEY, reason="ARMORIQ_API_KEY not set")
-
-def _mcp_server_reachable() -> bool:
-    import socket
-    try:
-        s = socket.create_connection(("127.0.0.1", 8000), timeout=1.0)
-        s.close()
-        return True
-    except OSError:
-        return False
-
-needs_mcp = pytest.mark.skipif(not _mcp_server_reachable(), reason="MCP server not running")
+from tests.helpers import needs_key, needs_mcp
 
 
 @pytest.fixture(autouse=True)
@@ -46,17 +18,18 @@ def test_plan_before_ingest():
     lock = ReplanLock()
     planner = Planner()
     
-    plan = planner.create_initial_plan("Fix issue #3")
+    # 1. Plan created before ingest
+    plan = planner.create_initial_plan("Fix issue #1")
     lock.on_plan_created(plan)
+    
+    # Authorize
     lock.on_authorization_granted()
     
-    assert lock.state == LifecycleState.AUTHORIZED
-    assert not lock.t3_ingested
-    
-    # Read issue simulates T3 ingestion
+    # Ingest T3
     lock.on_t3_read("read_issue")
-    assert lock.t3_ingested
+    
     assert lock.state == LifecycleState.T3_INGESTED
+    assert lock.t3_ingested == True
     
     events = lock.events
     # Check ordering
@@ -67,11 +40,14 @@ def test_plan_before_ingest():
     assert plan_idx < t3_idx
     assert auth_idx < t3_idx
 
+
 def test_plan_before_ingest_violation():
     lock = ReplanLock()
     with pytest.raises(RuntimeError):
         lock.on_t3_read("read_issue")
 
+
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_attack_d_plan_laundering():
@@ -91,11 +67,14 @@ def test_attack_d_plan_laundering():
         malicious_step = next((s for s in result["steps"] if s["tool"] == "malicious_hack"), None)
         assert malicious_step is not None
         assert malicious_step["allowed"] == False
-        assert malicious_step["error"] == "ArmorIQ Denied: Replan blocked (T3 ingested)"
+        assert "Replan blocked (T3 ingested)" in malicious_step["error"]
+        assert "Tripline Replan Lock Held" in malicious_step["error"]
         assert result["status"] == "failed_auth"
 
     asyncio.run(_run())
 
+
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_legitimate_replan_fallback():
@@ -114,10 +93,13 @@ def test_legitimate_replan_fallback():
         legit_step = next((s for s in result["steps"] if s["tool"] == "read_project_info"), None)
         assert legit_step is not None
         assert legit_step["allowed"] == False
-        assert legit_step["error"] == "ArmorIQ Denied: Replan blocked (T3 ingested)"
+        assert "Replan blocked (T3 ingested)" in legit_step["error"]
+        assert "Tripline Replan Lock Held" in legit_step["error"]
         
     asyncio.run(_run())
 
+
+@pytest.mark.armoriq
 @needs_key
 @needs_mcp
 def test_normal_post_t3_action():

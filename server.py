@@ -211,23 +211,6 @@ def _load_witness():
     spec.loader.exec_module(mod)
     return mod
 
-# Tools that are purely diagnostic / side-effect-free and existed before the
-# proof requirement was introduced.  They are exempt from the Decision-Proof
-# header check — equivalent to a /healthz endpoint.  All impactful tools
-# (read_file, write_patch, comment_issue, run_tests, list_issues, list_dir)
-# still require a valid proof header.
-_DIAGNOSTIC_TOOLS = frozenset({
-    "hello_tool",
-    "echo_marker",
-    "clear_markers",
-    "list_markers",
-    "get_execution_counters",
-    "reset_execution_counters",
-    "read_project_info",
-    "perform_test_action",
-})
-
-
 class DecisionProofMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
@@ -245,13 +228,14 @@ class DecisionProofMiddleware(BaseHTTPMiddleware):
             if isinstance(msg, dict) and msg.get("method") == "tools/call":
                 params = msg.get("params", {})
                 tool_name = params.get("name", "")
-
-                # Diagnostic/smoke-test tools are side-effect free and exempt
-                # from the proof requirement (equivalent to a /healthz bypass).
-                if tool_name in _DIAGNOSTIC_TOOLS:
-                    return await call_next(request)
-
                 proof_header = request.headers.get("x-tripline-decision-proof")
+                trace_id_hdr = request.headers.get("x-tripline-trace-id")
+                if trace_id_hdr:
+                    try:
+                        from canary.state import set_current_trace
+                        set_current_trace(trace_id_hdr)
+                    except Exception:
+                        pass
                 tool_args = params.get("arguments", {})
                 key = self.witness_mod.get_witness_key()
                 
@@ -281,10 +265,18 @@ def create_app():
     return starlette_app
 
 if __name__ == "__main__":
+    import argparse
     import uvicorn
+
+    parser = argparse.ArgumentParser(description="Tripline MCP Server")
+    parser.add_argument("--port", type=int, default=8000, help="Port to listen on (default: 8000)")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="Host to bind to")
+    args = parser.parse_args()
+
     # Create fixtures directory with a sample file so read_file tests work
     _FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
     (_FIXTURES_DIR / "ok.txt").write_text("Tripline fixture file — safe read target.\n")
 
     app = create_app()
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host=args.host, port=args.port)
+

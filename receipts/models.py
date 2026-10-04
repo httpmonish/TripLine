@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Dict, Any, Optional
 
 class SourceEvidence(BaseModel):
@@ -59,6 +59,8 @@ class IncidentReceipt(BaseModel):
     canonical_hash: Optional[str] = None
     witness_head_hmac: Optional[str] = None
     receipt_signature: Optional[str] = None
+
+    model_config = ConfigDict(extra="allow")
 
     def to_markdown(self) -> str:
         md = f"""==================================================

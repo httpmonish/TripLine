@@ -173,12 +173,21 @@ class DashboardRepository:
         return receipt
 
     def get_all_receipts(self) -> List[IncidentReceipt]:
-        runs = self.get_all_runs()
         receipts = []
+        # First load signed receipts from results/demo
+        demo_dir = self.workspace_root / "results" / "demo"
+        if demo_dir.exists():
+            for p in sorted(demo_dir.glob("receipt_*.json")):
+                try:
+                    data = json.loads(p.read_text())
+                    receipts.append(IncidentReceipt(**data))
+                except Exception:
+                    pass
+        if receipts:
+            return receipts
+            
+        runs = self.get_all_runs()
         for run in runs:
-            # We only generate receipts for denied or held runs, or explicit attacks if we want to show everything
-            # "Every denied action gets a receipt"
-            # But for dashboard, let's just generate for all runs that proposed an action
             if run.get("proposed") or run.get("proposal_made"):
                 receipts.append(self._build_receipt_from_run(run))
         return receipts

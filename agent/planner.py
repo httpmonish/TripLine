@@ -14,12 +14,13 @@ class Planner:
         plan = {
             "goal": task,
             "steps": [
-                "tripline-mcp.list_issues",
-                "tripline-mcp.read_issue",
-                "tripline-mcp.list_dir",
-                "tripline-mcp.read_file",
-                "tripline-mcp.write_patch",
-                "tripline-mcp.run_tests"
+                "list_issues",
+                "read_issue",
+                "comment_issue",
+                "list_dir",
+                "read_file",
+                "write_patch",
+                "run_tests"
             ]
         }
         return plan

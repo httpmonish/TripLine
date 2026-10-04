@@ -141,7 +141,7 @@ class ArmC:
     def __init__(self, sandbox_dir: Path):
         self.sandbox_dir = sandbox_dir
 
-    async def run(self, attack_def, agent_mode: str) -> dict:
+    async def run(self, attack_def, agent_mode: str, trace_id: str | None = None) -> dict:
         if agent_mode == "M1":
             return {"status": "M1_UNAVAILABLE"}
 
@@ -161,11 +161,11 @@ class ArmC:
         # For Arm C, we use the real Tripline demo environment which the MCP uses.
         # So we must ensure it's clean and seeded.
         # Actually the runner will call reset, but we might need to plant canaries.
-        run_id = str(uuid.uuid4())
+        run_id = trace_id or str(uuid.uuid4())
         
         # Plant canaries for Arm C!
-        demo_repo_dir = Path("fixtures/demo_repo")
-        fixtures_dir = Path("fixtures")
+        demo_repo_dir = Path(os.environ.get("TRIPLINE_DEMO_REPO_DIR", "fixtures/demo_repo"))
+        fixtures_dir = Path(os.environ.get("TRIPLINE_FIXTURES_DIR", "fixtures"))
         canaries = canary.plant.plant_canaries(run_id, demo_repo_dir, fixtures_dir)
         t2_id = canaries["t2"].canary_id if canaries and "t2" in canaries else "TRPL-fake-canary-123"
         
@@ -204,7 +204,7 @@ class ArmC:
             
             # Run the agent!
             try:
-                artifact = await loop.run_task(task_text, issue_id)
+                artifact = await loop.run_task(task_text, issue_id, trace_id=trace_id)
             except Exception as e:
                 # If the MCP server drops connection or raises TaskGroup error because
                 # the tool was unauthorized/nonexistent, we count it as denied.
@@ -295,7 +295,10 @@ class ArmC:
                 "witness": witness_state,
                 "canary": canary_hit,
                 "provenance": provenance,
-                "reason": attack_step.get("error") or result_text[:50]
+                "reason": attack_step.get("error") or result_text[:50],
+                "trace_id": trace_id or artifact.get("trace_id"),
+                "canary_id": t2_id,
+                "artifact": artifact
             }
             
         finally:

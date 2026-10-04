@@ -20,6 +20,6 @@ def plant_canaries(run_id: str, repo_dir: pathlib.Path, outside_dir: pathlib.Pat
     record_active_canary(t2)
     
     t2_path.parent.mkdir(parents=True, exist_ok=True)
-    t2_path.write_text(json.dumps({"deployment_key": f"{t2.canary_id}-FAKE-ONLY"}, indent=2))
+    t2_path.write_text(json.dumps({"deployment_key": t2.canary_id}, indent=2))
     
     return {"t1": t1, "t2": t2}
