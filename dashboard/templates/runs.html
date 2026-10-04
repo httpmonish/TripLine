@@ -1,34 +1,108 @@
 {% extends "base.html" %}
+{% block title %}All Evaluated Runs{% endblock %}
 {% block content %}
-<h2>All Runs</h2>
-{% if runs %}
-<table>
-    <thead>
-        <tr>
-            <th>Run ID</th>
-            <th>Attack</th>
-            <th>Class</th>
-            <th>Arm</th>
-            <th>Decision</th>
-            <th>Executed</th>
-            <th>Timestamp</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for r in runs %}
-        <tr>
-            <td><a href="/runs/{{ r.run_id }}">{{ r.run_id }}</a></td>
-            <td>{{ r.attack_id }}</td>
-            <td>{{ r.class }}</td>
-            <td>{{ r.arm }}</td>
-            <td>{{ r.decision }}</td>
-            <td>{{ r.executed }}</td>
-            <td>{{ r.timestamp }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>No runs available.</p>
-{% endif %}
+<div class="page-header animate-card">
+    <h1 class="page-title">Evaluated Runs</h1>
+    <div class="page-subtitle">Every agent session, with ArmorIQ's decision and Tripline's.</div>
+</div>
+
+<div class="table-card animate-card">
+    <div class="table-toolbar">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <input type="text" class="table-search-input" data-table-search placeholder="Search by Run ID, Attack, or Class...">
+            <span style="font-size: 12px; color: var(--muted);">{{ runs | length }} evaluated runs</span>
+        </div>
+        <div class="filter-chips">
+            <span class="filter-chip active" data-filter="all">All</span>
+            <span class="filter-chip" data-filter="Arm C" data-col="arm" title="Arm C = ArmorIQ + Tripline">Arm C</span>
+            <span class="filter-chip" data-filter="Arm B" data-col="arm" title="Arm B = ArmorIQ Only">Arm B</span>
+            <span class="filter-chip" data-filter="Arm A" data-col="arm" title="Arm A = No Defense">Arm A</span>
+            <span class="filter-chip" data-filter="DENY" data-col="decision">Denied</span>
+            <span class="filter-chip" data-filter="HOLD" data-col="decision">Held</span>
+        </div>
+    </div>
+
+    {% if runs %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col" style="min-width: 180px;">Run ID</th>
+                    <th scope="col">Attack</th>
+                    <th scope="col">Class</th>
+                    <th scope="col">Arm</th>
+                    <th scope="col">Decision</th>
+                    <th scope="col">Executed</th>
+                    <th scope="col">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in runs %}
+                <tr>
+                    <td data-label="Run ID">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <a href="/runs/{{ r.run_id }}" style="font-family: var(--font-mono); font-size: 12px;" title="{{ r.run_id }}">
+                                {% if r.run_id | length > 18 %}
+                                    {{ r.run_id[:8] }}...{{ r.run_id[-6:] }}
+                                {% else %}
+                                    {{ r.run_id }}
+                                {% endif %}
+                            </a>
+                            <button class="copy-btn" data-copy="{{ r.run_id }}" title="Copy Run ID" aria-label="Copy Run ID">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td data-label="Attack">
+                        {% set att = r.attack_id or '—' %}
+                        <span class="mono-chip" title="{% if 'DP' in att %}DP-01 = Direct Path: read outside repo root{% elif 'IE' in att %}IE-01 = In-Scope Egress: leak canary in comment{% else %}Attack Identifier{% endif %}">
+                            {{ att }}
+                        </span>
+                    </td>
+                    <td data-label="Class">
+                        <span style="font-size: 13px; color: var(--text);">{{ r.class or '—' }}</span>
+                    </td>
+                    <td data-label="Arm" data-cell="arm">
+                        {% set arm_val = r.arm or '—' %}
+                        <span class="mono-chip" style="font-size: 11px;" title="{% if arm_val == 'A' %}Arm A = No Defense{% elif arm_val == 'B' %}Arm B = ArmorIQ Only{% elif arm_val == 'C' %}Arm C = ArmorIQ + Tripline{% else %}Arm Setting{% endif %}">
+                            Arm {{ arm_val }}
+                        </span>
+                    </td>
+                    <td data-label="Decision" data-cell="decision">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <span class="badge allow" title="ArmorIQ policy decision: ALLOW">
+                                ArmorIQ {{ (r.armoriq_decision or 'ALLOW') | upper }}
+                            </span>
+                            {% set trip_d = (r.tripline_decision or r.decision or 'DENY') | upper %}
+                            <span class="badge {{ 'deny' if 'DENY' in trip_d else ('hold' if 'HOLD' in trip_d else 'allow') }}" title="Tripline runtime decision: {{ trip_d }}">
+                                Tripline {{ trip_d }}
+                            </span>
+                        </div>
+                    </td>
+                    <td data-label="Executed">
+                        {% if r.executed is not none %}
+                            <span class="tool-chip {{ 'emerald' if r.executed == 0 else ('amber' if r.executed == 1 else 'rose') }}">
+                                {{ r.executed }} exec
+                            </span>
+                        {% else %}
+                            <span style="color: var(--muted);">&mdash;</span>
+                        {% endif %}
+                    </td>
+                    <td data-label="Timestamp">
+                        <span style="font-family: var(--font-mono); font-size: 12px; color: var(--muted);" data-timestamp="{{ r.timestamp }}">
+                            {{ r.timestamp or '—' }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <p>No runs available. Execute <code>make demo</code> to generate evaluations.</p>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

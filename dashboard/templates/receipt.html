@@ -1,111 +1,179 @@
 {% extends "base.html" %}
+{% block title %}Receipt {{ receipt.receipt_id }}{% endblock %}
 {% block content %}
-<div style="border: 2px solid #333; padding: 20px; background: white; margin-bottom: 20px;">
-    <h2 style="text-align: center; margin-top: 0; border-bottom: 2px solid #ccc; padding-bottom: 10px;">
-        TRIPLINE INCIDENT RECEIPT<br>
-        <small style="font-size: 14px; color: #666;">{{ receipt.receipt_id }}</small>
-    </h2>
-
-    <div class="card" style="background: #f8f9fa; border-left: 4px solid #0056b3;">
-        <h3>SUMMARY</h3>
-        <table style="width: 100%; border: none;">
-            <tr>
-                <td style="border: none;"><strong>SOURCE:</strong></td>
-                <td style="border: none;">{{ receipt.source.source_id }}</td>
-                <td style="border: none;"><strong>{{ receipt.confidence.level }}</strong></td>
-            </tr>
-            <tr>
-                <td style="border: none;"><strong>PROPOSAL:</strong></td>
-                <td style="border: none;">{{ receipt.proposal.tool }}.{{ receipt.proposal.action }}</td>
-                <td style="border: none;">{{ receipt.proposal.normalized_proposal }}</td>
-            </tr>
-            <tr>
-                <td style="border: none;"><strong>ARMORIQ:</strong></td>
-                <td style="border: none;" colspan="2"><span class="badge {{ receipt.decision.armoriq_decision | lower }}">{{ receipt.decision.armoriq_decision }}</span></td>
-            </tr>
-            <tr>
-                <td style="border: none;"><strong>TRIPLINE:</strong></td>
-                <td style="border: none;" colspan="2"><span class="badge {{ receipt.decision.tripline_decision | lower }}">{{ receipt.decision.tripline_decision }}</span></td>
-            </tr>
-            <tr>
-                <td style="border: none;"><strong>CANARY:</strong></td>
-                <td style="border: none;" colspan="2"><span class="badge {{ 'deny' if receipt.canary.hit else 'unverified' }}">{{ 'TIER-' ~ receipt.canary.tier ~ ' FIRED' if receipt.canary.hit else 'NO CANARY HIT' }}</span></td>
-            </tr>
-            <tr>
-                <td style="border: none;"><strong>WITNESS:</strong></td>
-                <td style="border: none;" colspan="2"><span class="badge {{ 'allow' if 'VERIFIED' in receipt.witness.witness_verification else 'unverified' }}">{{ receipt.witness.execution_count }} EXECUTIONS &mdash; {{ receipt.witness.witness_verification }}</span></td>
-            </tr>
-            <tr>
-                <td style="border: none;"><strong>CONFIDENCE:</strong></td>
-                <td style="border: none;" colspan="2"><strong>{{ receipt.confidence.level }}</strong></td>
-            </tr>
-        </table>
-    </div>
-
-    <h4>SOURCE</h4>
-    <hr>
-    <p>
-        Origin: {{ receipt.source.source_id }}<br>
-        Source type: {{ receipt.source.source_type }}<br>
-        Trust: {{ receipt.source.trust_level }}<br>
-        Attribution: {{ receipt.source.provenance_evidence }}
-    </p>
-
-    <h4>PROPOSAL</h4>
-    <hr>
-    <p>
-        Tool: {{ receipt.proposal.tool }}<br>
-        Action: {{ receipt.proposal.action }}<br>
-        Arguments: <br>
-        <pre>{{ receipt.proposal.arguments_summary | tojson(indent=2) }}</pre>
-    </p>
-
-    <div style="display: flex; gap: 20px;">
-        <div style="flex: 1;">
-            <h4>ARMORIQ</h4>
-            <hr>
-            <p>
-                Decision: <strong>{{ receipt.decision.armoriq_decision }}</strong><br>
-                Reason: {{ receipt.decision.armoriq_reason or 'None' }}
-            </p>
-        </div>
-        <div style="flex: 1;">
-            <h4>TRIPLINE</h4>
-            <hr>
-            <p>
-                Decision: <strong>{{ receipt.decision.tripline_decision }}</strong><br>
-                Reason: {{ receipt.decision.tripline_reason or 'None' }}
-            </p>
+<div class="page-header animate-card" style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div>
+        <h1 class="page-title">TRIPLINE INCIDENT RECEIPT</h1>
+        <div style="font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>{{ receipt.receipt_id }}</span>
+            <button class="copy-btn" data-copy="{{ receipt.receipt_id }}" title="Copy Receipt ID" aria-label="Copy Receipt ID">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
         </div>
     </div>
+    <div style="font-size: 12px; color: var(--muted); font-family: var(--font-mono);">
+        Created: {{ receipt.created_at }}
+    </div>
+</div>
 
-    <h4>CANARY</h4>
-    <hr>
-    <p>
-        {% if receipt.canary.hit %}
-        TIER-{{ receipt.canary.tier }} CANARY FIRED<br>
-        ID: {{ receipt.canary.canary_id }}<br>
-        Location: {{ receipt.canary.detection_location }}<br>
-        Trigger: {{ receipt.canary.trigger }}
-        {% else %}
-        NO CANARY HIT
+<div class="card animate-card" style="border-left: 4px solid var(--accent);">
+    <div class="card-title">SUMMARY</div>
+    <table class="data-table" style="background: transparent;">
+        <tbody>
+            <tr>
+                <td style="width: 140px; font-weight: 600; color: var(--muted);">SOURCE:</td>
+                <td>
+                    <code style="color: var(--text);">{{ receipt.source.source_id }}</code> 
+                    <span class="mono-chip" style="margin-left: 8px;" title="C1 = string-origin correlation from untrusted input. Not causation.">{{ receipt.confidence.level }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: var(--muted);">PROPOSAL:</td>
+                <td>
+                    <strong>{% if receipt.proposal.action and receipt.proposal.action != receipt.proposal.tool %}{{ receipt.proposal.tool }}.{{ receipt.proposal.action }}{% else %}{{ receipt.proposal.tool }}{% endif %}</strong>
+                    &mdash; <code style="color: var(--accent);">{{ receipt.proposal.normalized_proposal }}</code>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: var(--muted);">ARMORIQ:</td>
+                <td>
+                    <span class="badge {{ receipt.decision.armoriq_decision | lower }}" title="ArmorIQ policy decision: {{ receipt.decision.armoriq_decision }}">{{ receipt.decision.armoriq_decision }}</span>
+                    {% if receipt.decision.armoriq_reason %}
+                    <span style="font-size: 12px; color: var(--muted); margin-left: 8px;">({{ receipt.decision.armoriq_reason }})</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: var(--muted);">TRIPLINE:</td>
+                <td>
+                    <span class="badge {{ receipt.decision.tripline_decision | lower }}" title="Tripline enforcement decision: {{ receipt.decision.tripline_decision }}">{{ receipt.decision.tripline_decision }}</span>
+                    {% if receipt.decision.tripline_reason %}
+                    <span style="font-size: 12px; color: var(--muted); margin-left: 8px;">({{ receipt.decision.tripline_reason }})</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: var(--muted);">CANARY:</td>
+                <td>
+                    <span class="badge {{ 'fired' if receipt.canary.hit else 'unverified' }}">
+                        {{ 'TIER-' ~ receipt.canary.tier ~ ' FIRED' if receipt.canary.hit else 'NO CANARY HIT' }}
+                    </span>
+                    {% if receipt.canary.hit %}
+                    <span style="font-size: 12px; color: var(--muted); margin-left: 8px;">(Trigger: {{ receipt.canary.trigger }} @ {{ receipt.canary.detection_location }})</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: var(--muted);">WITNESS:</td>
+                <td>
+                    <span class="badge {{ 'allow' if 'VERIFIED' in receipt.witness.witness_verification else 'unverified' }}">
+                        {{ receipt.witness.execution_count }} EXECUTIONS &mdash; {{ receipt.witness.witness_verification }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight: 600; color: var(--muted);">CONFIDENCE:</td>
+                <td>
+                    <strong>{{ receipt.confidence.level }}</strong>
+                    <span style="font-size: 12px; color: var(--muted); margin-left: 8px;" title="C1 = string-origin correlation from untrusted input. Not causation.">({{ receipt.confidence.basis }})</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="grid-2 animate-card" style="margin-bottom: 24px;">
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">SOURCE</div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+            <div><strong style="color: var(--text);">Origin:</strong> <code>{{ receipt.source.source_id }}</code></div>
+            <div><strong style="color: var(--text);">Source type:</strong> {{ receipt.source.source_type }}</div>
+            <div><strong style="color: var(--text);">Trust:</strong> {{ receipt.source.trust_level }}</div>
+            <div><strong style="color: var(--text);">Attribution:</strong> {{ receipt.source.provenance_evidence }}</div>
+        </div>
+    </div>
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">PROPOSAL</div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+            <div><strong style="color: var(--text);">Tool:</strong> <code>{{ receipt.proposal.tool }}</code></div>
+            {% if receipt.proposal.action and receipt.proposal.action != receipt.proposal.tool %}
+            <div><strong style="color: var(--text);">Action:</strong> <code>{{ receipt.proposal.action }}</code></div>
+            {% endif %}
+            <div style="margin-top: 8px;"><strong style="color: var(--text);">Arguments:</strong></div>
+            <pre style="margin-top: 4px; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-chip); font-size: 12px; color: var(--accent); overflow-x: auto;">{{ receipt.proposal.arguments_summary | tojson(indent=2) }}</pre>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2 animate-card" style="margin-bottom: 24px;">
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">ARMORIQ & TRIPLINE EVALUATION</div>
+        <div style="font-size: 13px; line-height: 1.6;">
+            <div style="margin-bottom: 12px;">
+                <span class="badge {{ receipt.decision.armoriq_decision | lower }}">ARMORIQ {{ receipt.decision.armoriq_decision }}</span>
+                <div style="color: var(--muted); margin-top: 4px;">Reason: {{ receipt.decision.armoriq_reason or 'None' }}</div>
+            </div>
+            <div>
+                <span class="badge {{ receipt.decision.tripline_decision | lower }}">TRIPLINE {{ receipt.decision.tripline_decision }}</span>
+                <div style="color: var(--muted); margin-top: 4px;">Reason: {{ receipt.decision.tripline_reason or 'None' }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">CANARY & WITNESS</div>
+        <div style="font-size: 13px; line-height: 1.6;">
+            <div style="margin-bottom: 12px;">
+                <strong style="color: var(--text);">CANARY:</strong>
+                {% if receipt.canary.hit %}
+                <span class="badge fired">TIER-{{ receipt.canary.tier }} FIRED</span>
+                <div style="color: var(--muted); margin-top: 4px;">ID: <code>{{ receipt.canary.canary_id }}</code> · {{ receipt.canary.trigger }}</div>
+                {% else %}
+                <span class="badge unverified">NO CANARY HIT</span>
+                {% endif %}
+            </div>
+            <div>
+                <strong style="color: var(--text);">WITNESS:</strong>
+                <span class="badge allow">{{ receipt.witness.witness_verification }}</span>
+                <div style="color: var(--muted); margin-top: 4px;">Chain: {{ receipt.witness.chain_status }} · State: {{ receipt.witness.execution_state }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card animate-card">
+    <div class="card-title">CONFIDENCE & CRYPTOGRAPHIC VERIFICATION</div>
+    <div style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">
+        Tier: <strong>{{ receipt.confidence.level }}</strong> ({{ receipt.confidence.basis }}) &mdash; "{{ receipt.confidence.attribution_wording }}"
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 8px; font-family: var(--font-mono); font-size: 12px; margin-bottom: 16px;">
+        {% if receipt.canonical_hash %}
+        <div>
+            <span style="color: var(--muted);">Canonical SHA-256:</span>
+            <code style="color: var(--accent);">{{ receipt.canonical_hash }}</code>
+        </div>
         {% endif %}
-    </p>
+        {% if receipt.receipt_signature %}
+        <div>
+            <span style="color: var(--muted);">HMAC Signature:</span>
+            <code style="color: var(--text);">{{ receipt.receipt_signature }}</code>
+        </div>
+        {% endif %}
+    </div>
 
-    <h4>WITNESS</h4>
-    <hr>
-    <p>
-        Execution: <strong>{{ receipt.witness.execution_count }} executions &mdash; {{ receipt.witness.witness_verification }}</strong><br>
-        State: {{ receipt.witness.execution_state }}<br>
-        Chain: {{ receipt.witness.chain_status }}
-    </p>
-
-    <h4>CONFIDENCE / ATTRIBUTION</h4>
-    <hr>
-    <p>
-        Tier: <strong>{{ receipt.confidence.level }}</strong><br>
-        Basis: {{ receipt.confidence.basis }}<br>
-        "{{ receipt.confidence.attribution_wording }}"
-    </p>
+    {% if receipt_file %}
+    <div class="verify-panel">
+        <div class="verify-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Cryptographic Verification CLI</span>
+        </div>
+        <div class="verify-cmd">
+            <code>make verify FILE={{ receipt_file }}</code>
+            <button class="copy-btn" data-copy="make verify FILE={{ receipt_file }}" title="Copy verify command" aria-label="Copy verify command">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

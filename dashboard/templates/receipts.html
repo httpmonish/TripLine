@@ -1,42 +1,103 @@
 {% extends "base.html" %}
+{% block title %}Incident Receipts{% endblock %}
 {% block content %}
-<h2>Incident Receipts</h2>
-{% if receipts %}
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Task/Tool</th>
-            <th>ArmorIQ</th>
-            <th>Tripline</th>
-            <th>Canary</th>
-            <th>Witness</th>
-            <th>Confidence</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for r in receipts %}
-        <tr>
-            <td><a href="/receipts/{{ r.receipt_id }}">{{ r.receipt_id }}</a></td>
-            <td>{{ r.proposal.tool }}</td>
-            <td>
-                <span class="badge {{ r.decision.armoriq_decision | lower }}">{{ r.decision.armoriq_decision }}</span>
-            </td>
-            <td>
-                <span class="badge {{ r.decision.tripline_decision | lower }}">{{ r.decision.tripline_decision }}</span>
-            </td>
-            <td>
-                <span class="badge {{ 'deny' if r.canary.hit else 'unverified' }}">{{ 'FIRED' if r.canary.hit else 'NO-HIT' }}</span>
-            </td>
-            <td>
-                <span class="badge {{ 'allow' if 'VERIFIED' in r.witness.witness_verification else 'unverified' }}">{{ r.witness.witness_verification }}</span>
-            </td>
-            <td>{{ r.confidence.level }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>No receipts have been generated yet.</p>
-{% endif %}
+<div class="page-header animate-card">
+    <h1 class="page-title">Incident Receipts</h1>
+    <div class="page-subtitle">Each row is a signed proof of one agent action.</div>
+</div>
+
+<div class="legend-row animate-card">
+    <strong>Security Boundaries:</strong> ArmorIQ = tool-level authorizer. Tripline = path jail + egress canary + signed witness.
+</div>
+
+<div class="table-card animate-card">
+    <div class="table-toolbar">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <input type="text" class="table-search-input" data-table-search placeholder="Filter receipts by ID, tool, origin...">
+            <span style="font-size: 12px; color: var(--muted);">{{ receipts | length }} signed proofs</span>
+        </div>
+        <div class="filter-chips">
+            <span class="filter-chip active" data-filter="all">All</span>
+            <span class="filter-chip" data-filter="ALLOW" data-col="armoriq">ArmorIQ: ALLOW</span>
+            <span class="filter-chip" data-filter="DENY" data-col="tripline">Tripline: DENY</span>
+            <span class="filter-chip" data-filter="HOLD" data-col="tripline">Tripline: HOLD</span>
+        </div>
+    </div>
+
+    {% if receipts %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col" style="min-width: 220px;">Receipt ID</th>
+                    <th scope="col">Tool</th>
+                    <th scope="col">ArmorIQ</th>
+                    <th scope="col">Tripline</th>
+                    <th scope="col">Canary</th>
+                    <th scope="col" style="min-width: 220px;">Witness Executions</th>
+                    <th scope="col">Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in receipts %}
+                <tr>
+                    <td data-label="Receipt ID">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <a href="/receipts/{{ r.receipt_id }}" style="font-family: var(--font-mono); font-size: 12px; word-break: break-all;">
+                                {{ r.receipt_id }}
+                            </a>
+                            <button class="copy-btn" data-copy="{{ r.receipt_id }}" title="Copy Receipt ID" aria-label="Copy Receipt ID">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                    <td data-label="Tool">
+                        <span class="tool-chip">{{ r.proposal.tool }}</span>
+                    </td>
+                    <td data-label="ArmorIQ" data-cell="armoriq">
+                        <span class="badge {{ r.decision.armoriq_decision | lower }}" title="ArmorIQ policy decision for proposed tool: {{ r.decision.armoriq_decision }}">
+                            {{ r.decision.armoriq_decision }}
+                        </span>
+                    </td>
+                    <td data-label="Tripline" data-cell="tripline">
+                        <span class="badge {{ r.decision.tripline_decision | lower }}" title="Tripline kernel jail or egress gateway decision: {{ r.decision.tripline_decision }}">
+                            {{ r.decision.tripline_decision }}
+                        </span>
+                    </td>
+                    <td data-label="Canary">
+                        <span class="badge {{ 'fired' if r.canary.hit else 'unverified' }}" title="{{ 'Planted synthetic canary token detected in arguments' if r.canary.hit else 'No synthetic canary detected' }}">
+                            {{ 'TIER-' ~ r.canary.tier ~ ' FIRED' if r.canary.hit else 'NO-HIT' }}
+                        </span>
+                    </td>
+                    <td data-label="Witness Executions">
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            {% if 'comment_issue' in r.witness.witness_verification %}
+                            <span class="tool-chip amber" title="Egress attempt held; comment never reached MCP tool">comment_issue · 0 exec</span>
+                            <span class="tool-chip emerald" title="Authorized decoy read permitted">read_file · 1 exec</span>
+                            {% elif 'read_file' in r.witness.witness_verification %}
+                            <span class="tool-chip emerald" title="Path jail blocked access; 0 executions performed">read_file · 0 exec</span>
+                            {% else %}
+                            <span class="tool-chip {{ 'emerald' if r.witness.execution_count == 0 else 'rose' }}" title="Independent witness HMAC execution counter">
+                                {{ r.witness.execution_count }} executions
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td data-label="Confidence">
+                        <span class="mono-chip" title="C1 = string-origin correlation from untrusted input. Not causation.">
+                            {{ r.confidence.level }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <p>No receipts yet. Run <code>make demo</code> to generate two live receipts.</p>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}

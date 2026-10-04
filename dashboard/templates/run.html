@@ -1,27 +1,120 @@
 {% extends "base.html" %}
+{% block title %}Run {{ run.run_id }}{% endblock %}
 {% block content %}
-<h2>Run Details: {{ run.run_id }}</h2>
-<div class="card">
-    <p><strong>Attack ID:</strong> {{ run.attack_id }}</p>
-    <p><strong>Class:</strong> {{ run.class }}</p>
-    <p><strong>Arm:</strong> {{ run.arm }}</p>
-    <p><strong>Mode:</strong> {{ run.mode }}</p>
-    <p><strong>Timestamp:</strong> {{ run.timestamp }}</p>
+<div class="page-header animate-card" style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div>
+        <h1 class="page-title">Run Details</h1>
+        <div class="page-subtitle">What happened in this session, stage by stage.</div>
+        <div style="font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>{{ run.run_id }}</span>
+            <button class="copy-btn" data-copy="{{ run.run_id }}" title="Copy Run ID" aria-label="Copy Run ID">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+        </div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        {% set att = run.attack_id or '—' %}
+        <span class="mono-chip" title="{% if 'DP' in att %}DP-01 = Direct Path: read outside repo root{% elif 'IE' in att %}IE-01 = In-Scope Egress: leak canary in comment{% else %}Attack{% endif %}">
+            Attack: {{ att }}
+        </span>
+        <span class="mono-chip">Class: {{ run.class or '—' }}</span>
+        {% set arm_val = run.arm or '—' %}
+        <span class="mono-chip" title="{% if arm_val == 'A' %}Arm A = No Defense{% elif arm_val == 'B' %}Arm B = ArmorIQ Only{% elif arm_val == 'C' %}Arm C = ArmorIQ + Tripline{% else %}Arm{% endif %}">
+            Arm: {{ arm_val }}
+        </span>
+        <span class="mono-chip" title="M2 = forced-compliance stub mode">Mode: {{ run.mode or 'M2' }}</span>
+        <span class="mono-chip" data-timestamp="{{ run.timestamp }}">Timestamp: {{ run.timestamp or '—' }}</span>
+    </div>
 </div>
 
-<h3>Chronological View</h3>
-<div style="border-left: 2px solid #ccc; padding-left: 20px; margin-left: 10px;">
-    {% for step in steps %}
-    <div style="margin-bottom: 15px;">
-        <strong>{{ step.name }}</strong><br>
-        {{ step.action }}<br>
-        <span class="badge {{ step.status | lower }}">{{ step.status }}</span>
-        
-        {% if step.receipt_id %}
-        <br><br>
-        <a href="/receipts/{{ step.receipt_id }}">[View Receipt]</a>
-        {% endif %}
+<!-- Verdict Strip -->
+<div class="verdict-strip {{ verdict_class }} animate-card">
+    <div>
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px;">
+            Authoritative Forensic Verdict
+        </div>
+        <div class="verdict-text">
+            {{ verdict_summary }}
+        </div>
     </div>
-    {% endfor %}
+    <span class="badge {{ verdict_class }}" style="font-size: 13px; padding: 6px 14px;">
+        {{ verdict_word }}
+    </span>
 </div>
+
+<!-- Chronological Vertical Timeline -->
+<div class="card animate-card">
+    <div class="card-title">
+        <span>Chronological Execution Stages</span>
+        <span style="font-size: 12px; color: var(--muted); font-weight: normal;">{{ steps | length }} stages logged</span>
+    </div>
+    
+    <div class="timeline">
+        {% for step in steps %}
+        <div class="timeline-step active">
+            <div class="timeline-marker">
+                {{ loop.index }}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-header">
+                    <span class="timeline-stage">{{ step.name }}</span>
+                    {% set st = (step.status or 'INFO') | upper %}
+                    <span class="badge {{ 'deny' if 'DENY' in st else ('hold' if 'HOLD' in st else ('allow' if 'ALLOW' in st else 'unverified')) }}" title="Stage outcome: {{ st }}">
+                        {{ st }}
+                    </span>
+                </div>
+                <div class="timeline-action">
+                    {{ step.action }}
+                </div>
+                {% if step.receipt_id %}
+                <div style="margin-top: 8px;">
+                    <a href="/receipts/{{ step.receipt_id }}" class="incident-link" style="font-size: 12px; font-family: var(--font-mono);">
+                        View Generated Incident Receipt [{{ step.receipt_id[:18] }}...] →
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Cryptographic Verification Box -->
+{% if receipt %}
+<div class="card animate-card">
+    <div class="card-title">
+        <span>Receipt Cryptographic Verification</span>
+        <span class="badge verified">VERIFIED EMISSION</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; font-size: 13px; margin-bottom: 20px;">
+        <div>
+            <div style="color: var(--muted); font-size: 11px; text-transform: uppercase; margin-bottom: 4px;">Receipt ID</div>
+            <code style="color: var(--text);">{{ receipt.receipt_id }}</code>
+        </div>
+        <div>
+            <div style="color: var(--muted); font-size: 11px; text-transform: uppercase; margin-bottom: 4px;">Canonical SHA-256 (10 fields)</div>
+            <code style="color: var(--accent);">{{ receipt.canonical_hash or 'Verified on emission' }}</code>
+        </div>
+        <div>
+            <div style="color: var(--muted); font-size: 11px; text-transform: uppercase; margin-bottom: 4px;">Witness Head HMAC</div>
+            <code style="color: var(--text);">{{ receipt.witness_head_hmac or 'Valid hash chain' }}</code>
+        </div>
+    </div>
+
+    {% if receipt_file %}
+    <div class="verify-panel">
+        <div class="verify-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>Verify Locally via CLI</span>
+        </div>
+        <div class="verify-cmd">
+            <code>make verify FILE={{ receipt_file }}</code>
+            <button class="copy-btn" data-copy="make verify FILE={{ receipt_file }}" title="Copy verify command" aria-label="Copy verify command">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

@@ -1,66 +1,141 @@
 {% extends "base.html" %}
+{% block title %}Boundary Map{% endblock %}
 {% block content %}
-<h2>Boundary Map</h2>
+<div class="page-header animate-card">
+    <h1 class="page-title">Boundary Map</h1>
+    <div class="page-subtitle">Who checks what, and where ArmorIQ stops.</div>
+</div>
 
-<div style="text-align: center; margin-bottom: 30px;">
-    <!-- Simple conceptual SVG boundary map as requested -->
-    <svg width="300" height="400" viewBox="0 0 300 400" style="background: white; border: 1px solid #ccc; border-radius: 8px;">
-        <rect x="50" y="20" width="200" height="40" fill="#f8f9fa" stroke="#333" />
-        <text x="150" y="45" font-family="sans-serif" font-size="14" text-anchor="middle">PROPOSAL</text>
-        
-        <line x1="150" y1="60" x2="150" y2="100" stroke="#333" marker-end="url(#arrow)" />
-        
-        <rect x="50" y="100" width="200" height="60" fill="#e9ecef" stroke="#333" />
-        <text x="150" y="125" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle">ARMORIQ</text>
-        <text x="150" y="145" font-family="sans-serif" font-size="12" text-anchor="middle">allow / deny</text>
-        
-        <line x1="150" y1="160" x2="150" y2="200" stroke="#333" marker-end="url(#arrow)" />
-        
-        <rect x="50" y="200" width="200" height="80" fill="#e9ecef" stroke="#333" />
-        <text x="150" y="225" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle">TRIPLINE</text>
-        <text x="150" y="245" font-family="sans-serif" font-size="12" text-anchor="middle">jail / egress</text>
-        <text x="150" y="265" font-family="sans-serif" font-size="12" text-anchor="middle">canary / witness</text>
-        
-        <line x1="150" y1="280" x2="150" y2="320" stroke="#333" marker-end="url(#arrow)" />
-        
-        <rect x="50" y="320" width="200" height="40" fill="#f8f9fa" stroke="#333" />
-        <text x="150" y="345" font-family="sans-serif" font-size="14" text-anchor="middle">MCP TOOL</text>
-        
-        <defs>
-            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" />
-            </marker>
-        </defs>
-    </svg>
-    <div style="max-width: 600px; margin: 15px auto; text-align: left; background: #f8f9fa; border: 1px solid #ddd; padding: 12px; font-size: 13px; border-radius: 4px;">
-        <strong>Boundary Responsibilities:</strong>
-        <ul style="margin: 5px 0 0 20px; padding: 0;">
-            <li><strong>ArmorIQ:</strong> Tool & role authorization. Path and payload not inspected; ArmorIQ returns <code>ALLOW</code> for both DP-01 and IE-01.</li>
-            <li><strong>Tripline Path Jail:</strong> Blocks file path traversal outside repository root (denies DP-01 with <code>PATH_OUTSIDE_ROOT</code>).</li>
-            <li><strong>Tripline Egress Gateway:</strong> Scans egress payloads for canaries (holds IE-01; independent Tripline hold, not an ArmorIQ delegation).</li>
-            <li><strong>Decision Proofs:</strong> Replay within 60s TTL is allowed by design to support agent retries.</li>
-        </ul>
+<!-- Architecture Flow Diagram -->
+<div class="card animate-card" style="margin-bottom: 28px;">
+    <div class="card-title">Security Boundary Architecture</div>
+    
+    <div style="display: flex; justify-content: center; padding: 20px 0;">
+        <svg width="360" height="430" viewBox="0 0 360 430" style="background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-card);">
+            <!-- Proposal Box -->
+            <rect x="50" y="24" width="260" height="46" rx="8" fill="#14161c" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+            <text x="180" y="47" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="700" fill="#9ca3af" text-anchor="middle" letter-spacing="0.08em">AGENT PROPOSAL</text>
+            <text x="180" y="61" font-family="ui-monospace, monospace" font-size="10" fill="#6b7280" text-anchor="middle">tools/call request</text>
+            
+            <!-- Arrow 1 -->
+            <line x1="180" y1="70" x2="180" y2="108" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="3 3" />
+            <polygon points="180,114 176,106 184,106" fill="#22d3ee" />
+            
+            <!-- ArmorIQ Box -->
+            <rect x="50" y="114" width="260" height="66" rx="8" fill="#14161c" stroke="#34d399" stroke-width="1.5" />
+            <!-- Shield icon -->
+            <path d="M72 138 s5-2.5 5-6V127l-5-2-5 2v5c0 3.5 5 6 5 6z" fill="none" stroke="#34d399" stroke-width="1.5"/>
+            <text x="180" y="139" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="700" fill="#34d399" text-anchor="middle" letter-spacing="0.05em">ARMORIQ AUTHORIZER</text>
+            <text x="180" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" fill="#9ca3af" text-anchor="middle">Tool & Role Policy: ALLOW / DENY</text>
+            <text x="180" y="170" font-family="ui-monospace, monospace" font-size="10" fill="#6b7280" text-anchor="middle">Does NOT inspect paths or payloads</text>
+            
+            <!-- Arrow 2 -->
+            <line x1="180" y1="180" x2="180" y2="218" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="3 3" />
+            <polygon points="180,224 176,216 184,216" fill="#22d3ee" />
+            
+            <!-- Tripline Box -->
+            <rect x="50" y="224" width="260" height="88" rx="8" fill="#14161c" stroke="#22d3ee" stroke-width="1.5" />
+            <!-- Circuit/Wire icon -->
+            <circle cx="72" cy="248" r="4" fill="none" stroke="#22d3ee" stroke-width="1.5"/>
+            <line x1="76" y1="248" x2="84" y2="248" stroke="#22d3ee" stroke-width="1.5"/>
+            <text x="180" y="248" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="700" fill="#22d3ee" text-anchor="middle" letter-spacing="0.05em">TRIPLINE EVIDENCE LAYER</text>
+            <text x="180" y="266" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" fill="#e8eaf0" text-anchor="middle">Path Jail (Kernel TOCTOU check)</text>
+            <text x="180" y="282" font-family="ui-sans-serif, system-ui, sans-serif" font-size="11" fill="#e8eaf0" text-anchor="middle">Egress Canary Gateway & Decision Proof</text>
+            <text x="180" y="298" font-family="ui-monospace, monospace" font-size="10" fill="#9ca3af" text-anchor="middle">Witness HMAC Chain & Incident Receipt</text>
+            
+            <!-- Arrow 3 -->
+            <line x1="180" y1="312" x2="180" y2="350" stroke="#22d3ee" stroke-width="1.5" stroke-dasharray="3 3" />
+            <polygon points="180,356 176,348 184,348" fill="#22d3ee" />
+            
+            <!-- MCP Tool Box -->
+            <rect x="50" y="356" width="260" height="46" rx="8" fill="#14161c" stroke="rgba(255,255,255,0.12)" stroke-width="1.5" />
+            <!-- Plug icon -->
+            <path d="M68 376v4m6-4v4m-8-2h10" stroke="#9ca3af" stroke-width="1.5"/>
+            <text x="180" y="379" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" font-weight="700" fill="#9ca3af" text-anchor="middle" letter-spacing="0.08em">TARGET MCP TOOL</text>
+            <text x="180" y="393" font-family="ui-monospace, monospace" font-size="10" fill="#6b7280" text-anchor="middle">Executes only if decision proof verified</text>
+        </svg>
     </div>
 </div>
 
-<table>
-    <thead>
-        <tr>
-            <th>Attack Class</th>
-            <th>ArmorIQ</th>
-            <th>Tripline</th>
-            <th>Neither</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for cls, stops in matrix.items() %}
-        <tr>
-            <td>{{ cls }}</td>
-            <td>{{ '✓' if stops.armoriq else '' }}</td>
-            <td>{{ '✓' if stops.tripline else '' }}</td>
-            <td>{{ '✓' if stops.neither else '' }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- What Tripline Checks that ArmorIQ Does Not -->
+<div class="page-header animate-card" style="margin-top: 36px;">
+    <h2>What Tripline Checks that ArmorIQ Does Not</h2>
+    <div class="page-subtitle">Three defense surfaces enforced inside the tool boundary.</div>
+</div>
+
+<div class="grid-3 animate-card" style="margin-bottom: 32px;">
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">
+            <span>1. Path Containment</span>
+        </div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+            Blocks file path traversal outside repository root with kernel-level TOCTOU verification.
+            <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--deny);">
+                DP-01: DENIED (PATH_OUTSIDE_ROOT)
+            </div>
+        </div>
+    </div>
+    
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">
+            <span>2. Egress Canary</span>
+        </div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+            Quarantines outbound arguments and comments attempting to leak planted secrets.
+            <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--hold);">
+                IE-01: HELD (egress_canary_hit)
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">
+            <span>3. Signed Witness</span>
+        </div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+            Reconciles execution counts via append-only HMAC chain into signed canonical receipts.
+            <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--allow);">
+                Proof: Canonical SHA-256 + HMAC
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Boundary Responsibilities -->
+<div class="page-header animate-card" style="margin-top: 36px;">
+    <h2>Boundary Responsibilities</h2>
+    <div class="page-subtitle">Separation of concerns between ArmorIQ authorizer and Tripline evidence layer.</div>
+</div>
+
+<div class="grid-2 animate-card">
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title" style="color: var(--allow);">
+            <span>ArmorIQ Authorizer</span>
+        </div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+            <p style="margin-bottom: 8px;"><strong>Role:</strong> External tool-level authorizer and plan constraints evaluator.</p>
+            <ul style="padding-left: 18px; margin-bottom: 12px;">
+                <li>Checks caller identity and tool permissions via <code>session.check()</code></li>
+                <li>Enforces tool whitelist and coarse policy rules</li>
+                <li>Returns ALLOW / DENY decisions at the boundary</li>
+                <li>Does not inspect filesystem paths or analyze argument payloads</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title" style="color: var(--accent);">
+            <span>Tripline Evidence Layer</span>
+        </div>
+        <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+            <p style="margin-bottom: 8px;"><strong>Role:</strong> In-depth runtime enforcement and cryptographic witness.</p>
+            <ul style="padding-left: 18px; margin-bottom: 12px;">
+                <li>Enforces path containment jail using open-then-verify fd checks</li>
+                <li>Deep-scans outbound arguments for Tier-1 and Tier-2 canary tokens</li>
+                <li>Maintains tamper-evident HMAC hash chain of executed calls</li>
+                <li>Generates canonical 10-field SHA-256 signed incident receipts</li>
+            </ul>
+        </div>
+    </div>
+</div>
 {% endblock %}

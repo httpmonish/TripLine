@@ -25,3 +25,8 @@ cloudflared.tgz
 # DB / Runtime Artifacts
 .tripline/
 results/
+
+# Node / Frontend
+node_modules/
+.next/
+

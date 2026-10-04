@@ -8,6 +8,27 @@ from attacks.schema import load_attacks
 
 from dashboard.security import sanitize_payload, sanitize_text
 
+PREFIX_MAP = {
+    "DP": "Direct Path",
+    "IE": "In-Scope Egress",
+    "PL": "Plan Laundering",
+    "UT": "Unauthorized Tool",
+    "NE": "Network Exfiltration",
+    "BN": "Benign",
+    "TR": "Traversal",
+    "SY": "Symlink",
+    "DC": "Destructive Command",
+}
+
+def derive_class(attack_id: Optional[str], attack_class: Optional[str] = None) -> str:
+    if attack_id:
+        prefix = attack_id.split("-")[0].upper()
+        if prefix in PREFIX_MAP:
+            return PREFIX_MAP[prefix]
+    if attack_class:
+        return attack_class.replace("_", " ").title()
+    return "Unknown"
+
 class DashboardRepository:
     def __init__(self, workspace_root: str = "."):
         self.workspace_root = pathlib.Path(workspace_root)
@@ -21,6 +42,56 @@ class DashboardRepository:
             self.attacks = {a.id: a for a in load_attacks(self.attacks_dir)}
         else:
             self.attacks = {}
+
+    def _load_signed_receipts(self) -> Dict[str, IncidentReceipt]:
+        receipts_by_run = {}
+        demo_dir = self.workspace_root / "results" / "demo"
+        if demo_dir.exists():
+            for p in sorted(demo_dir.glob("receipt_*.json")):
+                try:
+                    data = json.loads(p.read_text())
+                    rcpt = IncidentReceipt(**data)
+                    receipts_by_run[rcpt.run_id] = rcpt
+                except Exception:
+                    pass
+        return receipts_by_run
+
+    def get_benchmark_runs(self) -> List[Dict[str, Any]]:
+        bench_file = self.workspace_root / "benchmark" / "results" / "benchmark_runs.jsonl"
+        runs = []
+        if bench_file.exists():
+            with open(bench_file, "r") as f:
+                for line in f:
+                    if line.strip():
+                        runs.append(json.loads(line))
+        return runs
+
+    def get_events_for_run(self, run_id: str, trace_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        events = []
+        if not trace_id:
+            run = self.get_run(run_id)
+            if run and run.get("trace_id"):
+                trace_id = run["trace_id"]
+            else:
+                demo_dir = self.workspace_root / "results" / "demo"
+                if demo_dir.exists():
+                    for p in demo_dir.glob("receipt_*.json"):
+                        try:
+                            d = json.loads(p.read_text())
+                            if d.get("run_id") == run_id:
+                                trace_id = d.get("trace_id")
+                                break
+                        except Exception:
+                            pass
+        events_file = self.workspace_root / "results" / "demo" / "events.jsonl"
+        if events_file.exists() and trace_id:
+            with open(events_file, "r") as f:
+                for line in f:
+                    if line.strip():
+                        ev = json.loads(line)
+                        if ev.get("trace_id") == trace_id:
+                            events.append(ev)
+        return events
 
     def get_all_runs(self) -> List[Dict[str, Any]]:
         runs = []
@@ -40,6 +111,36 @@ class DashboardRepository:
                 if line.strip():
                     runs.append(json.loads(line))
         
+        # Populate class, decision, executed, timestamp from matching receipt
+        signed_receipts = self._load_signed_receipts()
+        for r in runs:
+            rcpt = signed_receipts.get(r.get("run_id"))
+            if not r.get("class"):
+                r["class"] = derive_class(r.get("attack_id"), r.get("attack_class"))
+            if not r.get("decision"):
+                if rcpt:
+                    tripline_d = rcpt.decision.tripline_decision
+                    armoriq_d = rcpt.decision.armoriq_decision
+                    if tripline_d and tripline_d not in ("NO GATEWAY", "NO DEFENSE", "not_applicable", "unavailable"):
+                        r["decision"] = tripline_d
+                    else:
+                        r["decision"] = armoriq_d
+                else:
+                    d = r.get("tripline_decision") or r.get("armoriq_decision") or r.get("decision") or "UNKNOWN"
+                    r["decision"] = str(d).upper()
+            if "executed" not in r or r.get("executed") is None:
+                if rcpt:
+                    r["executed"] = rcpt.witness.execution_count
+                elif "witnessed_execution_count" in r:
+                    r["executed"] = r["witnessed_execution_count"]
+                else:
+                    r["executed"] = 0
+            if not r.get("timestamp"):
+                if rcpt:
+                    r["timestamp"] = rcpt.created_at
+                else:
+                    r["timestamp"] = r.get("finished_at") or r.get("started_at") or ""
+
         # Sort newest first
         runs.sort(key=lambda x: x.get("finished_at") or x.get("timestamp") or "", reverse=True)
         return runs
