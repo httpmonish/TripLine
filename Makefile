@@ -1,10 +1,13 @@
-.PHONY: phase10 phase11 test dashboard bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep
+.PHONY: phase10 phase11 test dashboard dashboard-build bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep
 
 test:
 	PYTHONPATH=. .venv313/bin/pytest tests/ --ignore=tests/test_phase11_benchmark.py -v
 
 phase10:
 	PYTHONPATH=. .venv313/bin/pytest tests/test_phase10_dashboard.py -v
+
+dashboard-build:
+	cd tripline-frontend && npm run build
 
 dashboard:
 	PYTHONPATH=. .venv313/bin/uvicorn dashboard.app:app --reload --port 8080

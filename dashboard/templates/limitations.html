@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Limitations{% endblock %}
+{% block content %}
+<div class="page-header animate-card">
+    <h1 class="page-title">TRIPLINE ARCHITECTURAL LIMITATIONS</h1>
+    <div class="page-subtitle">Honest forensic disclosure of boundaries, residuals, and non-claims.</div>
+</div>
+
+<div class="card animate-card" style="border-left: 4px solid var(--hold);">
+    <div class="card-title">DOCUMENTATION SOURCE: docs/limitations.md</div>
+    <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.7; color: var(--text); white-space: pre-wrap; background: var(--surface-2); padding: 20px; border-radius: 6px; overflow-x: auto;">{{ content }}</div>
+</div>
+{% endblock %}

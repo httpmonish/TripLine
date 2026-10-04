@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 def redact_secret(text: str) -> str:
     """Redacts secrets, API keys, bearer tokens."""
@@ -44,19 +45,26 @@ def sanitize_text(text: str) -> str:
     # The UI layer will handle HTML escaping via Jinja2 default behavior.
     return text
 
-def sanitize_payload(payload: dict) -> dict:
-    """Recursively sanitize a payload."""
-    if not payload:
-        return {}
-    
-    sanitized = {}
-    for k, v in payload.items():
-        if isinstance(v, str):
-            sanitized[k] = sanitize_text(v)
-        elif isinstance(v, dict):
-            sanitized[k] = sanitize_payload(v)
-        elif isinstance(v, list):
-            sanitized[k] = [sanitize_text(item) if isinstance(item, str) else item for item in v]
-        else:
-            sanitized[k] = v
-    return sanitized
+def sanitize_payload(payload: Any) -> Any:
+    """Recursively sanitize a payload (dict or list)."""
+    if payload is None:
+        return None
+    if isinstance(payload, list):
+        return [
+            sanitize_payload(item) if isinstance(item, (dict, list))
+            else (sanitize_text(item) if isinstance(item, str) else item)
+            for item in payload
+        ]
+    if isinstance(payload, dict):
+        sanitized = {}
+        for k, v in payload.items():
+            if isinstance(v, str):
+                sanitized[k] = sanitize_text(v)
+            elif isinstance(v, (dict, list)):
+                sanitized[k] = sanitize_payload(v)
+            else:
+                sanitized[k] = v
+        return sanitized
+    if isinstance(payload, str):
+        return sanitize_text(payload)
+    return payload

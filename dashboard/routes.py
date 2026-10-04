@@ -330,3 +330,24 @@ async def signup_submit(request: Request):
         context={"submitted": True, "registration": registration}
     )
 
+@router.get("/limitations", response_class=HTMLResponse)
+async def limitations_page(request: Request):
+    lim_file = repo.workspace_root / "docs" / "limitations.md"
+    content = lim_file.read_text(encoding="utf-8") if lim_file.exists() else "No limitations document found."
+    return templates.TemplateResponse(
+        request=request,
+        name="limitations.html",
+        context={"content": content}
+    )
+
+@router.get("/status", response_class=HTMLResponse)
+async def status_page(request: Request):
+    stat_file = repo.workspace_root / "docs" / "STATUS.md"
+    content = stat_file.read_text(encoding="utf-8") if stat_file.exists() else "No status document found."
+    return templates.TemplateResponse(
+        request=request,
+        name="status.html",
+        context={"content": content}
+    )
+
+

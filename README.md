@@ -88,6 +88,13 @@ make demo
 ## `make demo`
 This command prepares the demo environment, starts the backend MCP server, executes live attack scenarios, and launches the web dashboard at `http://localhost:8080`. Demo runs and receipts are written to `results/demo/` in isolation from benchmark data.
 
+## Frontend
+The dashboard interface is built with Next.js and static export (`tripline-frontend/`), served directly by FastAPI single-process on `http://127.0.0.1:8080`.
+- **Offline & Zero-CDN**: All assets, fonts, and scripts are bundled locally. Zero external network calls.
+- **REST API**: Mounted under `/api` in `dashboard/api.py`, serving real dynamic data computed directly from forensic artifacts (`results/demo/receipt_*.json`, `events.jsonl`, `demo_runs.jsonl`, and `benchmark_runs.jsonl`).
+- **Build**: Run `make dashboard-build` to recompile the frontend static bundle. The pre-built bundle is included in `tripline-frontend/out/` so `make demo` starts without requiring node/npm installed at runtime.
+
+
 ## Benchmark Results
 Benchmark scope matches `benchmark/results/benchmark_runs.csv` and `benchmark_summary.csv`:
 - **86 evaluated runs** across 27 scenarios (24 attack classes + 3 benign tasks).

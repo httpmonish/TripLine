@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from pathlib import Path
 from dashboard.routes import router
+from dashboard.api import api_router
 
 app = FastAPI(title="Tripline Dashboard")
 
@@ -35,4 +36,5 @@ for icon_name in ["icon-light-32x32.png", "icon-dark-32x32.png", "icon.svg", "ap
             return lambda: FileResponse(str(f))
         app.add_api_route(f"/{icon_name}", make_endpoint(icon_file), methods=["GET"])
 
+app.include_router(api_router)
 app.include_router(router)
