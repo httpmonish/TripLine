@@ -20,38 +20,124 @@ Every security incident generates an **Incident Receipt**—cryptographically ba
 "Authorization of one action does not authorize every downstream use of its data."
 Existing systems assume that if an action is unauthorized, the prompt is dropped. But what if authorized data is exfiltrated downstream? And how do we provide verifiable forensic evidence that a stopped instruction caused zero MCP tool side effects? Tripline bridges the gap between authorization policy and verifiable execution evidence. 
 
-## Architecture
+## 3D Multi-Layer Defense Topology
+
+Tripline implements an orthogonal, four-plane security architecture designed to prevent unauthorized downstream data use even when tool usage has been authorized.
+
 ```
-USER
- |
- v
-AGENT
- |
- v
-ARMORIQ
- |
- v
-ACTION GATEWAY
- |
- v
-MCP
- |
- +---- Path Jail
- |
- +---- Canary
- |
- +---- Witness
- |
- v
-TOOLS
+       ▲  [PLANE 1: INGRESS & PROVENANCE]
+      / \   • Untrusted Inputs (Issues, PRs, Webhooks)
+     /   \  • Invariant Hashing & C1 Origin Attribution
+    /═════\ • Ledger: Content Hash ⟷ Source URL / Author
+   /       \
+  /═════════\  [PLANE 2: TOOL-LEVEL AUTHORIZATION — ARMORIQ]
+ / \       / \   • Evaluates agent role, task scope & session plan
+/   \     /   \  • Authorizes: "May the agent invoke `read_file`?"
+\    \   /    /  • Matches Policy: `cli-tripline-maintainer-tripline-mcp`
+ \    \ /    /   • Outcome: ALLOW (Cannot see filesystem paths or payload secrets)
+  \    V    /
+   \═══════/  [PLANE 3: SYSTEM & ARGUMENT CONTAINMENT — TRIPLINE]
+    \     /     ┌────────────────────────────────────────────────────────┐
+     \   /      │  PATH JAIL: `fstat` + Inode verification               │
+      \ /       │  • Evaluates target path against repository root        │
+       ▼        │  • Blocks traversal (`../../.ssh/fake_key`) ➔ DENY     │
+      / \       ├────────────────────────────────────────────────────────┤
+     /   \      │  EGRESS CANARY GATEWAY: Regex & Entropy Scanners       │
+    /     \     │  • Scans outbound text arguments for planted tokens    │
+   /═══════\    │  • Detects leaked Tier-2 Canary in comment ➔ HOLD      │
+  /         \   └────────────────────────────────────────────────────────┘
+ /═══════════\  [PLANE 4: KERNEL WITNESS & CRYPTOGRAPHIC PROOF]
+/             \   • Append-only HMAC hash chain of real syscall executions
+\             /   • Reconciles intent vs reality: `read_file: 0 executed`
+ \           /    • Mints Canonical JSON SHA-256 + HMAC-SHA256 Incident Receipt
+  \═════════/     • 60-Second Replay-Safe Decision Proof Header
 ```
 
-## ArmorIQ vs Tripline
-- **ArmorIQ** decides at the tool authorization boundary. It verifies agent session state, tool permissions, and maintainer role policies. Because ArmorIQ does not inspect raw filesystem paths or unstructured comment payloads, **ArmorIQ ALLOWS both demo attacks (DP-01 and IE-01) at the tool level** (matched policy `cli-tripline-maintainer-tripline-mcp`).
-- **Tripline** explains and verifies at the system and data boundaries:
-  - **DP-01** is **DENIED by Tripline's kernel-verified Path Jail** (`PATH_OUTSIDE_ROOT`), not by ArmorIQ.
-  - **IE-01** is **HELD by Tripline's Egress Gateway** upon detecting the canary in the comment payload. This is an **independent Tripline egress hold**, not an ArmorIQ delegation.
-  - Tripline adds forensic provenance (C1), canary/egress detection, kernel-verified execution witness reconciliation, and cryptographically verifiable incident receipts.
+---
+
+## Dynamic Execution Pipeline Flow
+
+The following interactive sequence illustrates how an action proposal travels through the Tripline pipeline from raw prompt ingest to cryptographically verified incident receipt:
+
+```mermaid
+flowchart TD
+    %% Styling
+    classDef input fill:#1c1917,stroke:#78716c,stroke-width:1px,color:#f5f5f4;
+    classDef armoriq fill:#064e3b,stroke:#059669,stroke-width:1.5px,color:#ecfdf5;
+    classDef tripline fill:#701a75,stroke:#c026d3,stroke-width:1.5px,color:#fdf4ff;
+    classDef deny fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#fee2e2;
+    classDef hold fill:#78350f,stroke:#f59e0b,stroke-width:2px,color:#fef3c7;
+    classDef witness fill:#1e1b4b,stroke:#6366f1,stroke-width:1.5px,color:#e0e7ff;
+    classDef receipt fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f0f9ff;
+
+    subgraph STAGE_1["01 / INGEST & PROVENANCE"]
+        U["Untrusted Input<br/>(Issue #42 / Decoy Config)"]:::input --> P["Origin Ledger<br/>(C1 Attribution Hash)"]:::input
+    end
+
+    subgraph STAGE_2["02 / AGENT PROPOSAL & ARMORIQ"]
+        P --> A["Agent Loop<br/>(Proposes Tool Call)"]:::input
+        A -->|Tool check request| AQ{"ArmorIQ Gate<br/>session.check()"}:::armoriq
+        AQ -->|Policy Match:<br/>Tool Allowed| DP["Mint Decision Proof<br/>(HMAC Token, TTL=60s)"]:::armoriq
+    end
+
+    subgraph STAGE_3["03 / TRIPLINE ARGUMENT CONTAINMENT"]
+        DP --> TG{"Tripline Gateway<br/>Argument Inspector"}:::tripline
+        
+        %% Direct Path Branch
+        TG -->|Path Traversal Check| PJ{"Path Jail<br/>fstat Inode Check"}:::tripline
+        PJ -->|Outside Repo Root| D1["TRIPLINE DENY<br/>(PATH_OUTSIDE_ROOT)"]:::deny
+        
+        %% Egress Canary Branch
+        TG -->|Outbound Text Scan| CG{"Canary Gateway<br/>Regex Trap"}:::tripline
+        CG -->|Planted Token Detected| D2["TRIPLINE HOLD<br/>(egress_canary_hit)"]:::hold
+    end
+
+    subgraph STAGE_4["04 / WITNESS RECONCILIATION"]
+        D1 --> W1["Execution Witness<br/>read_file: 0 executed"]:::witness
+        D2 --> W2["Execution Witness<br/>comment_issue: 0 executed"]:::witness
+    end
+
+    subgraph STAGE_5["05 / CRYPTOGRAPHIC INCIDENT RECEIPT"]
+        W1 --> R1["Signed Receipt (DP-01)<br/>SHA-256 Digest + HMAC"]:::receipt
+        W2 --> R2["Signed Receipt (IE-01)<br/>SHA-256 Digest + HMAC"]:::receipt
+        R1 --> V["Independent Verifier<br/>python -m receipts.verify"]:::receipt
+        R2 --> V
+    end
+```
+
+---
+
+## 3D Forensic Anatomy: Two Live Demo Attacks
+
+| Forensic Dimension | Attack A: Direct Path (`DP-01`) | Attack B: In-Scope Egress (`IE-01`) |
+| :--- | :--- | :--- |
+| **Ingress Vector** | Poisoned Issue payload requesting SSH key access | Poisoned prompt reading decoy deployment credentials |
+| **Proposed Action** | `read_file(path="../../.ssh/fake_key")` | `comment_issue(body="Canary token: ak_live_...")` |
+| **Plane 1: Provenance** | Attribution: `C1` (Untrusted issue author) | Attribution: `C1` (Decoy config injected via prompt) |
+| **Plane 2: ArmorIQ** | **ALLOW** (Authorized `read_file` under maintainer policy) | **ALLOW** (Authorized `comment_issue` under maintainer policy) |
+| **Plane 3: Tripline** | **DENY** via **Path Jail** (`PATH_OUTSIDE_ROOT`) | **HOLD** via **Egress Gateway** (`egress_canary_hit`) |
+| **Plane 4: Witness** | `read_file`: **0 executed** (Blocked prior to syscall) | `read_file`: **1 executed** (decoy) $\vert$ `comment`: **0 executed** |
+| **Plane 5: Receipt** | Canonical Hash: `a82d65...` $\vert$ HMAC Signature | Canonical Hash: `530db4...` $\vert$ HMAC Signature |
+| **Verification** | `make verify FILE=results/demo/receipt_DP-01.json` | `make verify FILE=results/demo/receipt_IE-01.json` |
+
+---
+
+## Decision Proof Cryptographic Protocol
+
+To prevent malicious local processes from bypassing ArmorIQ or Tripline gates, every legitimate tool call is bound to a cryptographically verifiable **Decision Proof**:
+
+```
+[Agent Engine] ──── 1. Proposal ────► [Tripline Gateway] ──── 2. Verify Session ────► [ArmorIQ SDK]
+                                              │                                             │
+                                      4. HMAC Mint                                   3. Policy ALLOW
+                                              ▼                                             │
+[Tripline MCP Server] ◄── 5. X-Tripline-Decision-Proof ─────────────────────────────────────┘
+         │               (args_hash : decision : timestamp : hmac)
+         ├──── 6. Validate HMAC using local Witness Secret Key
+         ├──── 7. Enforce 60-Second Replay Window (Idempotent Retries)
+         ├──── 8. Execute Path Jail / Canary Scan
+         └──── 9. Append Step to HMAC Hash Chain (Witness Log)
+```
 
 ## Demo
 The demo showcases two primary attacks:
