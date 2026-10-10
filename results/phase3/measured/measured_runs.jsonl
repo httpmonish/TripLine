@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-10T12:45:59.758779+00:00", "provider": "none", "model": "none", "temperature": 0.0, "k_per_cell": 5, "total_cap": 80, "prompt_hashes": {"system_v1.md": "ece94c058c8506265fd9a53cf8637c72fc0e4d8c3d1c34c56ecefbf310df4715", "system_v2_naive.md": "c83a396fccbe7515cf5c2a83d8a11661ed39d7d9dccfb208e42368ffdf32df63"}, "status": "UNVERIFIED_NO_LLM_KEY"}
