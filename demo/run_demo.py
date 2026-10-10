@@ -29,7 +29,16 @@ def main():
     print("Starting server...")
     server_env = os.environ.copy()
     server = subprocess.Popen([sys.executable, "server.py"], env=server_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    time.sleep(2)
+    
+    # Active socket poll instead of artificial sleep
+    import socket
+    for _ in range(50):
+        try:
+            with socket.create_connection(("127.0.0.1", 8000), timeout=0.1):
+                break
+        except OSError:
+            time.sleep(0.05)
+
 
     # 3. Execute live attacks for real receipt generation
     print("\nExecuting LIVE attacks for demo receipts...")
@@ -296,7 +305,13 @@ def main():
     # 4. Start Dashboard
     print("Starting dashboard...")
     dashboard = subprocess.Popen([sys.executable, "-m", "uvicorn", "dashboard.app:app", "--port", "8080"])
-    time.sleep(2)
+    for _ in range(50):
+        try:
+            with socket.create_connection(("127.0.0.1", 8080), timeout=0.1):
+                break
+        except OSError:
+            time.sleep(0.05)
+
     
     print("\n" + "="*50)
     print("Tripline Demo Environment is LIVE.")

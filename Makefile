@@ -83,6 +83,22 @@ pipeline:
 verify:
 	PYTHONPATH=. .venv313/bin/python -m receipts.verify $(FILE)
 
+wow:
+	@echo "=== 1/5: Running Phase 3 Multi-Layer Scenario ==="
+	PYTHONPATH=. .venv313/bin/python scripts/run_phase3_scenario.py --rung 0
+	@echo "\n=== 2/5: Running Deterministic Path-Trick Jail Burst ==="
+	PYTHONPATH=. .venv313/bin/python scripts/jail_burst.py
+	@echo "\n=== 3/5: Cryptographic Receipt Verification ==="
+	PYTHONPATH=. .venv313/bin/python -m receipts.verify results/phase3/scenario/receipt_P1_ARMORIQ_DENY.json
+	PYTHONPATH=. .venv313/bin/python -m receipts.verify results/phase3/scenario/receipt_P2_JAIL_DENY.json
+	PYTHONPATH=. .venv313/bin/python -m receipts.verify results/phase3/scenario/receipt_P3_GATEWAY_HOLD.json
+	@echo "\n=== 4/5: Verifying ArmorIQ Sidecar Hash-Chain ==="
+	PYTHONPATH=. .venv313/bin/python -m scripts.verify_links
+	@echo "\n=== 5/5: Running Cryptographic Tamper Demonstration ==="
+	PYTHONPATH=. .venv313/bin/python scripts/tamper_demo.py
+	@echo "\n[+] TRIPLINE PHASE 3 'WOW' TARGET SUCCEEDED: ALL CHECKS VERIFIED."
+
 phase13:
 	echo "Submitting..."
+
 

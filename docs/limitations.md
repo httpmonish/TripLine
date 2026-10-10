@@ -63,3 +63,9 @@ This document honestly outlines the boundaries, assumptions, cryptographic model
 ## 6. Provenance Attribution vs Causal Proof
 **Implementation:** Tripline provides robust provenance (C1 level attribution via exact string matching and normalized content hashing against context items recorded in the provenance ledger).
 **Residual Limitation:** C0 and C1 attribution establish that untrusted content was present in context or matched the proposal verbatim. They do **not** mathematically prove *causation* (C2 level ablation-confirmed causal attribution was not implemented in this phase).
+
+---
+
+## 7. Canary Egress Scanner Encoding Residual (Phase 3 Finding)
+**Implementation:** Tripline's Egress Scanner performs substring pattern matching against active Tier-2 canary tokens in outbound tool call payloads (`scan_egress_payload` in `canary/scan.py`).
+**Residual Limitation:** Tripline's canary scan does not catch base64-encoded, reversed, or split-token representations of secrets. ArmorIQ authorizes `comment_issue` at the tool policy boundary without inspecting unstructured body text, and Tripline's scanner relies on literal token matching. Consequently, an agent that base64-encodes, reverses, or splits a planted canary across multiple comments evades detection under both layers. This boundary gap is documented honestly as an architecture limitation.

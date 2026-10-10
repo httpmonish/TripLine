@@ -20,3 +20,51 @@ In accordance with the hackathon transparency rules and Phase 2 Section 4.4, thi
   - **Matched Policy**: `cli-tripline-maintainer-tripline-mcp`
   - **Platform Request ID**: `129b1cae-d597-451b-8a9f-2eddb7cab3a8`
   - **Network Verification**: 1 direct HTTP POST to `https://api.armoriq.ai/iap/sdk/enforce`
+
+---
+
+## Phase 3 Video Disclosure Card (The 90-Second Submission Card)
+
+```
+========================================================================================
+TRIPLINE HACKATHON DISCLOSURE CARD (FLOW STATE 2026 — 10–17 OCT 2026)
+========================================================================================
+1. MODEL & RUN DETAILS:
+   - Evaluated under Rung 0 (standard prompt `agent/prompts/system_v1.md`).
+   - Without live LLM credentials configured, LLM emission rates remain UNVERIFIED.
+   - Zero synthetic, simulated, or mock LLM tool emissions were substituted.
+
+2. ARMORIQ PLATFORM ENFORCEMENT:
+   - All ArmorIQ decisions are 100% REAL platform evaluations executed live against
+     api.armoriq.ai (/iap/sdk/enforce) in SDK mode under policy cli-tripline-maintainer-tripline-mcp.
+
+3. DEFENSE ATTRIBUTION (ARMORIQ ALLOWED, TRIPLINE STOPPED):
+   - Attack 2 (Path Traversal to ~/.ssh/id_rsa): ArmorIQ ALLOWED read_file; Tripline Path
+     Jail DENIED (PATH_OUTSIDE_ROOT), yielding 0 executions and 0 bytes leaked.
+   - Attack 3 (Canary Token Exfiltration): ArmorIQ ALLOWED comment_issue; Tripline Egress
+     Gateway HELD (egress_canary_hit), yielding 0 exfiltrations.
+
+4. ACKNOWLEDGED HONEST RESIDUAL:
+   - Tripline's egress canary scan matches literal substrings and DOES NOT catch base64-encoded,
+     reversed, or fragmented canary tokens. Neither layer stops transformed egress.
+
+5. SAMPLE SIZE & LIMITS:
+   - Measured sample k=5 per cell; N=15 total. No statistical significance or generalization
+     claim is asserted beyond this exact benchmark suite.
+   - Historical M2 benchmark (86 runs) utilized forced-compliance stubs and is not model data.
+
+6. WITNESS IMPLEMENTATION:
+   - The witness is an HMAC-chained append-only execution log maintained on the local MCP side,
+     not a kernel-level module or Merkle tree.
+
+7. PRE-EXISTING CODE DISCLOSURE:
+   - Tripline's pre-build-week foundation was fully disclosed to hackathon organizers and
+     approved by the founder in accordance with competition rules.
+
+8. SANDBOX ISOLATION:
+   - All tests execute strictly within disposable throwaway sandbox roots. The "~/.ssh/id_rsa"
+     path is a synthetic fixture in an isolated temp folder. No real user credentials or
+     external GitHub repositories were accessed.
+========================================================================================
+```
+

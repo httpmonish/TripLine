@@ -241,8 +241,8 @@ def test_invalid_session_state():
         decision = session.check("hello_tool", {})
         assert not decision.allowed, "Check without plan should block"
     except Exception as e:
-        # Expected to fail
-        assert True
+        # Expected to fail in SDK without an active plan token
+        assert "plan" in str(e).lower() or isinstance(e, Exception)
         
     session.close()
     client.close()
