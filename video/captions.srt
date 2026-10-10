@@ -1,0 +1,27 @@
+1
+00:00:00,000 --> 00:00:06,000
+Tripline: forensic incident receipts for AI agents.
+
+2
+00:00:06,000 --> 00:00:18,000
+A real LLM agent. 5 issues: 2 benign, 3 poisoned.
+
+3
+00:00:18,000 --> 00:00:32,000
+ArmorIQ blocks delete_branch at the platform.
+
+4
+00:00:32,000 --> 00:00:48,000
+ArmorIQ allowed both. Tripline stopped them.
+
+5
+00:00:48,000 --> 00:01:04,000
+Change one byte of a receipt. Detected.
+
+6
+00:01:04,000 --> 00:01:16,000
+Attributable defense-in-depth across three layers.
+
+7
+00:01:16,000 --> 00:01:26,000
+ArmorIQ decides. Tripline proves.

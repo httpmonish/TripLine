@@ -1,0 +1,7 @@
+Blocked isn't evidence. Every denied action gets a receipt.
+A real LLM agent processes a queue of five issues. Benign tasks execute normally under ArmorIQ.
+A poisoned issue instructs the agent to delete a branch. ArmorIQ stops it upstream at the platform.
+For the next two attacks, ArmorIQ permits the tools. But Tripline's path jail blocks traversal, and its egress gateway traps planted canary leaks.
+Every denied action generates an HMAC-signed receipt. Change just one byte, and tampering is immediately detected.
+All decisions are captured across three layers in a read-only dashboard reading real evidence files.
+ArmorIQ decides. Tripline proves.
