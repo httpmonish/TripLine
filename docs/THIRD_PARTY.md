@@ -31,9 +31,12 @@ Generated via `pip freeze` and `pip list` in `.venv313` (Python 3.13.16).
 | `pytest` | 9.1.1 | MIT | Automated testing framework |
 | `pytest-asyncio` | 1.4.0 | Apache-2.0 | Async test runner |
 | `anyio` | 4.15.1 | MIT | Async compatibility layer |
+| `imageio-ffmpeg` | 0.6.0 | BSD-2-Clause | Standalone binary wrapper for ffmpeg video encoding |
+| `pillow` | 12.3.0 | HPND / MIT-like | Keyframe and terminal frame image rendering |
 
 ---
 
 ## 3. UI Assets & Fonts
-- **Fonts:** System native font stacks only (`-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `ui-monospace`, `Menlo`). Zero external font files or CDN calls.
+- **Dashboard Fonts:** System native font stacks only (`-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `ui-monospace`, `Menlo`). Zero external font files or CDN calls.
+- **Video Fonts:** Standard system monospace (`Courier New`) and sans-serif (`Arial`) bundled locally under `video/fonts/`.
 - **Icons:** Inline SVG and Unicode glyphs (`[✓]`, `[✕]`, `[⧗]`, `[⚠]`). Zero external icon libraries.

@@ -22,3 +22,5 @@ pytest-asyncio==1.4.0
 anyio==4.15.1
 rich==15.0.0
 click==8.5.0
+imageio-ffmpeg==0.6.0
+pillow==12.3.0

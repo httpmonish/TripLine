@@ -24,6 +24,7 @@ agent/logs/
 *~
 .DS_Store
 _to_delete/
+video/frames/
 
 # Cloudflare binary/archive
 cloudflared
