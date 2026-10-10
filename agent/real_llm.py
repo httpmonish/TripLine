@@ -14,6 +14,10 @@ import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
+from dotenv import load_dotenv
+
+# Load local .env if present (gitignored)
+load_dotenv()
 
 # Predefined tool definitions matching Tripline MCP schema
 TRIAGE_TOOLS_SCHEMA = [
