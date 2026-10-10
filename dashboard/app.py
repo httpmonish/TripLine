@@ -1,40 +1,36 @@
-from fastapi import FastAPI, Response
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+"""
+dashboard/app.py — Minimal Truthful FastAPI Application (Phase 4).
+
+Enforces security headers, strictly read-only views, and local static assets.
+"""
+
 from pathlib import Path
-from dashboard.routes import router
+from fastapi import FastAPI, Request, Response
+from fastapi.staticfiles import StaticFiles
+
 from dashboard.api import api_router
+from dashboard.routes import router
 
-app = FastAPI(title="Tripline Dashboard")
+app = FastAPI(
+    title="Tripline Evidence Dashboard",
+    description="Minimal read-only viewer for real agent execution receipts and defense layers.",
+    docs_url=None,   # Disable Swagger docs in production viewer
+    redoc_url=None,  # Disable ReDoc in production viewer
+)
 
-workspace_root = Path(__file__).parent.parent
-frontend_out = workspace_root / "tripline-frontend" / "out"
+# Security Headers Middleware (Section 5.4)
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response: Response = await call_next(request)
+    response.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
 
 static_dir = Path(__file__).parent / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
-if frontend_out.exists():
-    next_static = frontend_out / "_next"
-    if next_static.exists():
-        app.mount("/_next", StaticFiles(directory=str(next_static)), name="next_static")
-
-# Serve public root icons from frontend_out
-@app.get("/icon-light-32x32.png")
-@app.get("/icon-dark-32x32.png")
-@app.get("/icon.svg")
-@app.get("/apple-icon.png")
-async def get_icon(path: str = None):
-    from fastapi import Request
-    # Handled via individual route decorators
-    pass
-
-for icon_name in ["icon-light-32x32.png", "icon-dark-32x32.png", "icon.svg", "apple-icon.png"]:
-    icon_file = frontend_out / icon_name
-    if icon_file.exists():
-        def make_endpoint(f):
-            return lambda: FileResponse(str(f))
-        app.add_api_route(f"/{icon_name}", make_endpoint(icon_file), methods=["GET"])
 
 app.include_router(api_router)
 app.include_router(router)

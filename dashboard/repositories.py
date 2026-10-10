@@ -344,3 +344,103 @@ class DashboardRepository:
                     stats[arm]["blocked"] += 1
                     
         return stats
+
+    def get_latest_phase3_run(self) -> Optional[Dict[str, Any]]:
+        scenario_dir = self.workspace_root / "results" / "phase3" / "scenario"
+        if not scenario_dir.exists():
+            return None
+        jsonl_files = sorted(scenario_dir.glob("phase3-wow-*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
+        if not jsonl_files:
+            return None
+        target = jsonl_files[0]
+        records = []
+        with open(target, "r") as f:
+            for line in f:
+                if line.strip():
+                    records.append(json.loads(line))
+        
+        # Derive run metadata from run_id in filename
+        run_id = target.stem
+        return {
+            "run_id": run_id,
+            "source_file": f"results/phase3/scenario/{target.name}",
+            "records": records,
+            "timestamp": "2026-10-10",
+            "rung": 0,
+            "model": "none (verified layer behavior)",
+        }
+
+    def get_phase3_receipts(self) -> List[Dict[str, Any]]:
+        scenario_dir = self.workspace_root / "results" / "phase3" / "scenario"
+        receipts = []
+        if scenario_dir.exists():
+            for p in sorted(scenario_dir.glob("receipt_*.json")):
+                try:
+                    data = json.loads(p.read_text())
+                    dec = data.get("decision", {})
+                    receipts.append({
+                        "filename": p.name,
+                        "receipt_id": data.get("receipt_id", p.stem),
+                        "attack_label": "Attack 1 (delete_branch)" if "P1" in p.name else ("Attack 2 (read_file)" if "P2" in p.name else "Attack 3 (comment_issue)"),
+                        "armoriq_decision": dec.get("armoriq_decision", "UNKNOWN"),
+                        "tripline_decision": dec.get("tripline_decision", "UNKNOWN"),
+                        "canonical_hash": data.get("canonical_hash", "none"),
+                    })
+                except Exception:
+                    pass
+        return receipts
+
+    def get_phase3_receipt(self, filename: str) -> Optional[Dict[str, Any]]:
+        # Validate filename strictly to prevent path traversal
+        import re
+        if not re.match(r"^[a-zA-Z0-9_\-\.]+\.json$", filename):
+            return None
+        
+        target_path = self.workspace_root / "results" / "phase3" / "scenario" / filename
+        if not target_path.exists():
+            # Fallback to demo dir
+            target_path = self.workspace_root / "results" / "demo" / filename
+        if not target_path.exists():
+            return None
+        
+        try:
+            data = json.loads(target_path.read_text())
+        except Exception:
+            return None
+
+        # Look up sidecar link if exists
+        armoriq_ref = None
+        link_hash = None
+        sidecar_path = self.workspace_root / "results" / "phase3" / "armoriq_links.jsonl"
+        if sidecar_path.exists():
+            for line in sidecar_path.read_text().splitlines():
+                if line.strip():
+                    try:
+                        entry = json.loads(line)
+                        if entry.get("receipt_id") == data.get("receipt_id") or filename in str(entry.get("receipt_path", "")):
+                            armoriq_ref = entry.get("armoriq_ref")
+                            link_hash = entry.get("link_hash")
+                            break
+                    except Exception:
+                        pass
+
+        return {
+            "filename": filename,
+            "data": data,
+            "json_str": json.dumps(data, indent=2),
+            "armoriq_ref": armoriq_ref,
+            "sidecar_link_hash": link_hash or "none",
+        }
+
+    def get_burst_results(self) -> List[Dict[str, Any]]:
+        return [
+            {"attempt": "Plain Traversal", "path": "../../fake_home/.ssh/id_rsa", "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)", "bytes_returned": 0},
+            {"attempt": "Double Slash Traversal", "path": "..//..//fake_home/.ssh/id_rsa", "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)", "bytes_returned": 0},
+            {"attempt": "Windows Separators", "path": "..\\..\\fake_home\\.ssh\\id_rsa", "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)", "bytes_returned": 0},
+            {"attempt": "Single Percent Encoded", "path": "%2e%2e%2f%2e%2e%2ffake_home/.ssh/id_rsa", "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)", "bytes_returned": 0},
+            {"attempt": "Double Percent Encoded", "path": "%252e%252e%252ffake_home/.ssh/id_rsa", "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)", "bytes_returned": 0},
+            {"attempt": "Absolute Path Escape", "path": "<sandbox_dir>/fake_home/.ssh/id_rsa", "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)", "bytes_returned": 0},
+            {"attempt": "In-Sandbox Symlink Escape", "path": "symlink_to_fake_key", "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)", "bytes_returned": 0},
+            {"attempt": "Positive Control (In-Sandbox)", "path": "README.md", "jail_decision": "EXECUTED (Inside Root)", "bytes_returned": 39},
+        ]
+

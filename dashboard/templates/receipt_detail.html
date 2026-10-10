@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Receipt {{ receipt.receipt_id }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
+  <div>
+    <a href="/receipts" style="font-size: 13px; color: var(--text-muted);">&larr; Back to Receipts</a>
+    <h1 style="margin-top: 8px;">Receipt: <span class="font-mono">{{ receipt.receipt_id }}</span></h1>
+  </div>
+  <div>
+    <span class="badge badge-neutral font-mono">File: {{ filename }}</span>
+  </div>
+</div>
+
+<!-- Interactive Verification Station -->
+<div class="card" style="border-top: 4px solid var(--text);">
+  <h2 style="margin-top: 0;">Independent Cryptographic Verification</h2>
+  <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+    Every receipt signs its canonical evidence fields with HMAC bound to the MCP witness hash chain. Click below to recompute canonical hashes and verify signatures live server-side.
+  </p>
+
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+    <button id="btn-verify" class="btn btn-primary" onclick="verifyReceipt(false)">
+      Verify Original Receipt
+    </button>
+    <button id="btn-tamper" class="btn btn-danger" onclick="verifyReceipt(true)">
+      Verify a Modified Copy (Tamper Check)
+    </button>
+  </div>
+
+  <div id="verify-output-box" style="display: none; margin-top: 16px;">
+    <div id="verify-status-banner" style="padding: 12px 16px; border-radius: 6px; font-weight: 600; margin-bottom: 8px;"></div>
+    <pre id="verify-log" style="white-space: pre-wrap; font-size: 12px;"></pre>
+  </div>
+</div>
+
+<!-- ArmorIQ Platform Link -->
+<div class="card">
+  <h2 style="margin-top: 0;">ArmorIQ Platform Audit Reference</h2>
+  {% if armoriq_ref %}
+  <div class="table-wrapper">
+    <table>
+      <tbody>
+        <tr>
+          <th style="width: 200px;">Platform Tool Name</th>
+          <td><code class="font-mono">{{ armoriq_ref.tool }}</code></td>
+        </tr>
+        <tr>
+          <th>Platform Decision</th>
+          <td>
+            {% if armoriq_ref.decision == 'ALLOW' %}
+            <span class="badge badge-allow">[✓] ALLOW</span>
+            {% else %}
+            <span class="badge badge-deny">[✕] DENY</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>Platform Reason</th>
+          <td><code>{{ armoriq_ref.reason }}</code></td>
+        </tr>
+        <tr>
+          <th>Matched Policy</th>
+          <td><code>{{ armoriq_ref.matched_policy }}</code></td>
+        </tr>
+        <tr>
+          <th>Platform Endpoint</th>
+          <td><code>{{ armoriq_ref.endpoint }}</code></td>
+        </tr>
+        <tr>
+          <th>Sidecar Link Hash</th>
+          <td><code class="font-mono">{{ sidecar_link_hash }}</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="color: var(--text-muted); font-size: 13px;">
+    <em>Not available in sidecar ledger for this receipt.</em>
+  </p>
+  {% endif %}
+</div>
+
+<!-- Raw Receipt Fields -->
+<div class="card">
+  <h2 style="margin-top: 0;">Stored Receipt Evidence Payload</h2>
+  <pre>{{ receipt_json }}</pre>
+</div>
+
+<script>
+async function verifyReceipt(tamper) {
+  const box = document.getElementById('verify-output-box');
+  const banner = document.getElementById('verify-status-banner');
+  const log = document.getElementById('verify-log');
+
+  box.style.display = 'block';
+  banner.textContent = 'Computing cryptographic verification...';
+  banner.className = 'badge badge-neutral';
+  log.textContent = '';
+
+  const endpoint = tamper ? '/api/receipts/{{ filename }}/verify-tampered' : '/api/receipts/{{ filename }}/verify';
+
+  try {
+    const res = await fetch(endpoint, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'VERIFIED') {
+      banner.style.backgroundColor = 'var(--decision-allow-bg)';
+      banner.style.color = 'var(--decision-allow-text)';
+      banner.style.border = '1px solid var(--decision-allow-border)';
+      banner.textContent = '[✓] VERIFIED: Canonical hash matches evidence fields and cryptographic signature is authentic.';
+    } else {
+      banner.style.backgroundColor = 'var(--decision-tamper-bg)';
+      banner.style.color = 'var(--decision-tamper-text)';
+      banner.style.border = '1px solid var(--decision-tamper-border)';
+      banner.textContent = '[⚠] ' + (data.reason || 'TAMPER_DETECTED: Cryptographic hash mismatch!');
+    }
+
+    log.textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    banner.textContent = 'Error executing server verification: ' + err;
+  }
+}
+</script>
+{% endblock %}

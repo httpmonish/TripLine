@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}About & Boundaries{% endblock %}
+
+{% block content %}
+<h1>About Tripline & ArmorIQ</h1>
+<p class="subtitle">Architecture responsibilities, boundaries, and honest limitations.</p>
+
+<div class="card">
+  <h2 style="margin-top: 0;">1. What is ArmorIQ's Job?</h2>
+  <p style="color: var(--text-muted); line-height: 1.8;">
+    ArmorIQ acts as the authoritative upstream policy and identity gatekeeper. When an autonomous AI agent proposes invoking an MCP tool, ArmorIQ evaluates maintainer roles, session tokens, and tool permissions against centralized platform policies (such as <code class="font-mono">cli-tripline-maintainer-tripline-mcp</code>). Actions prohibited by policy—such as destructive branch deletions—are denied upstream at the platform perimeter before reaching the repository MCP server, ensuring 0 unwanted tool dispatches.
+  </p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top: 0;">2. What is Tripline's Job?</h2>
+  <p style="color: var(--text-muted); line-height: 1.8;">
+    Tripline acts as the downstream containment and forensic evidence engine. Because ArmorIQ authorizes tools broadly (e.g. allowing <code class="font-mono">read_file</code> or <code class="font-mono">comment_issue</code> for maintainers), Tripline inspects runtime arguments and execution parameters:
+  </p>
+  <ul style="list-style-type: disc; margin: 12px 0 12px 24px; color: var(--text-muted); line-height: 1.8;">
+    <li><strong>Path Containment Jail:</strong> Enforces userland <code class="font-mono">open-then-verify</code> file descriptor checks (<code class="font-mono">fcntl(fd, F_GETPATH)</code>) to stop path traversal and TOCTOU escapes.</li>
+    <li><strong>Canary Egress Gateway:</strong> Quarantines outbound comments and payload bodies attempting to exfiltrate planted secrets.</li>
+    <li><strong>Cryptographic Receipts:</strong> Emits canonical JSON SHA-256 receipts signed with HMAC bound to an append-only witness chain, proving exactly what happened.</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h2 style="margin-top: 0;">3. Documented Limitations & Assumptions</h2>
+  <p style="color: var(--text-muted); line-height: 1.8;">
+    Honesty is the product. As documented in <code class="font-mono">docs/limitations.md</code>:
+  </p>
+  <ul style="list-style-type: disc; margin: 12px 0 12px 24px; color: var(--text-muted); line-height: 1.8;">
+    <li><strong>Canary Encoding Residual:</strong> Tripline's egress scanner matches exact token substrings. It does not detect Base64-encoded, reversed, or fragmented secrets across multiple comments. Neither layer stops transformed egress.</li>
+    <li><strong>Witness Locality:</strong> The witness HMAC key resides on the local filesystem (<code class="font-mono">0o600</code> permissions). It defends against unverified tool execution, not against a fully compromised local host user.</li>
+    <li><strong>Symmetric HMAC Signatures:</strong> Receipts use symmetric HMAC signatures rather than asymmetric public-key cryptography (e.g. Ed25519). Verification requires access to the shared signing key.</li>
+    <li><strong>Model Refusal Independence:</strong> Layer defense protection is measured independently of LLM alignment or refusal rates.</li>
+  </ul>
+</div>
+{% endblock %}
