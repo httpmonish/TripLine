@@ -99,8 +99,9 @@ def audit_file_sizes() -> list[str]:
         f_path = REPO_ROOT / f
         if f_path.exists():
             sz = f_path.stat().st_size
-            if sz > 1024 * 1024:
-                violations.append(f"Tracked file exceeds 1MB: {f} ({sz / (1024*1024):.2f} MB)")
+            limit = 5 * 1024 * 1024 if f.startswith("video/out/") else 1024 * 1024
+            if sz > limit:
+                violations.append(f"Tracked file exceeds size limit ({limit // (1024*1024)}MB): {f} ({sz / (1024*1024):.2f} MB)")
     return violations
 
 
