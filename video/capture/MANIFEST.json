@@ -1,0 +1,52 @@
+{
+  "B2_start": {
+    "command": "make wow",
+    "exit_code": 0,
+    "runtime_seconds": 21.731,
+    "sha256": "eb7d745f8664944cc147bc92350f00046ddabd42508ffca38da98b5619feb3bd",
+    "log_file": "video/capture/B2_start.log",
+    "commit": "c8ce1479a241e317c786885140043aa307d846bb",
+    "timestamp": "2026-10-10T13:33:08Z",
+    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+  },
+  "B3_attack1": {
+    "command": ".venv313/bin/python scripts/armoriq_proof.py --target delete_branch",
+    "exit_code": 0,
+    "runtime_seconds": 6.346,
+    "sha256": "bfe563c6ee45c6fa35d8e6ef67ac06c4e7983093e7ecd12584c3f4b427ac8698",
+    "log_file": "video/capture/B3_attack1.log",
+    "commit": "c8ce1479a241e317c786885140043aa307d846bb",
+    "timestamp": "2026-10-10T13:33:15Z",
+    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+  },
+  "B4_attacks2_3": {
+    "command": ".venv313/bin/python scripts/jail_burst.py",
+    "exit_code": 0,
+    "runtime_seconds": 3.488,
+    "sha256": "615555f17731cc71970af3bc07b71ec1e93d77ce29fd3a7d801d02c996d098e1",
+    "log_file": "video/capture/B4_attacks2_3.log",
+    "commit": "c8ce1479a241e317c786885140043aa307d846bb",
+    "timestamp": "2026-10-10T13:33:18Z",
+    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+  },
+  "B5_verify_tamper": {
+    "command": "make verify && make tamper",
+    "exit_code": 0,
+    "runtime_seconds": 0.074,
+    "sha256": "e83ef8622bbce4f5e219b1e5d79e85cbeaefc72cff6a2d71a63ba0d32fc04172",
+    "log_file": "video/capture/B5_verify_tamper.log",
+    "commit": "c8ce1479a241e317c786885140043aa307d846bb",
+    "timestamp": "2026-10-10T13:33:18Z",
+    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+  },
+  "B6_attribution": {
+    "command": ".venv313/bin/python -m scripts.verify_links",
+    "exit_code": 0,
+    "runtime_seconds": 0.024,
+    "sha256": "870ca7494ea42e4df6f28a2a61fd980d03ae0205f44bcf8fdbbf1c6ecf5e47f2",
+    "log_file": "video/capture/B6_attribution.log",
+    "commit": "c8ce1479a241e317c786885140043aa307d846bb",
+    "timestamp": "2026-10-10T13:33:18Z",
+    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+  }
+}

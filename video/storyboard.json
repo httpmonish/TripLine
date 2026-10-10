@@ -1,0 +1,92 @@
+{
+  "project": "Tripline",
+  "target_duration_seconds": 86.0,
+  "resolution": [1920, 1080],
+  "fps": 30,
+  "beats": [
+    {
+      "id": "B1",
+      "name": "Title Card",
+      "start_time": 0.0,
+      "end_time": 6.0,
+      "duration": 6.0,
+      "type": "card",
+      "caption": "Tripline: forensic incident receipts for AI agents.",
+      "voiceover": "Blocked isn't evidence. Every denied action gets a receipt.",
+      "source": "generated_card",
+      "text": "Tripline\n\nBlocked isn't evidence.\nEvery denied action gets a receipt.\n\nBuilt for ArmorIQ Flow State 2026"
+    },
+    {
+      "id": "B2",
+      "name": "Agent Start & Benign Issues",
+      "start_time": 6.0,
+      "end_time": 18.0,
+      "duration": 12.0,
+      "type": "terminal",
+      "caption": "A real LLM agent. 5 issues: 2 benign, 3 poisoned.",
+      "voiceover": "A real LLM agent processes a queue of five issues. Benign tasks execute normally under ArmorIQ.",
+      "source": "video/capture/B2_start.log",
+      "command": "make wow"
+    },
+    {
+      "id": "B3",
+      "name": "Attack 1: ArmorIQ Blocks Delete Branch",
+      "start_time": 18.0,
+      "end_time": 32.0,
+      "duration": 14.0,
+      "type": "terminal",
+      "caption": "ArmorIQ blocks delete_branch at the platform.",
+      "voiceover": "A poisoned issue instructs the agent to delete a branch. ArmorIQ stops it upstream at the platform.",
+      "source": "video/capture/B3_attack1.log",
+      "command": "scripts/armoriq_proof.py --target delete_branch"
+    },
+    {
+      "id": "B4",
+      "name": "Attacks 2 & 3: Path Jail & Egress Gateway",
+      "start_time": 32.0,
+      "end_time": 48.0,
+      "duration": 16.0,
+      "type": "terminal",
+      "caption": "ArmorIQ allowed both. Tripline stopped them.",
+      "voiceover": "For the next two attacks, ArmorIQ permits the tools. But Tripline's path jail blocks traversal, and its egress gateway traps planted canary leaks.",
+      "source": "video/capture/B4_attacks2_3.log",
+      "command": "scripts/jail_burst.py"
+    },
+    {
+      "id": "B5",
+      "name": "Receipts & Cryptographic Tamper Detection",
+      "start_time": 48.0,
+      "end_time": 64.0,
+      "duration": 16.0,
+      "type": "terminal",
+      "caption": "Change one byte of a receipt. Detected.",
+      "voiceover": "Every denied action generates an HMAC-signed receipt. Change just one byte, and tampering is immediately detected.",
+      "source": "video/capture/B5_verify_tamper.log",
+      "command": "make verify && make tamper"
+    },
+    {
+      "id": "B6",
+      "name": "Layer Attribution & Real Dashboard",
+      "start_time": 64.0,
+      "end_time": 76.0,
+      "duration": 12.0,
+      "type": "terminal",
+      "caption": "Attributable defense-in-depth across three layers.",
+      "voiceover": "All decisions are captured across three layers in a read-only dashboard reading real evidence files.",
+      "source": "video/capture/B6_attribution.log",
+      "command": "python3 -m scripts.verify_links"
+    },
+    {
+      "id": "B7",
+      "name": "Closing & Full Disclosure Card",
+      "start_time": 76.0,
+      "end_time": 86.0,
+      "duration": 10.0,
+      "type": "card",
+      "caption": "ArmorIQ decides. Tripline proves.",
+      "voiceover": "ArmorIQ decides. Tripline proves.",
+      "source": "generated_card",
+      "text": "ArmorIQ decides. Tripline proves.\n\nDISCLOSURE\n• Real LLM: Claude 3.5 Sonnet\n• Real Platform Enforcement: api.armoriq.ai\n• Sandbox Environment Only (Synthetic ~/.ssh fixture)\n• Audio: Silent Presentation with Subtitles\n• Known Residual: Obfuscated/Transformed Canary Egress\n• Repository: github.com/httpmonish/TripLine"
+    }
+  ]
+}
