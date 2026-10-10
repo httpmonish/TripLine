@@ -32,8 +32,16 @@ R10_FORBIDDEN = [
 
 def audit_terminology() -> list[str]:
     violations = []
-    # Documented allow-list files that legitimately discuss the forbidden terminology rules
-    allow_list = ["repo_audit.py", "phase4_truth_audit.md", "phase3_report.md", "disclosure_snippets.md"]
+    allow_list = {"repo_audit.py", "WORDING_ALLOWLIST.md"}
+    allowlist_file = REPO_ROOT / "docs" / "WORDING_ALLOWLIST.md"
+    if allowlist_file.exists():
+        try:
+            for line in allowlist_file.read_text().splitlines():
+                m = re.search(r"`([^`]+)`", line)
+                if m:
+                    allow_list.add(pathlib.Path(m.group(1)).name)
+        except Exception:
+            pass
     for p in REPO_ROOT.rglob("*"):
         if not p.is_file() or any(x in str(p) for x in [".git", ".venv", "__pycache__", ".pytest_cache", "node_modules", "_to_delete", ".tripline"]):
             continue

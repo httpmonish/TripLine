@@ -76,12 +76,12 @@ pipeline:
 	@echo "  5. Action Gateway-> Scans outbound arguments for canary hits (egress holds)"
 	@echo "  6. Decision Proof-> HMAC token minted with witness key"
 	@echo "  7. MCP Middleware-> Verifies decision proof on all localhost HTTP calls"
-	@echo "  8. Path Jail     -> Open-then-verify kernel check prevents path traversal / TOCTOU"
+	@echo "  8. Path Jail     -> Open-then-verify fstat inode check prevents path traversal / TOCTOU"
 	@echo "  9. Witness Chain -> Append-only HMAC hash chain verifies execution counts"
 	@echo " 10. Receipt Builder-> Canonical JSON SHA-256 + witness HMAC signature"
 
 verify:
-	PYTHONPATH=. .venv313/bin/python -m receipts.verify $(FILE)
+	PYTHONPATH=. .venv313/bin/python -m receipts.verify $(or $(FILE),results/phase3/scenario/receipt_P1_ARMORIQ_DENY.json)
 
 wow:
 	@echo "=== 1/5: Running Phase 3 Multi-Layer Scenario ==="
@@ -104,7 +104,14 @@ audit:
 	@echo "\n=== Running Deterministic Dashboard Truth Tests ==="
 	PYTHONPATH=. .venv313/bin/pytest tests/test_phase4_dashboard.py -v
 
-phase13:
-	echo "Submitting..."
+tamper:
+	PYTHONPATH=. .venv313/bin/python scripts/tamper_demo.py
+
+burst:
+	PYTHONPATH=. .venv313/bin/python scripts/jail_burst.py
+
+clean:
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
 
 
