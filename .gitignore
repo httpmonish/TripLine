@@ -9,6 +9,9 @@ __pycache__/
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.rsa
 **/credentials.json
 .armoriq/
 armoriq.yaml
@@ -17,9 +20,10 @@ armoriq.yaml
 *.log
 agent/logs/
 
-# Temporary files
+# Temporary and deleted files
 *~
 .DS_Store
+_to_delete/
 
 # Cloudflare binary/archive
 cloudflared
@@ -27,7 +31,12 @@ cloudflared.tgz
 
 # DB / Runtime Artifacts
 .tripline/
-results/
+# Unignore evidence artifacts in results/
+!results/
+!results/demo/
+!results/demo/**
+!results/phase3/
+!results/phase3/**
 
 # Node / Frontend
 node_modules/

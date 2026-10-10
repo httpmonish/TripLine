@@ -7,7 +7,7 @@ phase10:
 	PYTHONPATH=. .venv313/bin/pytest tests/test_phase10_dashboard.py -v
 
 dashboard-build:
-	cd tripline-frontend && npm run build
+	@echo "Dashboard is server-rendered Jinja2; no frontend build step required."
 
 dashboard:
 	PYTHONPATH=. .venv313/bin/uvicorn dashboard.app:app --reload --port 8080
@@ -97,6 +97,12 @@ wow:
 	@echo "\n=== 5/5: Running Cryptographic Tamper Demonstration ==="
 	PYTHONPATH=. .venv313/bin/python scripts/tamper_demo.py
 	@echo "\n[+] TRIPLINE PHASE 3 'WOW' TARGET SUCCEEDED: ALL CHECKS VERIFIED."
+
+audit:
+	@echo "=== Running Repository Truth & Hygiene Audit ==="
+	PYTHONPATH=. .venv313/bin/python scripts/repo_audit.py
+	@echo "\n=== Running Deterministic Dashboard Truth Tests ==="
+	PYTHONPATH=. .venv313/bin/pytest tests/test_phase4_dashboard.py -v
 
 phase13:
 	echo "Submitting..."
