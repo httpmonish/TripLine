@@ -1,0 +1,13 @@
+{
+  "tool": "hello_tool",
+  "allowed": true,
+  "action": "allow",
+  "reason": "allow_with_logging",
+  "matched_policy": "cli-tripline-maintainer-tripline-mcp",
+  "delegation_id": null,
+  "obligations": [],
+  "token_id": "e85303d8cdf04f3bb849a64d5671b249",
+  "policy_ref": "armoriq:eb0e6079680f:1a1251accb0",
+  "timestamp_utc": "2026-10-10T09:17:56.616736+00:00",
+  "backend_endpoint": "https://api.armoriq.ai/iap/sdk/enforce"
+}

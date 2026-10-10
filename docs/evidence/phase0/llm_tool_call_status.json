@@ -1,0 +1,15 @@
+{
+  "gate": "G7",
+  "status": "UNVERIFIED",
+  "reason": "No live LLM API key (OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY) was supplied in the environment. Agent engine (agent/llm.py) defaults to cached transcript playback (LLMAdapter.mode='cached'). Live generation loop commented out at agent/llm.py:59.",
+  "branch": "B6",
+  "tested_keys": [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "GROQ_API_KEY"
+  ],
+  "result": "Zero LLM tool calls faked or simulated per Hard Constraint 6. Marked UNVERIFIED pending key provision.",
+  "timestamp_utc": "2026-10-10T09:18:20Z"
+}
