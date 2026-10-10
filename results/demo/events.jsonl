@@ -124,3 +124,9 @@
 {"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:15:18.060091+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-run-8-call-8"}
 {"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:15:18.060906+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-run-9-call-9"}
 {"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:15:18.061735+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-fixed-run-123-fixed-ca"}
+{"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:29:08.405266+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-949dd2dc-call-p1_"}
+{"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:29:14.841245+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-949dd2dc-call-p2_"}
+{"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:29:18.839824+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-949dd2dc-call-p3_"}
+{"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:32:55.108602+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-ca5dcec9-call-p1_"}
+{"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:33:01.762280+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-ca5dcec9-call-p2_"}
+{"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:33:05.026532+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-ca5dcec9-call-p3_"}
