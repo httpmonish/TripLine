@@ -8,6 +8,7 @@ __pycache__/
 # Secrets / credentials
 .env
 .env.*
+**/credentials.json
 .armoriq/
 armoriq.yaml
 
@@ -30,3 +31,6 @@ results/
 node_modules/
 .next/
 
+
+# Editor workspace files
+*.code-workspace
