@@ -16,6 +16,6 @@
 | 9 | **Capture Platform Audit Row Screenshot** | 16 Oct 2026 | **Human Owner** | **ACTION REQUIRED** | Capture screenshot of `delete_branch` block on `platform.armoriq.ai`. |
 | 10 | **Select Repository License** | 16 Oct 2026 | **Human Owner** | **ACTION REQUIRED** | Select between MIT or Apache-2.0 license file. |
 | 11 | **Confirm AI Assistance Tools Used** | 16 Oct 2026 | **Human Owner** | **ACTION REQUIRED** | Replace placeholder in `docs/SUBMISSION.md` with tools used. |
-| 12 | **Record 90-Second Demo Video** | 16 Oct 2026 | Owner / Agent | **PHASE 6** | Follow beat sheet in `docs/video_script_90s.md`. |
+| 12 | **Record 90-Second Demo Video** | 16 Oct 2026 | Agent | **DONE** | Built 86.0s MP4 at `video/out/tripline_demo_90s.mp4`. |
 | 13 | **Check for Sponsor Addenda** | 16 Oct 2026 | Owner | **PENDING** | Monitor hackathon Discord / portal for addenda; update `docs/SPONSOR_ADDENDUM.md`. |
 | 14 | **Final Form Submission** | 16 Oct 2026 | **Human Owner** | **PENDING** | Paste text from `docs/SUBMISSION.md` into submission form. |
