@@ -105,6 +105,9 @@ make tamper
 
 # Run repository truth audit and deterministic dashboard tests
 make audit
+
+# Run local baseline demo
+make demo
 ```
 *Note: Offline verification checks authentic recorded evidence; it does not invoke ArmorIQ or external LLM APIs.*
 
