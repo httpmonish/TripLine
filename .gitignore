@@ -8,12 +8,14 @@ __pycache__/
 # Secrets / credentials
 .env
 .env.*
+!.env.example
 **/credentials.json
 .armoriq/
 armoriq.yaml
 
 # Runtime logs
 *.log
+agent/logs/
 
 # Temporary files
 *~
