@@ -1,28 +1,33 @@
-.PHONY: phase10 phase11 test dashboard dashboard-build bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep
+.PHONY: phase10 phase11 test dashboard dashboard-build bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof audit tamper burst clean wow
+
+VENV ?= .venv313
+PYTHON ?= $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,$(if $(wildcard .venv/bin/python),.venv/bin/python,python3))
+PYTEST ?= $(if $(wildcard $(VENV)/bin/pytest),$(VENV)/bin/pytest,$(if $(wildcard .venv/bin/pytest),.venv/bin/pytest,pytest))
+UVICORN ?= $(if $(wildcard $(VENV)/bin/uvicorn),$(VENV)/bin/uvicorn,$(if $(wildcard .venv/bin/uvicorn),.venv/bin/uvicorn,uvicorn))
 
 test:
-	PYTHONPATH=. .venv313/bin/pytest tests/ --ignore=tests/test_phase11_benchmark.py -v
+	PYTHONPATH=. $(PYTEST) tests/ --ignore=tests/test_phase11_benchmark.py -v
 
 phase10:
-	PYTHONPATH=. .venv313/bin/pytest tests/test_phase10_dashboard.py -v
+	PYTHONPATH=. $(PYTEST) tests/test_phase10_dashboard.py -v
 
 dashboard-build:
 	@echo "Dashboard is server-rendered Jinja2; no frontend build step required."
 
 dashboard:
-	PYTHONPATH=. .venv313/bin/uvicorn dashboard.app:app --reload --port 8080
+	PYTHONPATH=. $(UVICORN) dashboard.app:app --reload --port 8080
 
 bench-test:
-	PYTHONPATH=. .venv313/bin/pytest tests/test_phase11_benchmark.py -v
+	PYTHONPATH=. $(PYTEST) tests/test_phase11_benchmark.py -v
 
 bench-small:
-	PYTHONPATH=. .venv313/bin/python benchmark/runner.py --n 1 --m2
+	PYTHONPATH=. $(PYTHON) benchmark/runner.py --n 1 --m2
 
 bench:
-	PYTHONPATH=. .venv313/bin/python benchmark/runner.py --n 5 --m2
+	PYTHONPATH=. $(PYTHON) benchmark/runner.py --n 5 --m2
 
 bench-report:
-	PYTHONPATH=. .venv313/bin/python benchmark/report.py
+	PYTHONPATH=. $(PYTHON) benchmark/report.py
 
 phase11: bench-test bench-small bench-report
 
@@ -30,19 +35,19 @@ phase12: harden
 
 harden:
 	echo "Running Phase 12 hardening script..."
-	PYTHONPATH=. .venv313/bin/pytest tests/test_phase12_hardening.py -v
+	PYTHONPATH=. $(PYTEST) tests/test_phase12_hardening.py -v
 
 demo-check:
 	echo "Checking demo dependencies..."
-	PYTHONPATH=. .venv313/bin/pytest tests/test_final_demo.py -v
+	PYTHONPATH=. $(PYTEST) tests/test_final_demo.py -v
 
 demo-prep:
-	PYTHONPATH=. .venv313/bin/python demo/prepare_demo.py
+	PYTHONPATH=. $(PYTHON) demo/prepare_demo.py
 
 .PHONY: phase10 phase11 test dashboard bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof
 
 test-armoriq:
-	PYTHONPATH=. .venv313/bin/pytest -m armoriq -v
+	PYTHONPATH=. $(PYTEST) -m armoriq -v
 
 proof:
 	@echo "=== Step 1/7: Unit and integration tests ==="
@@ -62,10 +67,10 @@ proof:
 	@echo "=== ALL PROOF SEQUENCE TARGETS PASSED SUCCESSFULLY ==="
 
 demo:
-	PYTHONPATH=. .venv313/bin/python demo/run_demo.py
+	PYTHONPATH=. $(PYTHON) demo/run_demo.py
 
 explain:
-	PYTHONPATH=. .venv313/bin/python demo/explain.py
+	PYTHONPATH=. $(PYTHON) demo/explain.py
 
 pipeline:
 	@echo "Tripline Pipeline Architecture:"
@@ -81,34 +86,34 @@ pipeline:
 	@echo " 10. Receipt Builder-> Canonical JSON SHA-256 + witness HMAC signature"
 
 verify:
-	PYTHONPATH=. .venv313/bin/python -m receipts.verify $(or $(FILE),results/phase3/scenario/receipt_P1_ARMORIQ_DENY.json)
+	PYTHONPATH=. $(PYTHON) -m receipts.verify $(or $(FILE),results/phase3/scenario/receipt_P1_ARMORIQ_DENY.json)
 
 wow:
 	@echo "=== 1/5: Running Phase 3 Multi-Layer Scenario ==="
-	PYTHONPATH=. .venv313/bin/python scripts/run_phase3_scenario.py --rung 0
+	PYTHONPATH=. $(PYTHON) scripts/run_phase3_scenario.py --rung 0
 	@echo "\n=== 2/5: Running Deterministic Path-Trick Jail Burst ==="
-	PYTHONPATH=. .venv313/bin/python scripts/jail_burst.py
+	PYTHONPATH=. $(PYTHON) scripts/jail_burst.py
 	@echo "\n=== 3/5: Cryptographic Receipt Verification ==="
-	PYTHONPATH=. .venv313/bin/python -m receipts.verify results/phase3/scenario/receipt_P1_ARMORIQ_DENY.json
-	PYTHONPATH=. .venv313/bin/python -m receipts.verify results/phase3/scenario/receipt_P2_JAIL_DENY.json
-	PYTHONPATH=. .venv313/bin/python -m receipts.verify results/phase3/scenario/receipt_P3_GATEWAY_HOLD.json
+	PYTHONPATH=. $(PYTHON) -m receipts.verify results/phase3/scenario/receipt_P1_ARMORIQ_DENY.json
+	PYTHONPATH=. $(PYTHON) -m receipts.verify results/phase3/scenario/receipt_P2_JAIL_DENY.json
+	PYTHONPATH=. $(PYTHON) -m receipts.verify results/phase3/scenario/receipt_P3_GATEWAY_HOLD.json
 	@echo "\n=== 4/5: Verifying ArmorIQ Sidecar Hash-Chain ==="
-	PYTHONPATH=. .venv313/bin/python -m scripts.verify_links
+	PYTHONPATH=. $(PYTHON) -m scripts.verify_links
 	@echo "\n=== 5/5: Running Cryptographic Tamper Demonstration ==="
-	PYTHONPATH=. .venv313/bin/python scripts/tamper_demo.py
+	PYTHONPATH=. $(PYTHON) scripts/tamper_demo.py
 	@echo "\n[+] TRIPLINE PHASE 3 'WOW' TARGET SUCCEEDED: ALL CHECKS VERIFIED."
 
 audit:
 	@echo "=== Running Repository Truth & Hygiene Audit ==="
-	PYTHONPATH=. .venv313/bin/python scripts/repo_audit.py
+	PYTHONPATH=. $(PYTHON) scripts/repo_audit.py
 	@echo "\n=== Running Deterministic Dashboard Truth Tests ==="
-	PYTHONPATH=. .venv313/bin/pytest tests/test_phase4_dashboard.py -v
+	PYTHONPATH=. $(PYTEST) tests/test_phase4_dashboard.py -v
 
 tamper:
-	PYTHONPATH=. .venv313/bin/python scripts/tamper_demo.py
+	PYTHONPATH=. $(PYTHON) scripts/tamper_demo.py
 
 burst:
-	PYTHONPATH=. .venv313/bin/python scripts/jail_burst.py
+	PYTHONPATH=. $(PYTHON) scripts/jail_burst.py
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
