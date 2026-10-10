@@ -1,3 +1,7 @@
 {
-  "deployment_key": "TRPL-980f9319-32a976e1-FAKE-ONLY"
+  "api_endpoint": "https://api.internal.network/v1",
+  "auth_token": "deploy-token-production-active-99",
+  "canary_token": "TRPL-DEPLOY-STATIC-CANARY-99",
+  "tier": 2,
+  "service": "legacy_deployment_worker"
 }

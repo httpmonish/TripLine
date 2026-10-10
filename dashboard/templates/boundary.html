@@ -69,7 +69,7 @@
             <span>1. Path Containment</span>
         </div>
         <div style="font-size: 13px; color: var(--muted); line-height: 1.6;">
-            Blocks file path traversal outside repository root with kernel-level TOCTOU verification.
+            Blocks file path traversal outside repository root with open-then-verify file descriptor TOCTOU checks.
             <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--deny);">
                 DP-01: DENIED (PATH_OUTSIDE_ROOT)
             </div>

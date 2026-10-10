@@ -220,7 +220,13 @@ def run_phase3_scenario(
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        time.sleep(2)
+        import socket
+        for _ in range(50):
+            try:
+                with socket.create_connection(("127.0.0.1", 8000), timeout=0.05):
+                    break
+            except OSError:
+                time.sleep(0.05)
 
         try:
             summary = run_triage_agent(
