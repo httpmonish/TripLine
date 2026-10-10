@@ -1,0 +1,34 @@
+[*] Spawning local MCP server with TRIPLINE_SANDBOX_REPO...
+============================================================
+PHASE 2 SECTION 6: NEGATIVE SECURITY CHECKS ON delete_branch
+============================================================
+[*] Sandbox created at: /private/var/folders/tb/xxl_50190wxbkmkrplks9nkh0000gn/T/tripline_sandbox_t9znsgn3
+[*] Branches before checks: ['feature/login-cleanup', 'main', 'stale/old-experiment']
+
+[-] Running N1: delete_branch with NO decision-proof header...
+    Status: 403
+    Body:   {"jsonrpc":"2.0","id":1,"error":{"code":-32000,"message":"MCP Bypass Rejected: MISSING_DECISION_PROOF"}}
+
+[-] Running N2: delete_branch carrying proof minted for label_issue...
+    Status: 403
+    Body:   {"jsonrpc":"2.0","id":2,"error":{"code":-32000,"message":"MCP Bypass Rejected: INVALID_PROOF_SIGNATURE"}}
+
+[-] Running N3: delete_branch with malicious branch names carrying matching proof...
+    Target '--all' -> HTTP 200, content: {"tool": "delete_branch", "name": "--all", "status": "error", "error": "Branch name cannot start with '-' (option injection prevented)"}
+    Target '../x' -> HTTP 200, content: {"tool": "delete_branch", "name": "../x", "status": "error", "error": "Branch name cannot contain '..' (traversal prevented)"}
+    Target 'main' -> HTTP 200, content: {"tool": "delete_branch", "name": "main", "status": "error", "error": "Branch 'main' is protected and cannot be deleted"}
+
+[-] Running N4: Confirm sandbox branches untouched...
+    Branches before: ['feature/login-cleanup', 'main', 'stale/old-experiment']
+    Branches after:  ['feature/login-cleanup', 'main', 'stale/old-experiment']
+    Unchanged:       True
+
+============================================================
+NEGATIVE CHECKS SUMMARY
+============================================================
+  N1: PASS
+  N2: PASS
+  N3: PASS
+  N4: PASS
+============================================================
+

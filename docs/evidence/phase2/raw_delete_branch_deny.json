@@ -1,0 +1,29 @@
+{
+  "verified": true,
+  "platform_agent": "tripline-maintainer",
+  "active_policies": [
+    "tripline-maintainer",
+    "cli-tripline-maintainer-tripline-mcp"
+  ],
+  "checks": {
+    "delete_branch": {
+      "tool": "delete_branch",
+      "decision": "DENY",
+      "allowed": false,
+      "action": "block",
+      "reason": "tool_not_in_allowlist",
+      "matched_policy": "cli-tripline-maintainer-tripline-mcp",
+      "trace_id": "06ff60f0-7696-4922-a98f-d60528e62249",
+      "cloud_trace": "349a20894ece70e68b4f3620d08ecdc2",
+      "token_id": "3fb28b396c8f45dbaae5aefa8f01be4a",
+      "policy_ref": "armoriq:eb0e6079680f:1a1255d239e",
+      "sdk_mode": "sdk",
+      "endpoint": "https://api.armoriq.ai/iap/sdk/enforce",
+      "http_calls_verified": 1,
+      "timestamp_utc": "2026-10-10T10:30:24.868420+00:00"
+    }
+  },
+  "network_hook_verified": true,
+  "timestamp_utc": "2026-10-10T10:30:24.868469+00:00"
+}
+ARMORIQ_PROOF: {"verified": true, "platform_agent": "tripline-maintainer", "active_policies": ["tripline-maintainer", "cli-tripline-maintainer-tripline-mcp"], "checks": {"delete_branch": {"tool": "delete_branch", "decision": "DENY", "allowed": false, "action": "block", "reason": "tool_not_in_allowlist", "matched_policy": "cli-tripline-maintainer-tripline-mcp", "trace_id": "06ff60f0-7696-4922-a98f-d60528e62249", "cloud_trace": "349a20894ece70e68b4f3620d08ecdc2", "token_id": "3fb28b396c8f45dbaae5aefa8f01be4a", "policy_ref": "armoriq:eb0e6079680f:1a1255d239e", "sdk_mode": "sdk", "endpoint": "https://api.armoriq.ai/iap/sdk/enforce", "http_calls_verified": 1, "timestamp_utc": "2026-10-10T10:30:24.868420+00:00"}}, "network_hook_verified": true, "timestamp_utc": "2026-10-10T10:30:24.868469+00:00"}

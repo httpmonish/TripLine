@@ -83,3 +83,34 @@ def comment_issue(issue_id: str, text: str) -> str:
     res = f"comment added to {issue_id}"
     recorder.record_event(call_id, args_hash, "comment_issue", "execution_completed", result_hash=_hash_result(res), trace_id=trace_id)
     return res
+
+def label_issue(issue_id: str, label: str) -> str:
+    """Add a label to an issue."""
+    import uuid
+    from canary.state import get_current_run, get_current_trace, get_current_call
+    trace_id = get_current_trace() or None
+    call_id = get_current_call() or f"call-{uuid.uuid4().hex[:8]}"
+    args_hash = compute_args_hash("issues-mcp", "label_issue", {"issue_id": issue_id, "label": label})
+    recorder.record_event(call_id, args_hash, "label_issue", "received", trace_id=trace_id)
+    recorder.record_event(call_id, args_hash, "label_issue", "execution_started", trace_id=trace_id)
+    
+    if not ISSUES_FILE.exists():
+        res = "error: issues not found"
+        recorder.record_event(call_id, args_hash, "label_issue", "execution_completed", result_hash=_hash_result(res), trace_id=trace_id)
+        return res
+        
+    issues = json.loads(ISSUES_FILE.read_text())
+    for issue in issues:
+        if issue["id"] == issue_id:
+            if "labels" not in issue:
+                issue["labels"] = []
+            if label not in issue["labels"]:
+                issue["labels"].append(label)
+            ISSUES_FILE.write_text(json.dumps(issues, indent=2))
+            res = f"label '{label}' added to {issue_id}"
+            recorder.record_event(call_id, args_hash, "label_issue", "execution_completed", result_hash=_hash_result(res), trace_id=trace_id)
+            return res
+            
+    res = f"error: issue {issue_id} not found"
+    recorder.record_event(call_id, args_hash, "label_issue", "execution_completed", result_hash=_hash_result(res), trace_id=trace_id)
+    return res

@@ -125,6 +125,7 @@ def load_tool_module(name, path):
 issues_mod = load_tool_module("issues_tool", str(pathlib.Path(__file__).parent / "mcp" / "issues_mcp" / "tool.py"))
 repo_mod = load_tool_module("repo_tool", str(pathlib.Path(__file__).parent / "mcp" / "repo_mcp" / "tool.py"))
 sandbox_mod = load_tool_module("sandbox_tool", str(pathlib.Path(__file__).parent / "mcp" / "sandbox_mcp" / "tool.py"))
+delete_branch_mod = load_tool_module("delete_branch_tool", str(pathlib.Path(__file__).parent / "mcp" / "repo_mcp" / "delete_branch.py"))
 
 @mcp.tool()
 def list_issues() -> str:
@@ -140,6 +141,16 @@ def read_issue(issue_id: str) -> str:
 def comment_issue(issue_id: str, text: str) -> str:
     """Add a comment to an issue."""
     return issues_mod.comment_issue(issue_id, text)
+
+@mcp.tool()
+def label_issue(issue_id: str, label: str) -> str:
+    """Add a label to an issue."""
+    return issues_mod.label_issue(issue_id, label)
+
+@mcp.tool()
+def delete_branch(name: str) -> str:
+    """Delete a git branch inside the throwaway sandbox repository."""
+    return delete_branch_mod.delete_branch(name)
 
 @mcp.tool()
 def list_dir(path: str = ".") -> str:

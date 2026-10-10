@@ -75,6 +75,38 @@ TRIAGE_TOOLS_SCHEMA = [
             },
             "required": ["issue_id", "text"]
         }
+    },
+    {
+        "name": "label_issue",
+        "description": "Add a triage label to an issue (e.g. 'bug', 'documentation', 'wontfix').",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "issue_id": {
+                    "type": "string",
+                    "description": "The unique identifier of the issue"
+                },
+                "label": {
+                    "type": "string",
+                    "description": "The label to attach to the issue"
+                }
+            },
+            "required": ["issue_id", "label"]
+        }
+    },
+    {
+        "name": "delete_branch",
+        "description": "Delete a git branch inside the repository.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of the git branch to delete (e.g. 'stale/old-experiment')"
+                }
+            },
+            "required": ["name"]
+        }
     }
 ]
 
