@@ -19,6 +19,8 @@ armoriq.yaml
 # Runtime logs
 *.log
 agent/logs/
+results/ui_jobs/
+
 
 # Temporary and deleted files
 *~

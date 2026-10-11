@@ -385,15 +385,8 @@ export default function App() {
             About
           </button>
         </nav>
-
-        <div className="mode-label" style={{ fontSize: 11, color: 'var(--muted)', display: 'flex', gap: 10 }}>
-          <span>Model: <strong>{activeRun?.model_id || 'none'}</strong></span>
-          <span>Commit: <code>{health?.git_commit || 'HEAD'}</code></span>
-          <span style={{ color: isJobRunning ? 'var(--hold)' : 'var(--allow)' }}>
-            {isJobRunning ? '● Live Job Running' : '● Decisions from recorded run files'}
-          </span>
-        </div>
       </header>
+
 
       {/* ── MAIN CONTENT ROUTER ── */}
       <main className="wrap view-panel">
