@@ -38,5 +38,6 @@ Generated via `pip freeze` and `pip list` in `.venv313` (Python 3.13.16).
 
 ## 3. UI Assets & Fonts
 - **Dashboard Fonts:** System native font stacks only (`-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `ui-monospace`, `Menlo`). Zero external font files or CDN calls.
+- **Brand Wordmark:** Outlined Inter Display SemiBold (designed by Rasmus Andersson). Licensed under the SIL Open Font License, Version 1.1 (SIL OFL 1.1). Stored as vector paths (outlines) directly inside SVG assets (`assets/brand/`) — zero font downloads or remote calls required. Full license preserved in [`assets/brand/OFL.txt`](file:///Users/themonishnawaz/tripline/assets/brand/OFL.txt).
 - **Video Fonts:** Standard system monospace (`Courier New`) and sans-serif (`Arial`) bundled locally under `video/fonts/`.
-- **Icons:** Inline SVG and Unicode glyphs (`[✓]`, `[✕]`, `[⧗]`, `[⚠]`). Zero external icon libraries.
+- **Icons:** Inline SVG and local vector brand assets (`assets/brand/`). Zero external icon libraries or CDN requests.

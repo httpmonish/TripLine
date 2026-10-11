@@ -1,4 +1,4 @@
-.PHONY: phase10 phase11 test dashboard dashboard-build dashboard-legacy ui ui-coverage bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof audit tamper burst clean wow video
+.PHONY: brand phase10 phase11 test dashboard dashboard-build dashboard-legacy ui ui-coverage bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof audit tamper burst clean wow video
 
 VENV ?= .venv313
 PYTHON ?= $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,$(if $(wildcard .venv/bin/python),.venv/bin/python,python3))
@@ -16,6 +16,9 @@ ui:
 
 ui-coverage:
 	PYTHONPATH=. $(PYTHON) scripts/ui_api_coverage.py
+
+brand:
+	PYTHONPATH=. $(PYTHON) scripts/sync_brand.py
 
 dashboard-build: ui
 

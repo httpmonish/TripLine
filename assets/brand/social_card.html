@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1280px;
+    height: 640px;
+    background-color: #0F1115;
+    color: #FFFFFF;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(#262626 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.35;
+  }
+  .border-box {
+    position: absolute;
+    inset: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    pointer-events: none;
+  }
+  .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 30px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(229, 72, 77, 0.12);
+    border: 1px solid rgba(229, 72, 77, 0.35);
+    border-radius: 999px;
+    font-size: 13px;
+    font-family: ui-monospace, monospace;
+    color: #FF8589;
+    letter-spacing: 0.05em;
+  }
+  .logo {
+    height: 105px;
+    width: auto;
+    display: block;
+  }
+  .thesis {
+    font-size: 28px;
+    font-weight: 500;
+    color: #EDEDED;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+    line-height: 1.35;
+  }
+  .subtext {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 14px;
+    color: #A1A1A1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="border-box"></div>
+  <div class="content">
+    <div class="badge">ARMORIQ FLOW STATE HACKATHON · OCT 2026</div>
+    <img class="logo" src="tripline-lockup-on-dark.svg" alt="Tripline">
+    <div class="thesis">
+      &ldquo;Blocked isn't evidence. Every denied action gets a receipt.&rdquo;
+    </div>
+    <div class="subtext">
+      Forensic Evidence Layer for AI Agents · RFC-8785 HMAC-Signed Receipts
+    </div>
+  </div>
+</body>
+</html>
