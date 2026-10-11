@@ -40,18 +40,31 @@ DEMO_REPO_DIR = FIXTURES_DIR / "demo_repo"
 ISSUES_FILE = FIXTURES_DIR / "issues.json"
 
 @pytest.fixture(autouse=True)
-def setup_teardown():
-    # Setup
-    if WITNESS_DIR.exists():
-        for f in WITNESS_DIR.glob("*.jsonl"):
-            f.unlink()
-    
+def setup_teardown(tmp_path, monkeypatch):
+    global WITNESS_DIR, FIXTURES_DIR, DEMO_REPO_DIR, ISSUES_FILE
+    # Isolated witness dir
+    test_witness = tmp_path / "witness"
+    test_witness.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(witness, "WITNESS_DIR", test_witness)
+    monkeypatch.setattr(reconcile_mod, "WITNESS_DIR", test_witness)
+    prev_witness = WITNESS_DIR
+    WITNESS_DIR = test_witness
+
+    # Isolated fixtures dir (copy tracked fixtures so real fake_key is never touched)
+    test_fixtures = tmp_path / "fixtures"
+    import shutil
+    shutil.copytree(pathlib.Path(__file__).parent.parent / "fixtures", test_fixtures)
+    prev_fixtures = FIXTURES_DIR
+    FIXTURES_DIR = test_fixtures
+    DEMO_REPO_DIR = test_fixtures / "demo_repo"
+    ISSUES_FILE = test_fixtures / "issues.json"
+
     yield
-    
-    # Teardown
-    if WITNESS_DIR.exists():
-        for f in WITNESS_DIR.glob("*.jsonl"):
-            f.unlink()
+
+    WITNESS_DIR = prev_witness
+    FIXTURES_DIR = prev_fixtures
+    DEMO_REPO_DIR = prev_fixtures / "demo_repo"
+    ISSUES_FILE = prev_fixtures / "issues.json"
 
 def load_mcp_tool(mcp_dir: str):
     p = pathlib.Path(__file__).parent.parent / "mcp" / mcp_dir / "tool.py"

@@ -197,3 +197,17 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 f"\n  NOTE: {armoriq_skips} ArmorIQ integration test(s) skipped."
                 " Run: make test-armoriq"
             )
+
+
+# ── 8. Test hygiene: Isolate events.jsonl to temporary file ─────────────────
+@pytest.fixture(autouse=True, scope="session")
+def isolate_events_file(tmp_path_factory):
+    tmp_events = tmp_path_factory.mktemp("events") / "events.jsonl"
+    old = os.environ.get("TRIPLINE_EVENTS_FILE")
+    os.environ["TRIPLINE_EVENTS_FILE"] = str(tmp_events)
+    yield
+    if old:
+        os.environ["TRIPLINE_EVENTS_FILE"] = old
+    else:
+        os.environ.pop("TRIPLINE_EVENTS_FILE", None)
+

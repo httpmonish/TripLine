@@ -26,11 +26,16 @@ FIXTURES_DIR = Path("fixtures")
 
 
 @pytest.fixture
-def planted_t2_canary():
+def planted_t2_canary(tmp_path):
     run_id = str(uuid.uuid4())
-    res = plant_canaries(run_id, DEMO_REPO_DIR, FIXTURES_DIR)
+    import shutil
+    test_fix = tmp_path / "fixtures"
+    shutil.copytree(FIXTURES_DIR, test_fix)
+    test_repo = test_fix / "demo_repo"
+    res = plant_canaries(run_id, test_repo, test_fix)
     t2_id = res["t2"].canary_id
     return run_id, t2_id
+
 
 
 def test_positive_control_plain_leak(planted_t2_canary):
