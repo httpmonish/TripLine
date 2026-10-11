@@ -27,28 +27,48 @@ import pytest
 
 # ── ArmorIQ key detection ────────────────────────────────────────────────────
 
+_KEY_VALID_CACHE: bool | None = None
+
 def _detect_armoriq_key() -> bool:
+    global _KEY_VALID_CACHE
+    if _KEY_VALID_CACHE is not None:
+        return _KEY_VALID_CACHE
+
     key = os.environ.get("ARMORIQ_API_KEY", "")
-    if key and key.startswith("ak_"):
-        return True
+    if not key:
+        try:
+            cred = pathlib.Path.home() / ".armoriq" / "credentials.json"
+            if cred.exists():
+                data = json.loads(cred.read_text())
+                k = data.get("apiKey", "")
+                if isinstance(k, str) and k.startswith("ak_"):
+                    key = k
+        except Exception:
+            pass
+
+    if not key or not key.startswith("ak_"):
+        _KEY_VALID_CACHE = False
+        return False
+
     try:
-        cred = pathlib.Path.home() / ".armoriq" / "credentials.json"
-        if cred.exists():
-            data = json.loads(cred.read_text())
-            k = data.get("apiKey", "")
-            if isinstance(k, str) and k.startswith("ak_"):
-                return True
+        from armoriq_helper import build_client
+        c = build_client(skip_validate=True)
+        cap = c.capture_plan(llm="tripline-maintainer", prompt="probe", plan={"steps": []})
+        c.get_intent_token(cap, validity_seconds=60)
+        _KEY_VALID_CACHE = True
+        return True
     except Exception:
-        pass
-    return False
+        _KEY_VALID_CACHE = False
+        return False
 
 
 HAS_KEY: bool = _detect_armoriq_key()
 
 needs_key = pytest.mark.skipif(
     not HAS_KEY,
-    reason="ARMORIQ_API_KEY not set and no ~/.armoriq/credentials.json — use make test-armoriq",
+    reason="Valid ARMORIQ_API_KEY required — use make test-armoriq with active key",
 )
+
 
 
 # ── MCP server reachability ──────────────────────────────────────────────────

@@ -211,3 +211,46 @@ def isolate_events_file(tmp_path_factory):
     else:
         os.environ.pop("TRIPLINE_EVENTS_FILE", None)
 
+
+# ── 9. Test hygiene: Protect tracked evidence & fixtures ────────────────────
+import pathlib
+_TRACKED_INITIAL_SNAPSHOT: dict[pathlib.Path, bytes] = {}
+
+def _init_tracked_snapshot():
+    if not _TRACKED_INITIAL_SNAPSHOT:
+        repo_root = pathlib.Path(__file__).parent.parent
+        witness_dir = repo_root / ".tripline" / "witness"
+        key_file = repo_root / "fixtures" / ".ssh" / "fake_key"
+        if witness_dir.exists():
+            for f in witness_dir.glob("*.jsonl"):
+                _TRACKED_INITIAL_SNAPSHOT[f] = f.read_bytes()
+        if key_file.exists():
+            _TRACKED_INITIAL_SNAPSHOT[key_file] = key_file.read_bytes()
+
+@pytest.fixture(autouse=True)
+def protect_tracked_evidence():
+    _init_tracked_snapshot()
+    repo_root = pathlib.Path(__file__).parent.parent
+    witness_dir = repo_root / ".tripline" / "witness"
+    key_file = repo_root / "fixtures" / ".ssh" / "fake_key"
+
+    yield
+
+    # Restore witness files
+    for f, content in _TRACKED_INITIAL_SNAPSHOT.items():
+        if f.suffix == ".jsonl":
+            if not f.exists() or f.read_bytes() != content:
+                f.write_bytes(content)
+    if witness_dir.exists():
+        for f in witness_dir.glob("*.jsonl"):
+            if f not in _TRACKED_INITIAL_SNAPSHOT:
+                f.unlink(missing_ok=True)
+
+    # Restore fake_key
+    if key_file in _TRACKED_INITIAL_SNAPSHOT:
+        expected = _TRACKED_INITIAL_SNAPSHOT[key_file]
+        if not key_file.exists() or key_file.read_bytes() != expected:
+            key_file.write_bytes(expected)
+
+
+

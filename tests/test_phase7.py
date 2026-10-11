@@ -45,6 +45,7 @@ def setup_teardown(tmp_path, monkeypatch):
     # Isolated witness dir
     test_witness = tmp_path / "witness"
     test_witness.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setenv("TRIPLINE_WITNESS_DIR", str(test_witness))
     monkeypatch.setattr(witness, "WITNESS_DIR", test_witness)
     monkeypatch.setattr(reconcile_mod, "WITNESS_DIR", test_witness)
     prev_witness = WITNESS_DIR

@@ -18,6 +18,15 @@ get_witness_key = witness_mod.get_witness_key
 canonical_json = witness_mod.canonical_json
 WITNESS_DIR = witness_mod.WITNESS_DIR
 
+def get_witness_dir() -> pathlib.Path:
+    env = os.environ.get("TRIPLINE_WITNESS_DIR")
+    if env:
+        p = pathlib.Path(env)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    return WITNESS_DIR
+
+
 def verify_chain(witness_file: pathlib.Path) -> Dict[str, Any]:
     """Verify the HMAC chain and sequence numbers of a witness file."""
     if not witness_file.exists():
@@ -61,7 +70,8 @@ def reconcile(decision: str, mcp: str, tool: str, args_hash: str) -> str:
     tool: e.g. 'write_patch'
     args_hash: expected args hash computed via compute_args_hash
     """
-    witness_file = WITNESS_DIR / f"{mcp}.jsonl"
+    witness_file = get_witness_dir() / f"{mcp}.jsonl"
+
     
     if not witness_file.exists():
         if decision in ["DENY", "HOLD"]:

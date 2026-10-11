@@ -1,4 +1,4 @@
-.PHONY: phase10 phase11 test dashboard dashboard-build bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof audit tamper burst clean wow video
+.PHONY: phase10 phase11 test dashboard dashboard-build dashboard-legacy ui ui-coverage bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof audit tamper burst clean wow video
 
 VENV ?= .venv313
 PYTHON ?= $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,$(if $(wildcard .venv/bin/python),.venv/bin/python,python3))
@@ -11,11 +11,19 @@ test:
 phase10:
 	PYTHONPATH=. $(PYTEST) tests/test_phase10_dashboard.py -v
 
-dashboard-build:
-	@echo "Dashboard is server-rendered Jinja2; no frontend build step required."
+ui:
+	npm run build --prefix tripline-frontend
+
+ui-coverage:
+	PYTHONPATH=. $(PYTHON) scripts/ui_api_coverage.py
+
+dashboard-build: ui
 
 dashboard:
 	PYTHONPATH=. $(UVICORN) dashboard.app:app --reload --port 8080
+
+dashboard-legacy:
+	PYTHONPATH=. $(UVICORN) dashboard.legacy_app:app --reload --port 8081
 
 bench-test:
 	PYTHONPATH=. $(PYTEST) tests/test_phase11_benchmark.py -v

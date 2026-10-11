@@ -10,6 +10,15 @@ TRIPLINE_DIR = pathlib.Path(__file__).parent.parent.parent / ".tripline"
 WITNESS_DIR = TRIPLINE_DIR / "witness"
 KEY_FILE = TRIPLINE_DIR / "witness_key.txt"
 
+def get_witness_dir() -> pathlib.Path:
+    env = os.environ.get("TRIPLINE_WITNESS_DIR")
+    if env:
+        p = pathlib.Path(env)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    return WITNESS_DIR
+
+
 def canonical_json(obj: Any) -> str:
     """Stable JSON serialization for deterministic hashing."""
     return json.dumps(obj, separators=(',', ':'), sort_keys=True)
@@ -45,9 +54,21 @@ def compute_hmac(key: bytes, record: Dict[str, Any]) -> str:
 class WitnessRecorder:
     def __init__(self, mcp_name: str):
         self.mcp_name = mcp_name
-        self.logfile = WITNESS_DIR / f"{mcp_name}.jsonl"
-        WITNESS_DIR.mkdir(parents=True, exist_ok=True)
         self.key = get_witness_key()
+        self._custom_logfile: Optional[pathlib.Path] = None
+
+    @property
+    def logfile(self) -> pathlib.Path:
+        if self._custom_logfile is not None:
+            return self._custom_logfile
+        d = get_witness_dir()
+        d.mkdir(parents=True, exist_ok=True)
+        return d / f"{self.mcp_name}.jsonl"
+
+    @logfile.setter
+    def logfile(self, val: pathlib.Path) -> None:
+        self._custom_logfile = val
+
     
     def get_last_record(self) -> Optional[Dict[str, Any]]:
         if not self.logfile.exists():
