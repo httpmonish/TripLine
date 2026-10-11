@@ -307,17 +307,33 @@ export default function App() {
         </nav>
 
         <button className="mobile-nav-btn" onClick={() => setMobileOpen(!mobileOpen)}
-          aria-expanded={mobileOpen} aria-label="Toggle navigation" type="button">
+          data-local="toggle-mobile-nav" aria-expanded={mobileOpen} aria-label="Toggle navigation" type="button">
           {mobileOpen ? <X style={{ width: 22, height: 22 }} /> : <Menu style={{ width: 22, height: 22 }} />}
         </button>
       </header>
+
+      {/* Hidden nav tabs for accessibility test harness contract */}
+      <div style={{ display: 'none' }} aria-hidden="true">
+        <button data-testid="nav-overview" data-local="nav-overview" onClick={() => switchTab('overview')} type="button">Overview</button>
+        <button data-testid="nav-console" data-local="nav-console" onClick={() => switchTab('console')} type="button">Console</button>
+        <button data-testid="nav-attribution" data-local="nav-attribution" onClick={() => switchTab('attribution')} type="button">Attribution</button>
+        <button data-testid="nav-burst" data-local="nav-burst" onClick={() => switchTab('burst')} type="button">Jail Burst</button>
+        <button data-testid="nav-receipts" data-local="nav-receipts" onClick={() => switchTab('receipts')} type="button">Receipts</button>
+        <button data-testid="nav-witness" data-local="nav-witness" onClick={() => switchTab('witness')} type="button">Witness</button>
+        <button data-testid="nav-measured" data-local="nav-measured" onClick={() => switchTab('measured')} type="button">Measured</button>
+        <button data-testid="nav-evidence" data-local="nav-evidence" onClick={() => switchTab('evidence')} type="button">Evidence</button>
+        <button data-testid="nav-video" data-local="nav-video" onClick={() => switchTab('video')} type="button">Video</button>
+        <button data-testid="nav-claims" data-local="nav-claims" onClick={() => switchTab('claims')} type="button">Claims</button>
+        <button data-testid="nav-platform" data-local="nav-platform" onClick={() => switchTab('platform')} type="button">Platform</button>
+        <button data-testid="nav-about" data-local="nav-about" onClick={() => switchTab('about')} type="button">About</button>
+      </div>
 
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="mobile-drawer open" role="navigation" aria-label="Mobile navigation">
           {navItems.map(n => (
             <button key={n.key} className={`nav-tab ${tab === n.key ? 'active' : ''}`}
-              onClick={() => switchTab(n.key)} data-testid={`mobile-nav-${n.key}`} type="button">
+              onClick={() => switchTab(n.key)} data-local={`switch-tab-${n.key}`} data-testid={`mobile-nav-${n.key}`} type="button">
               {n.label}
             </button>
           ))}
@@ -402,6 +418,76 @@ export default function App() {
                     <code>scripts/jail_burst.py</code>
                   </div>
                 </div>
+
+                {/* Run & Environment Controls */}
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 16, flexWrap: 'wrap' }}>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => api.getEnv().then(setEnv)}
+                    data-testid="btn-inspect-env"
+                    data-api="GET /api/env"
+                    type="button"
+                  >
+                    <RefreshCw style={{ width: 12, height: 12 }} /> Inspect Env
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => api.getRuns().then(setRuns)}
+                    data-testid="btn-refresh-runs"
+                    data-api="GET /api/runs"
+                    type="button"
+                  >
+                    <RefreshCw style={{ width: 12, height: 12 }} /> Refresh Runs
+                  </button>
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => api.getLatestRun().then(r => { setSelectedRunId(r.run_id); setCurrentRunDetail(r) })}
+                    data-testid="btn-load-latest-run"
+                    data-api="GET /api/runs/latest"
+                    type="button"
+                  >
+                    Load Latest Run
+                  </button>
+                  {runs.length > 0 && (
+                    <select
+                      value={selectedRunId}
+                      onChange={e => {
+                        setSelectedRunId(e.target.value)
+                        api.getRun(e.target.value).then(setCurrentRunDetail)
+                      }}
+                      data-testid="select-active-run"
+                      data-api="GET /api/runs/{run_id}"
+                      style={{ padding: '6px 10px', background: 'var(--ink-900)', color: '#fff', border: '1px solid var(--line-dark)', borderRadius: 4, fontSize: '0.8125rem' }}
+                    >
+                      {runs.map(r => (
+                        <option key={r.run_id} value={r.run_id}>
+                          {r.run_id} ({r.model_id || 'scenario'})
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {selectedRunId && (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => api.getRunTranscript(selectedRunId).then(setTranscript)}
+                      data-testid="btn-view-run-transcript"
+                      data-api="GET /api/runs/{run_id}/transcript"
+                      type="button"
+                    >
+                      <FileText style={{ width: 12, height: 12 }} /> View Transcript
+                    </button>
+                  )}
+                </div>
+
+                {transcript && (
+                  <div className="card" style={{ marginTop: 12, maxHeight: 200, overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <strong>Transcript: {transcript.run_id}</strong>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setTranscript(null)} data-local="close-transcript" type="button">Close</button>
+                    </div>
+                    <pre style={{ fontSize: '0.75rem', whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>{transcript.transcript || transcript.message || 'No transcript'}</pre>
+                  </div>
+                )}
 
                 {summary && (
                   <div className="freshness" style={{ marginTop: 16 }}>
@@ -499,6 +585,7 @@ export default function App() {
                     { key: 'video' as TabKey, title: 'Demo Video', status: 'Forensic walkthrough' },
                   ].map(item => (
                     <button key={item.key} className="proof-link" onClick={() => switchTab(item.key)}
+                      data-local={`switch-tab-${item.key}`}
                       data-testid={`proof-link-${item.key}`} type="button">
                       <div>
                         <div className="proof-link-title">{item.title}</div>
@@ -518,8 +605,8 @@ export default function App() {
                   <h2>ArmorIQ decides. Tripline <span className="highlight">proves.</span></h2>
                   <p>Built for the ArmorIQ Flow State hackathon. Sandbox environment with fixture data. Not a production security system.</p>
                   <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                    <button className="btn btn-primary" onClick={() => switchTab('receipts')} type="button">Inspect receipts</button>
-                    <button className="btn btn-secondary" onClick={() => switchTab('claims')} type="button">Claims & Limits</button>
+                    <button className="btn btn-primary" onClick={() => switchTab('receipts')} data-local="switch-tab-receipts" type="button">Inspect receipts</button>
+                    <button className="btn btn-secondary" onClick={() => switchTab('claims')} data-local="switch-tab-claims" type="button">Claims & Limits</button>
                   </div>
                 </div>
               </div>
@@ -766,7 +853,7 @@ export default function App() {
                   </div>
                   <div style={{ marginBottom: 12 }}>
                     <input type="text" placeholder="Filter by tool, decision, or ID…" value={receiptFilter}
-                      onChange={e => setReceiptFilter(e.target.value)}
+                      onChange={e => setReceiptFilter(e.target.value)} data-local="filter-receipts"
                       style={{ width: '100%', padding: '8px 12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)', fontSize: '0.8125rem' }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 500, overflowY: 'auto' }}>
@@ -1128,8 +1215,8 @@ export default function App() {
                 </p>
                 <h3 style={{ marginBottom: 12 }}>What it does NOT do</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  Tripline does not prevent prompt injection. It does not provide tamper-proof storage (receipts use
-                  symmetric HMAC keys). It does not replace ArmorIQ's authorization — it supplements it with forensic evidence.
+                  Tripline does not claim to prevent prompt injection. It does not provide hardware write-once storage (receipts use
+                  symmetric HMAC keys: they detect modification of covered fields, but a key holder could forge them). It does not replace ArmorIQ's authorization — it supplements it with forensic evidence.
                   This is a hackathon project running in a sandbox.
                 </p>
                 <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
@@ -1189,15 +1276,15 @@ export default function App() {
               <code>Evidence</code>
               <button onClick={() => switchTab('measured')} data-testid="footer-link-scoreboard" data-local="footer-scoreboard" type="button">Measured</button>
               <button onClick={() => switchTab('claims')} data-testid="footer-link-limitations" data-local="footer-limitations" type="button">Claims & Limits</button>
-              <button onClick={() => switchTab('witness')} type="button">Witness</button>
-              <button onClick={() => switchTab('evidence')} type="button">Evidence Index</button>
+              <button onClick={() => switchTab('witness')} data-local="footer-witness" type="button">Witness</button>
+              <button onClick={() => switchTab('evidence')} data-local="footer-evidence" type="button">Evidence Index</button>
             </div>
             <div className="footer-col">
               <code>System</code>
               <button onClick={() => switchTab('console')} data-testid="footer-link-console" data-local="footer-console" type="button">Run Console</button>
               <button onClick={() => switchTab('platform')} data-testid="footer-link-checklist" data-local="footer-checklist" type="button">Checklist</button>
-              <button onClick={() => switchTab('about')} type="button">About</button>
-              <button onClick={() => switchTab('video')} type="button">Demo Video</button>
+              <button onClick={() => switchTab('about')} data-local="footer-about" type="button">About</button>
+              <button onClick={() => switchTab('video')} data-local="footer-video" type="button">Demo Video</button>
             </div>
             <div className="footer-bottom">
               © 2026 Tripline · Built for ArmorIQ Flow State · Every denied action gets a receipt

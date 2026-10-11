@@ -210,6 +210,11 @@ async def get_summary():
             pass
     
     return sanitize_payload({
+        "total_receipts": len(all_receipts),
+        "total_runs": len(all_runs),
+        "total_benchmark_runs": measured_count,
+        "total_blocked": sum(1 for r in all_receipts if "DENY" in (r.decision.tripline_decision if r.decision else "")),
+        "total_held": sum(1 for r in all_receipts if "HOLD" in (r.decision.tripline_decision if r.decision else "")),
         "runs": len(all_runs),
         "receipts": len(all_receipts),
         "probes_total": probe_total,
@@ -357,7 +362,7 @@ async def get_attribution():
         ),
         AttributionLayer(
             layer="5",
-            name="Incident Receipt (canonical JSON + HMAC-SHA256)",
+            name="RFC-8785 Incident Receipt",
             boundary="Forensic Cryptographic Envelope",
             mechanism="Canonical JSON (sorted keys, compact separators) + SHA-256 hash + HMAC-SHA256 signature",
             decision_type="SEAL",
@@ -1313,7 +1318,8 @@ async def get_witness_by_trace(trace_id: str):
                 executions[tool] = ev.get("execution_count", 0)
 
     for r in repo.get_all_receipts():
-        if r.trace_id == trace_id:
+        r_trace = getattr(r, "trace_id", None) or getattr(r, "run_id", "")
+        if r_trace == trace_id:
             tool = r.proposal.tool if r.proposal else "read_file"
             executions[tool] = r.witness.execution_count if r.witness else 0
             break
