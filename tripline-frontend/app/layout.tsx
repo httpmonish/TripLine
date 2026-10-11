@@ -1,10 +1,23 @@
 import type { Metadata, Viewport } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 
+const geistSans = Geist({
+  variable: '--font-sans',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+const geistMono = Geist_Mono({
+  variable: '--font-mono',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Tripline — Blocked isn’t evidence',
-  description: 'An evidence layer for AI agent actions. Every denied action gets a signed receipt.',
-  generator: 'Tripline Phase 9',
+  title: 'Tripline — Blocked isn\'t evidence',
+  description: 'An evidence layer for AI agent actions. Every denied action gets a signed receipt you can verify.',
+  generator: 'Tripline Phase 10',
   icons: {
     icon: [
       {
@@ -28,10 +41,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'light dark',
+  colorScheme: 'dark',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'white' },
-    { media: '(prefers-color-scheme: dark)', color: 'black' },
+    { media: '(prefers-color-scheme: light)', color: '#F6F4EF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0A0B0D' },
   ],
 }
 
@@ -41,11 +54,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body>
         {children}
       </body>
     </html>
   )
 }
-
