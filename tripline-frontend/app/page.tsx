@@ -124,6 +124,13 @@ export default function App() {
         setSelectedRunId(data[0].run_id)
       }
     }).catch(() => {})
+
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const h = window.location.hash.replace('#', '') as TabKey
+      if (['overview', 'console', 'attribution', 'burst', 'receipts', 'witness', 'measured', 'evidence', 'video', 'claims', 'platform', 'about'].includes(h)) {
+        setTab(h)
+      }
+    }
   }, [])
 
   // 2. Fetch Run Detail when selected
@@ -263,17 +270,28 @@ export default function App() {
     <div className="site-shell">
       {/* ── TOPBAR HEADER (RULE 5.6) ── */}
       <header className="topbar">
-        <button
+        <a
+          href="/"
           className="brand"
-          onClick={() => setTab('overview')}
+          onClick={(e) => {
+            e.preventDefault()
+            setTab('overview')
+          }}
           data-testid="brand-button"
           data-local="navigate-overview"
-          type="button"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit' }}
+          aria-label="Tripline home"
         >
-          <span className="brand-mark"><Waypoints /></span>
-          TRIPLINE
-        </button>
+          <picture>
+            <source media="(prefers-color-scheme: light)" srcSet="/tripline-lockup-on-light.svg" />
+            <img
+              src="/tripline-lockup-on-dark.svg"
+              alt="Tripline"
+              className="brand-logo-img"
+              width={140}
+              height={30}
+            />
+          </picture>
+        </a>
 
         <nav style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
           <button
@@ -1420,7 +1438,16 @@ export default function App() {
       {/* ── FOOTER ── */}
       <footer className="footer wrap">
         <div>
-          <strong>TRIPLINE</strong>
+          <picture style={{ display: 'inline-block', marginBottom: 6 }}>
+            <source media="(prefers-color-scheme: light)" srcSet="/tripline-lockup-on-light.svg" />
+            <img
+              src="/tripline-lockup-on-dark.svg"
+              alt="Tripline"
+              width={112}
+              height={24}
+              style={{ height: '24px', width: 'auto', display: 'block' }}
+            />
+          </picture>
           <p>It&apos;s not about blocking. It&apos;s about proof.</p>
         </div>
         <div>

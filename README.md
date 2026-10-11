@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/tripline-lockup-on-dark.svg">
+    <img src="assets/brand/tripline-lockup-on-light.svg" alt="Tripline" width="320">
+  </picture>
+</p>
+
 # Tripline
 
 > **"Blocked isn't evidence. Every denied action gets a receipt."**  

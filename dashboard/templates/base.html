@@ -5,13 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Tripline{% endblock %} · Execution Evidence Viewer</title>
   <link rel="stylesheet" href="/static/tripline.css">
+  <link rel="icon" type="image/svg+xml" href="/static/brand/tripline-favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/brand/tripline-favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/brand/tripline-apple-touch-180.png">
   <meta name="description" content="Tripline minimal forensic execution viewer for autonomous agents.">
 </head>
 <body>
   <header class="header-bar">
     <div class="header-container">
       <a href="/" class="brand-title">
-        <span>Tripline</span>
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="/static/brand/tripline-lockup-on-dark.svg">
+          <img src="/static/brand/tripline-lockup-on-light.svg" alt="Tripline" style="height: 26px; width: auto; display: block;">
+        </picture>
         <span class="brand-tag">Evidence Viewer</span>
       </a>
       <nav>

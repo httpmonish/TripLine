@@ -8,19 +8,22 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
+        url: '/tripline-favicon.svg',
         type: 'image/svg+xml',
       },
+      {
+        url: '/tripline-favicon-32.png',
+        sizes: '32x32',
+        type: 'image/png',
+      },
     ],
-    apple: '/apple-icon.png',
+    apple: [
+      {
+        url: '/tripline-apple-touch-180.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
   },
 }
 
