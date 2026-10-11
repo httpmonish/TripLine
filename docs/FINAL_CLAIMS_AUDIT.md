@@ -37,3 +37,15 @@
 2. **Attribution Discipline**: Re-confirmed that all materials strictly attribute `delete_branch` to **ArmorIQ Platform Policy**, path traversal to **Tripline Path Jail**, and canary exfiltration to **Tripline Egress Gateway**.
 3. **Receipt Scope Transparency**: Clarified in `docs/JUDGE_QA.md` that HMAC signatures detect modification of covered fields, but do not prove operator intent and could be forged by a holder of the private witness key.
 4. **Honest Residual Prominence**: The residual (obfuscated/transformed canaries) is featured in the root `README.md`, `docs/limitations.md`, `docs/SUBMISSION.md`, and on the final video disclosure card.
+
+---
+
+## 3. Phase 10 (UI Redesign) Wording & Technical Corrections (D4–D6, D10)
+
+| Defect / Claim | Previous Statement | Corrected Truthful Statement | Verification Evidence |
+|---|---|---|---|
+| **D4 (Canary Scanner)** | "Regex canary token scanner inspects argument payloads" | "Exact-match canary token scanner (substring search in outbound payloads)" | `canary/scan.py` uses `.find()` and substring containment; zero regex used in codebase. |
+| **D5 (Receipt Envelope)** | "RFC-8785 cryptographically signed receipt" | "Canonical JSON (sorted keys, compact separators) + SHA-256, HMAC-SHA256 signed" | `receipts/builder.py` and `receipts/verify.py` use `json.dumps(sort_keys=True, separators=(',', ':'))`. No RFC 8785 test vectors exist. |
+| **D6 (Enforcement Mode)** | "local/sdk (SessionOptions mode='sdk')" | "ArmorIQ SDK local policy check (mode='sdk')" | Evidence from recorded runs shows SDK mode local evaluation. |
+| **D10 (Model Identifier)** | Hardcoded environment provider | Data-driven model extraction from active run evidence / manifest | UI binds to `model_id` of active run (`M2 forced-compliance stubs` or active LLM). |
+

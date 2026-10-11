@@ -36,8 +36,9 @@ Generated via `pip freeze` and `pip list` in `.venv313` (Python 3.13.16).
 
 ---
 
-## 3. UI Assets & Fonts
-- **Dashboard Fonts:** System native font stacks only (`-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `ui-monospace`, `Menlo`). Zero external font files or CDN calls.
+## 3. UI Assets, Libraries & Fonts
+- **Next.js Frontend Fonts:** Geist Sans (`Geist`) and Geist Mono (`Geist_Mono`) bundled locally at build-time via `next/font/google`. Licensed under the SIL Open Font License, Version 1.1 (OFL 1.1). Stored as local `.woff2` files under `tripline-frontend/out/_next/static/media/`. Zero external network requests or CDN requests from the browser or server.
 - **Brand Wordmark:** Outlined Inter Display SemiBold (designed by Rasmus Andersson). Licensed under the SIL Open Font License, Version 1.1 (SIL OFL 1.1). Stored as vector paths (outlines) directly inside SVG assets (`assets/brand/`) — zero font downloads or remote calls required. Full license preserved in [`assets/brand/OFL.txt`](file:///Users/themonishnawaz/tripline/assets/brand/OFL.txt).
 - **Video Fonts:** Standard system monospace (`Courier New`) and sans-serif (`Arial`) bundled locally under `video/fonts/`.
-- **Icons:** Inline SVG and local vector brand assets (`assets/brand/`). Zero external icon libraries or CDN requests.
+- **Icons:** `lucide-react` (v1.16.0, ISC License) bundled locally in static export. Zero external icon libraries or CDN requests.
+- **Frontend Framework:** Next.js 16.3.3 (MIT License), React 19 (MIT License), Tailwind CSS v4 (MIT License). Static export (`output: 'export'`) served locally by FastAPI. `@vercel/analytics` removed to strictly enforce Rule R5 (zero telemetry / zero external requests).
