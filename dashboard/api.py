@@ -150,7 +150,7 @@ async def get_env_info():
         llm_key_present=llm_key_present,
         llm_provider=provider,
         llm_model=model,
-        enforcement_mode="local/sdk (SessionOptions mode='sdk')",
+        enforcement_mode="ArmorIQ SDK local enforcement (mode='sdk')",
         live_runs_enabled=live_runs_enabled,
         python_version=f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
         repo_relative_paths={
@@ -160,6 +160,64 @@ async def get_env_info():
             "video": "video/out/",
         },
     )
+
+
+# ── 1b. Summary (single source of truth for all counts) ──────────────────────
+
+@api_router.get("/summary")
+async def get_summary():
+    """Single source of truth for all page counts."""
+    all_receipts = repo.get_all_receipts()
+    all_runs = repo.get_all_runs()
+    
+    # Jail burst probes count
+    try:
+        from scripts.jail_burst import run_jail_burst
+        results, all_passed = run_jail_burst()
+        probe_total = len(results)
+        probe_passed = sum(1 for r in results if "PASS" in r.get("verdict", ""))
+    except Exception:
+        probe_total = 0
+        probe_passed = 0
+    
+    # Witness records
+    witness_dir = pathlib.Path(".tripline/witness")
+    witness_total = 0
+    if witness_dir.exists():
+        for wf in witness_dir.glob("*.jsonl"):
+            try:
+                witness_total += sum(1 for line in wf.read_text().splitlines() if line.strip())
+            except Exception:
+                pass
+    
+    # Claims
+    claims_data = {"total": 0, "verified": 0, "unverified": 0, "failed": 0}
+    claims_file = REPO_ROOT / "docs" / "FINAL_CLAIMS_AUDIT.md"
+    if claims_file.exists():
+        try:
+            content = claims_file.read_text()
+            claims_data["verified"] = content.lower().count("verified")
+        except Exception:
+            pass
+    
+    # Measured rows
+    measured_count = 0
+    manifest_file = REPO_ROOT / "results" / "phase3" / "measured" / "measured_runs.jsonl"
+    if manifest_file.exists():
+        try:
+            measured_count = sum(1 for line in manifest_file.read_text().splitlines() if line.strip())
+        except Exception:
+            pass
+    
+    return sanitize_payload({
+        "runs": len(all_runs),
+        "receipts": len(all_receipts),
+        "probes_total": probe_total,
+        "probes_passed": probe_passed,
+        "witness_records": witness_total,
+        "measured_rows": measured_count,
+        "data_timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    })
 
 
 # ── 2. Runs & Evidence ───────────────────────────────────────────────────────
@@ -283,7 +341,7 @@ async def get_attribution():
             layer="3",
             name="Tripline Egress Gateway",
             boundary="Outbound Tool Call Quarantine",
-            mechanism="Regex canary token scanner inspects argument payloads",
+            mechanism="Exact-match canary token scanner (substring search in outbound payloads)",
             decision_type="HOLD",
             stops=["Exfiltration of planted decoy canary tokens via issue comments"],
             receipt_coverage="Covered in receipt.decision.tripline_decision ('HOLD', reason='egress_canary_hit')",
@@ -299,9 +357,9 @@ async def get_attribution():
         ),
         AttributionLayer(
             layer="5",
-            name="RFC-8785 Incident Receipt",
+            name="Incident Receipt (canonical JSON + HMAC-SHA256)",
             boundary="Forensic Cryptographic Envelope",
-            mechanism="Deterministic SHA-256 canonical hash + witness HMAC signature",
+            mechanism="Canonical JSON (sorted keys, compact separators) + SHA-256 hash + HMAC-SHA256 signature",
             decision_type="SEAL",
             stops=["Post-incident log tampering", "Decision modification"],
             receipt_coverage="Binds 10 covered forensic fields; 1-byte tamper breaks signature",
@@ -1196,7 +1254,7 @@ async def get_boundary():
                 "Argument path jail enforcement (outside repo root)",
                 "Outbound egress canary token detection",
                 "Execution witness attestation (counting physical executions)",
-                "Deterministic RFC-8785 HMAC-SHA256 audit receipts",
+                "Canonical JSON + HMAC-SHA256 signed audit receipts",
             ],
         },
         "defense_matrix": {

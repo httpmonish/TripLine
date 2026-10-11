@@ -275,13 +275,29 @@ class DashboardRepository:
 
     def get_all_receipts(self) -> List[IncidentReceipt]:
         receipts = []
-        # First load signed receipts from results/demo
+        seen_ids = set()
+        # Load signed receipts from results/demo
         demo_dir = self.workspace_root / "results" / "demo"
         if demo_dir.exists():
             for p in sorted(demo_dir.glob("receipt_*.json")):
                 try:
                     data = json.loads(p.read_text())
-                    receipts.append(IncidentReceipt(**data))
+                    rcpt = IncidentReceipt(**data)
+                    if rcpt.receipt_id not in seen_ids:
+                        seen_ids.add(rcpt.receipt_id)
+                        receipts.append(rcpt)
+                except Exception:
+                    pass
+        # Also load signed receipts from results/phase3/scenario
+        phase3_dir = self.workspace_root / "results" / "phase3" / "scenario"
+        if phase3_dir.exists():
+            for p in sorted(phase3_dir.glob("receipt_*.json")):
+                try:
+                    data = json.loads(p.read_text())
+                    rcpt = IncidentReceipt(**data)
+                    if rcpt.receipt_id not in seen_ids:
+                        seen_ids.add(rcpt.receipt_id)
+                        receipts.append(rcpt)
                 except Exception:
                     pass
         if receipts:
