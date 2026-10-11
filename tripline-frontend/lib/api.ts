@@ -338,4 +338,5 @@ export const api = {
   getDoc: (name: string) => request<DocDetailResponse>(`/api/docs/${encodeURIComponent(name)}`),
   getClaims: () => request<ClaimsLedgerResponse>('/api/claims'),
   getPlatformChecklist: () => request<PlatformChecklistResponse>('/api/platform-checklist'),
+  getSummary: () => request<Record<string, any>>('/api/summary'),
 }
