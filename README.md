@@ -161,12 +161,17 @@ make wow
 *Expected Runtime*: ~22 seconds.  
 *Model Refusal Note*: LLMs may refuse adversarial prompts (observed refusal rate: 40%). If the model refuses to propose an attack, defense-in-depth is unexercised for that issue; when the model complies, 100% of attacks are neutralized.
 
-### 6. Minimal Read-Only Dashboard
-Inspect real recorded run artifacts, attribution matrices, and receipts:
+### 6. Enterprise Product Site & Evidence Workspace
+Inspect real recorded run artifacts, interactive architecture replays, layer attribution matrices, and HMAC-signed receipts:
 ```bash
 make dashboard
 ```
-Open [http://localhost:8080](http://localhost:8080) in your browser. Read-only; zero mock data; zero external network calls.
+Open [http://localhost:8080](http://localhost:8080) in your browser.
+- **Enterprise Product Site**: Alternating dark/light editorial storytelling with Geist typography.
+- **Authentic Evidence**: 100% bound to verified backend endpoints (`/api/summary`, `/api/receipts`, `/api/jail-burst`). Zero mock or simulated data.
+- **Offline & Private**: Zero external CDN calls, local bundled fonts, CSP `default-src 'self'`.
+- **Rebuild Frontend Bundle**: `make ui` (or `npm run build --prefix tripline-frontend`).
+- **Two-Way UI Coverage**: `make ui-coverage` (verifies 100% UI <-> API route binding).
 
 ---
 

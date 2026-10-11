@@ -479,7 +479,12 @@ button, input, select { font: inherit; }
   text-transform: uppercase;
   margin-bottom: 16px;
 }
-.hero-title { margin-bottom: 20px; }
+.hero-title {
+  margin-bottom: 20px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
 .hero-title .highlight { color: var(--trip-red); }
 .hero-subtitle {
   color: var(--text-secondary);
@@ -851,4 +856,10 @@ button, input, select { font: inherit; }
   .topbar { padding: 0 16px; }
   h1 { font-size: clamp(2rem, 8vw, 3rem); }
   h2 { font-size: clamp(1.5rem, 5vw, 2rem); }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: clamp(1.625rem, 7.5vw, 2.25rem); word-break: break-word; }
+  .hero-actions { flex-direction: column; width: 100%; }
+  .hero-actions .btn { width: 100%; justify-content: center; }
 }
