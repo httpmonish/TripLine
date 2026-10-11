@@ -52,6 +52,12 @@ def run_jail_burst() -> tuple[List[Dict[str, Any]], bool]:
     os.environ["TRIPLINE_DEMO_REPO_DIR"] = str(sandbox_repo)
     repo_mod.DEMO_REPO_DIR = sandbox_repo
 
+    # Isolate witness recording to temporary scratch file (preserves tracked evidence)
+    import tempfile
+    tmp_witness_dir = pathlib.Path(tempfile.mkdtemp(prefix="jail_burst_witness_"))
+    orig_witness_path = getattr(repo_mod.recorder, "logfile", None)
+    repo_mod.recorder.logfile = tmp_witness_dir / "repo-mcp.jsonl" 
+
     # Check ArmorIQ decision for read_file
     aiq_decision = "ALLOW"
     try:
@@ -153,6 +159,8 @@ def run_jail_burst() -> tuple[List[Dict[str, Any]], bool]:
     print(f"Overall Path Jail Burst Result: {'ALL PASS (ZERO LEAKS)' if all_passed else 'SECURITY FINDING (FAIL)'}")
     print("=" * 96 + "\n")
 
+    if orig_witness_path:
+        repo_mod.recorder.logfile = orig_witness_path
     return results, all_passed
 
 
