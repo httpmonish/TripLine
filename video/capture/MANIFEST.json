@@ -3,11 +3,11 @@
     "command": "make wow",
     "exit_code": 0,
     "runtime_seconds": 21.731,
-    "sha256": "eb7d745f8664944cc147bc92350f00046ddabd42508ffca38da98b5619feb3bd",
+    "sha256": "1451209b818159ea0f091c1faf2f62035e695725b6af3edfda7ecb15595d19a7",
     "log_file": "video/capture/B2_start.log",
     "commit": "c8ce1479a241e317c786885140043aa307d846bb",
     "timestamp": "2026-10-10T13:33:08Z",
-    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+    "model": "Deterministic scenario run (API key unconfigured at recording)"
   },
   "B3_attack1": {
     "command": ".venv313/bin/python scripts/armoriq_proof.py --target delete_branch",
@@ -17,7 +17,7 @@
     "log_file": "video/capture/B3_attack1.log",
     "commit": "c8ce1479a241e317c786885140043aa307d846bb",
     "timestamp": "2026-10-10T13:33:15Z",
-    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+    "model": "Deterministic scenario run (API key unconfigured at recording)"
   },
   "B4_attacks2_3": {
     "command": ".venv313/bin/python scripts/jail_burst.py",
@@ -27,26 +27,26 @@
     "log_file": "video/capture/B4_attacks2_3.log",
     "commit": "c8ce1479a241e317c786885140043aa307d846bb",
     "timestamp": "2026-10-10T13:33:18Z",
-    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+    "model": "Deterministic scenario run (API key unconfigured at recording)"
   },
   "B5_verify_tamper": {
     "command": "make verify && make tamper",
     "exit_code": 0,
     "runtime_seconds": 0.074,
-    "sha256": "e83ef8622bbce4f5e219b1e5d79e85cbeaefc72cff6a2d71a63ba0d32fc04172",
+    "sha256": "457e19e9e0f1ce9bb3a501fe4e2a7109f3ef43991cf8e04fa4af3286be045cae",
     "log_file": "video/capture/B5_verify_tamper.log",
     "commit": "c8ce1479a241e317c786885140043aa307d846bb",
     "timestamp": "2026-10-10T13:33:18Z",
-    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+    "model": "Deterministic scenario run (API key unconfigured at recording)"
   },
   "B6_attribution": {
     "command": ".venv313/bin/python -m scripts.verify_links",
     "exit_code": 0,
     "runtime_seconds": 0.024,
-    "sha256": "870ca7494ea42e4df6f28a2a61fd980d03ae0205f44bcf8fdbbf1c6ecf5e47f2",
+    "sha256": "b3f81488fdbcb7e786825a6fb0103f84ab9b625179a33bcdca566840085fb18e",
     "log_file": "video/capture/B6_attribution.log",
     "commit": "c8ce1479a241e317c786885140043aa307d846bb",
     "timestamp": "2026-10-10T13:33:18Z",
-    "model": "Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)"
+    "model": "Deterministic scenario run (API key unconfigured at recording)"
   }
 }

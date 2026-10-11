@@ -22,9 +22,9 @@ Autonomous AI agents require defense-in-depth: authorization of an action does n
 ### C. ~200 Words (Full Overview)
 In high-stakes agentic workflows, an empty error message or a "blocked" log line is insufficient evidence. Security teams need attributable, tamper-detectable proof of what an agent attempted, which layer intercepted it, and whether side effects occurred. Tripline introduces an orthogonal defense-in-depth and forensic evidence architecture for autonomous agents operating through MCP.
 
-Working with ArmorIQ's real platform enforcement (`/iap/sdk/enforce`), Tripline defends across three architectural boundaries. When an adversarial instruction attempts out-of-scope operations like `delete_branch`, ArmorIQ intercepts the call upstream. When an agent attempts directory traversal escapes like reading `~/.ssh/fake_key`, Tripline's in-MCP Path Jail traps the inode boundary. When an agent attempts to exfiltrate planted secrets through issue comments, Tripline's Egress Gateway quarantines the payload.
+Working with ArmorIQ's real platform enforcement (`/iap/sdk/enforce`), Tripline defends across three architectural boundaries. When an adversarial instruction attempts out-of-scope operations like `delete_branch`, ArmorIQ intercepts the call upstream (not on the agent's allowlist). When an agent attempts directory traversal escapes like reading `~/.ssh/fake_key`, Tripline's in-MCP Path Jail traps the inode boundary. When an agent attempts to exfiltrate planted secrets through issue comments, Tripline's Egress Gateway quarantines the payload.
 
-Crucially, Tripline proves what happened: every security event appends to an HMAC-chained witness log and mints an HMAC-SHA256 Canonical JSON Incident Receipt covering the tool call, argument hash, layer decision, and execution count (0). Any post-hoc modification triggers deterministic tamper detection. Tested against Claude 3.5 Sonnet across a 5-issue queue, Tripline ensures that "ArmorIQ decides, and Tripline proves."
+Crucially, Tripline proves what happened: every security event appends to an HMAC-chained witness log and mints an HMAC-SHA256 Canonical JSON Incident Receipt covering the tool call, argument hash, layer decision, and execution count (0). Any post-hoc modification triggers deterministic tamper detection. Tested across real scenario runs and deterministic test harnesses across a 5-issue queue, Tripline ensures that "ArmorIQ decides, and Tripline proves."
 
 ---
 
@@ -41,7 +41,7 @@ Existing AI agent security gateways operate as black-box firewalls that drop una
 * **Cryptographic Incident Receipts**: Emits Canonical JSON SHA-256 receipts signed with HMAC-SHA256, enabling independent offline verification and tamper detection.
 
 ### How ArmorIQ is Used
-ArmorIQ serves as the upstream authorization layer (Layer 1). On every proposed tool call, the agent loop calls the ArmorIQ SDK (`/iap/sdk/enforce`) with the active session token and proposed tool. ArmorIQ evaluates the agent role against platform policy `cli-tripline-maintainer-tripline-mcp`. If unauthorized (e.g., `delete_branch`), ArmorIQ returns an immediate `block` decision, preventing the request from ever reaching the MCP server.
+ArmorIQ serves as the upstream authorization layer (Layer 1). On every proposed tool call, the agent loop calls the ArmorIQ SDK (`/iap/sdk/enforce`) with the active session token and proposed tool. ArmorIQ evaluates the agent role against platform policy `cli-tripline-maintainer-tripline-mcp`. If unauthorized (e.g., `delete_branch`), ArmorIQ returns an immediate `block` decision (`reason: tool_not_in_allowlist`), preventing the request from ever reaching the MCP server.
 
 ### What Tripline Adds
 Tripline provides downstream parameter containment and cryptographic evidence:

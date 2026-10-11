@@ -35,7 +35,7 @@
       "end_time": 32.0,
       "duration": 14.0,
       "type": "terminal",
-      "caption": "ArmorIQ blocks delete_branch at the platform.",
+      "caption": "ArmorIQ blocks delete_branch (not on ArmorIQ's allowlist for this agent).",
       "voiceover": "A poisoned issue instructs the agent to delete a branch. ArmorIQ stops it upstream at the platform.",
       "source": "video/capture/B3_attack1.log",
       "command": "scripts/armoriq_proof.py --target delete_branch"
