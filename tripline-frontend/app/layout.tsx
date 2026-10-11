@@ -1,11 +1,10 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Tripline — Blocked isn’t evidence',
   description: 'An evidence layer for AI agent actions. Every denied action gets a signed receipt.',
-  generator: 'v0.app',
+  generator: 'Tripline Phase 9',
   icons: {
     icon: [
       {
@@ -42,8 +41,8 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )
 }
+

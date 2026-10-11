@@ -5,3 +5,48 @@
 @media(max-width:800px){.wrap{width:calc(100% - 32px)}.topbar{padding:0 16px}.topbar nav{display:none}.mode-label{margin-left:auto}.hero{grid-template-columns:1fr;gap:55px;padding:76px 0 70px}.hero h1{font-size:44px}.hero-actions{align-items:flex-start;flex-direction:column}.proof{grid-template-columns:1fr;gap:0}.proof>div,.proof>div:first-child{padding:22px 0;border-right:0;border-bottom:1px solid var(--border)}.proof .runs-on{margin-top:22px}.two-col,.signup-grid{grid-template-columns:1fr;gap:30px}.dark-section,.checks,.layers,.replay,.faq,.final-cta{padding-top:78px}.cards{grid-template-columns:1fr;padding-top:56px}.statement{padding:90px 0}.flow,.compare{margin-top:78px;padding:70px 0}.flow-map{align-items:flex-start;overflow:auto;justify-content:flex-start}.flow-map div{min-width:130px}.flow-map b{display:none}.layers article{grid-template-columns:1fr auto}.layers article p{grid-column:1/-1;grid-row:2}.layers article small{grid-column:1}.replay-panel{grid-template-columns:1fr}.gates{flex-direction:row}.status-strip{flex-wrap:wrap}.footer{grid-template-columns:1fr 1fr}.footer>div:first-child{grid-column:1/-1}.signup-grid{gap:24px}.signup{margin-top:78px;padding:70px 0}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
 :focus-visible{outline:2px solid var(--text);outline-offset:3px}
+
+/* Phase 9 UI Enhancements */
+.nav-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font:12px ui-monospace,monospace;padding:16px 8px;cursor:pointer;transition:color .15s,border-color .15s}
+.nav-tab.active{color:var(--text);border-color:var(--text)}
+.nav-tab:hover{color:var(--text)}
+
+.data-table{width:100%;border-collapse:collapse;font:13px ui-monospace,monospace;margin:20px 0}
+.data-table th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);color:var(--dim);font-weight:600}
+.data-table td{padding:12px;border-bottom:1px solid #1a1a1a;color:var(--muted)}
+.data-table tr:hover td{background:#111;color:var(--text)}
+
+.console-terminal{background:#070707;border:1px solid var(--border);padding:16px;min-height:260px;max-height:450px;overflow:auto;font:12px/1.7 ui-monospace,monospace;color:#ccc}
+.console-line{white-space:pre-wrap;word-break:break-all}
+.console-line.error{color:var(--deny)}
+.console-line.success{color:var(--allow)}
+.console-line.info{color:var(--hold)}
+
+.badge-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font:11px ui-monospace,monospace;border:1px solid currentColor}
+.badge-tag.allow{color:var(--allow)}
+.badge-tag.deny{color:var(--deny)}
+.badge-tag.hold{color:var(--hold)}
+.badge-tag.tamper{color:#ff4d4f;background:#330005;font-weight:bold}
+.badge-tag.neutral{color:var(--dim);border-color:var(--dim)}
+
+.empty-state{border:1px dashed var(--border);padding:40px;text-align:center;background:#0d0d0d;margin:20px 0}
+.empty-state h3{color:var(--text);margin-top:0}
+.empty-state p{color:var(--muted);font-size:14px;max-width:500px;margin:8px auto}
+.empty-state code{display:inline-block;margin-top:12px;padding:4px 8px;background:#151515;border:1px solid var(--border);color:var(--hold)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:5px;font:12px ui-monospace,monospace;cursor:pointer;transition:opacity .15s}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--text);color:var(--bg);border:none}
+.btn-danger{background:var(--deny);color:#fff;border:none}
+.btn-outline{border:1px solid var(--border);background:none;color:var(--muted)}
+.btn-outline:hover:not(:disabled){border-color:var(--text);color:var(--text)}
+.btn-sm{min-height:28px;padding:0 8px;font-size:11px}
+
+.view-panel{padding:40px 0 80px}
+.view-header{margin-bottom:30px}
+.view-header h2{font-size:32px;line-height:1.1;margin:0 0 8px;letter-spacing:-.04em}
+.view-header p{color:var(--muted);font-size:15px;margin:0}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.card{background:var(--surface);border:1px solid var(--border);padding:24px}
+
