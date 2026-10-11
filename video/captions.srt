@@ -8,7 +8,7 @@ A real LLM agent. 5 issues: 2 benign, 3 poisoned.
 
 3
 00:00:18,000 --> 00:00:32,000
-ArmorIQ blocks delete_branch at the platform.
+ArmorIQ blocks delete_branch (not on ArmorIQ's allowlist for this agent).
 
 4
 00:00:32,000 --> 00:00:48,000

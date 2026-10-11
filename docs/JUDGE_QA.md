@@ -14,7 +14,7 @@ This document provides concise, factual answers to 16 questions a skeptical hack
 ---
 
 ### Q2: Which attacks did ArmorIQ stop, which did Tripline stop, and why does that matter?
-**A:** ArmorIQ stopped Attack 1 (`delete_branch`) because tool-level policy excluded it. ArmorIQ allowed Attack 2 (`read_file`) and Attack 3 (`comment_issue`) because those tools were in the allowlist. Tripline's in-MCP Path Jail stopped Attack 2 (`PATH_OUTSIDE_ROOT`), and Tripline's Egress Gateway held Attack 3 (`egress_canary_hit`). This matters because tool authorization does not guarantee safe arguments or non-exfiltrating payloads.  
+**A:** ArmorIQ stopped Attack 1 (`delete_branch`) because it was not on the agent's tool allowlist (reason: `tool_not_in_allowlist`, matched policy `cli-tripline-maintainer-tripline-mcp`). ArmorIQ allowed Attack 2 (`read_file`) and Attack 3 (`comment_issue`) because those tools were in the allowlist. Tripline's in-MCP Path Jail stopped Attack 2 (`PATH_OUTSIDE_ROOT`), and Tripline's Egress Gateway held Attack 3 (`egress_canary_hit`). This matters because tool authorization does not guarantee safe arguments or non-exfiltrating payloads.  
 *Evidence*: `docs/phase3_layer_attribution.md` Section 1, `results/phase3/scenario/`.
 
 ---
@@ -92,8 +92,8 @@ This document provides concise, factual answers to 16 questions a skeptical hack
 ---
 
 ### Q15: How does a live policy flip work with zero code changes?
-**A:** ArmorIQ policies are configured in the cloud console. When `delete_branch` was omitted from the tool allowlist, the platform blocked it. When added to the allowlist in Phase 0, the platform permitted it instantly without restarting the agent or modifying a single line of application code.  
-*Evidence*: `docs/phase0_report.md` (Gate G5), `scripts/policy_flip_demo.py`.
+**A:** ArmorIQ policies are managed dynamically in the cloud console. When `delete_branch` was omitted from the tool allowlist, the platform blocked it (`tool_not_in_allowlist`). When added to the allowlist in Phase 0 tests, the platform permitted it instantly without code modifications. Note: The interactive human dashboard UI flip demonstration (`scripts/policy_flip_demo.py`) was NOT RUN live with the owner, and has been removed from public demo claims pending owner dashboard verification.  
+*Evidence*: `docs/phase0_report.md` (Gate G5), `docs/ONBOARDING_STATUS.md`.
 
 ---
 
