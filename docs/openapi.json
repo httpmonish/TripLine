@@ -1,0 +1,2465 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tripline Forensic Evidence Dashboard",
+    "description": "Every denied agent action gets a signed receipt. ArmorIQ decides. Tripline proves.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Health",
+        "operationId": "get_health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/csrf-token": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Csrf Token",
+        "operationId": "get_csrf_token_api_csrf_token_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/env": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Env Info",
+        "operationId": "get_env_info_api_env_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "List Runs",
+        "operationId": "list_runs_api_runs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RunSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Runs Api Runs Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/latest": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Latest Run",
+        "operationId": "get_latest_run_api_runs_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunDetail"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Run Detail",
+        "operationId": "get_run_detail_api_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{run_id}/transcript": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Run Transcript",
+        "operationId": "get_run_transcript_api_runs__run_id__transcript_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunTranscript"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/attribution": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Attribution",
+        "operationId": "get_attribution_api_attribution_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jail-burst": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Jail Burst",
+        "operationId": "get_jail_burst_api_jail_burst_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JailBurstResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/measured": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Measured",
+        "operationId": "get_measured_api_measured_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeasuredResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit-links": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Audit Links",
+        "operationId": "get_audit_links_api_audit_links_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLinksResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipts": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "List Receipts",
+        "operationId": "list_receipts_api_receipts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReceiptSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Receipts Api Receipts Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipts/{identifier}": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Receipt",
+        "operationId": "get_receipt_api_receipts__identifier__get",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipts/{identifier}/verify": {
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Verify Receipt Endpoint",
+        "operationId": "verify_receipt_endpoint_api_receipts__identifier__verify_post",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipts/{identifier}/tamper-check": {
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Tamper Check Receipt Endpoint",
+        "operationId": "tamper_check_receipt_endpoint_api_receipts__identifier__tamper_check_post",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptTamperResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/witness": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Witness Summary",
+        "operationId": "get_witness_summary_api_witness_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WitnessSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/witness/verify": {
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Verify Witness Endpoint",
+        "operationId": "verify_witness_endpoint_api_witness_verify_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WitnessVerifyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/witness/tamper-check": {
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Tamper Witness Endpoint",
+        "operationId": "tamper_witness_endpoint_api_witness_tamper_check_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WitnessTamperResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "List Jobs",
+        "operationId": "list_jobs_api_jobs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/JobResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Jobs Api Jobs Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Create Job",
+        "operationId": "create_job_api_jobs_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Job Detail",
+        "operationId": "get_job_detail_api_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/events": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Stream Job Events",
+        "operationId": "stream_job_events_api_jobs__job_id__events_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jobs/{job_id}/cancel": {
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Cancel Job",
+        "operationId": "cancel_job_api_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evidence": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Evidence Index",
+        "operationId": "get_evidence_index_api_evidence_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceIndexResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evidence/file": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Evidence File",
+        "operationId": "get_evidence_file_api_evidence_file_get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Repo-relative file path",
+              "title": "Path"
+            },
+            "description": "Repo-relative file path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/video": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Demo Video",
+        "operationId": "get_demo_video_api_video_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/video/captions": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Video Captions",
+        "operationId": "get_video_captions_api_video_captions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/docs": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "List Docs",
+        "operationId": "list_docs_api_docs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DocItem"
+                  },
+                  "type": "array",
+                  "title": "Response List Docs Api Docs Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/docs/{name}": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Doc Detail",
+        "operationId": "get_doc_detail_api_docs__name__get",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocDetailResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/claims": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Claims Ledger",
+        "operationId": "get_claims_ledger_api_claims_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimsLedgerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform-checklist": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Platform Checklist",
+        "operationId": "get_platform_checklist_api_platform_checklist_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformChecklistResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/summary": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Summary Compat",
+        "operationId": "get_summary_compat_api_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/demo-data": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Demo Data Compat",
+        "operationId": "get_demo_data_compat_api_demo_data_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Index View",
+        "operationId": "index_view__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attribution": {
+      "get": {
+        "summary": "Attribution View",
+        "operationId": "attribution_view_attribution_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipts": {
+      "get": {
+        "summary": "Receipts List View",
+        "operationId": "receipts_list_view_receipts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/receipts/{identifier}": {
+      "get": {
+        "summary": "Receipt Detail View",
+        "operationId": "receipt_detail_view_receipts__identifier__get",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/runs/{run_id}": {
+      "get": {
+        "summary": "Run View",
+        "operationId": "run_view_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boundary": {
+      "get": {
+        "summary": "Boundary View",
+        "operationId": "boundary_view_boundary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scoreboard": {
+      "get": {
+        "summary": "Scoreboard View",
+        "operationId": "scoreboard_view_scoreboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipts/{filename}/verify": {
+      "post": {
+        "summary": "Verify Receipt Endpoint",
+        "operationId": "verify_receipt_endpoint_api_receipts__filename__verify_post",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filename"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/receipts/{filename}/verify-tampered": {
+      "post": {
+        "summary": "Verify Tampered Receipt Endpoint",
+        "operationId": "verify_tampered_receipt_endpoint_api_receipts__filename__verify_tampered_post",
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filename"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/measured": {
+      "get": {
+        "summary": "Measured View",
+        "operationId": "measured_view_measured_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/about": {
+      "get": {
+        "summary": "About View",
+        "operationId": "about_view_about_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AttributionLayer": {
+        "properties": {
+          "layer": {
+            "type": "string",
+            "title": "Layer"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "boundary": {
+            "type": "string",
+            "title": "Boundary"
+          },
+          "mechanism": {
+            "type": "string",
+            "title": "Mechanism"
+          },
+          "decision_type": {
+            "type": "string",
+            "title": "Decision Type"
+          },
+          "stops": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Stops"
+          },
+          "receipt_coverage": {
+            "type": "string",
+            "title": "Receipt Coverage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "layer",
+          "name",
+          "boundary",
+          "mechanism",
+          "decision_type",
+          "stops",
+          "receipt_coverage"
+        ],
+        "title": "AttributionLayer"
+      },
+      "AttributionResponse": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/AttributionLayer"
+            },
+            "type": "array",
+            "title": "Layers"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "layers",
+          "summary"
+        ],
+        "title": "AttributionResponse"
+      },
+      "AuditLinkEntry": {
+        "properties": {
+          "receipt_id": {
+            "type": "string",
+            "title": "Receipt Id"
+          },
+          "receipt_hash": {
+            "type": "string",
+            "title": "Receipt Hash"
+          },
+          "armoriq_ref": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Armoriq Ref"
+          },
+          "prev_hash": {
+            "type": "string",
+            "title": "Prev Hash"
+          },
+          "link_hash": {
+            "type": "string",
+            "title": "Link Hash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "receipt_id",
+          "receipt_hash",
+          "armoriq_ref",
+          "prev_hash",
+          "link_hash"
+        ],
+        "title": "AuditLinkEntry"
+      },
+      "AuditLinksResponse": {
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "chain_length": {
+            "type": "integer",
+            "title": "Chain Length"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/AuditLinkEntry"
+            },
+            "type": "array",
+            "title": "Links"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid",
+          "chain_length",
+          "reason",
+          "links"
+        ],
+        "title": "AuditLinksResponse"
+      },
+      "ClaimsItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "claim": {
+            "type": "string",
+            "title": "Claim"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          },
+          "evidence_path": {
+            "type": "string",
+            "title": "Evidence Path"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "claim",
+          "verdict",
+          "evidence_path"
+        ],
+        "title": "ClaimsItem"
+      },
+      "ClaimsLedgerResponse": {
+        "properties": {
+          "total_claims": {
+            "type": "integer",
+            "title": "Total Claims"
+          },
+          "verified_count": {
+            "type": "integer",
+            "title": "Verified Count"
+          },
+          "unverified_count": {
+            "type": "integer",
+            "title": "Unverified Count"
+          },
+          "failed_count": {
+            "type": "integer",
+            "title": "Failed Count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimsItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_claims",
+          "verified_count",
+          "unverified_count",
+          "failed_count",
+          "items"
+        ],
+        "title": "ClaimsLedgerResponse"
+      },
+      "CsrfResponse": {
+        "properties": {
+          "csrf_token": {
+            "type": "string",
+            "title": "Csrf Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "csrf_token"
+        ],
+        "title": "CsrfResponse"
+      },
+      "DocDetailResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "title",
+          "content"
+        ],
+        "title": "DocDetailResponse"
+      },
+      "DocItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "title",
+          "size_bytes"
+        ],
+        "title": "DocItem"
+      },
+      "EnvResponse": {
+        "properties": {
+          "armoriq_sdk_version": {
+            "type": "string",
+            "title": "Armoriq Sdk Version"
+          },
+          "armoriq_key_present": {
+            "type": "boolean",
+            "title": "Armoriq Key Present"
+          },
+          "armoriq_key_prefix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Armoriq Key Prefix"
+          },
+          "llm_key_present": {
+            "type": "boolean",
+            "title": "Llm Key Present"
+          },
+          "llm_provider": {
+            "type": "string",
+            "title": "Llm Provider"
+          },
+          "llm_model": {
+            "type": "string",
+            "title": "Llm Model"
+          },
+          "enforcement_mode": {
+            "type": "string",
+            "title": "Enforcement Mode"
+          },
+          "live_runs_enabled": {
+            "type": "boolean",
+            "title": "Live Runs Enabled"
+          },
+          "python_version": {
+            "type": "string",
+            "title": "Python Version"
+          },
+          "repo_relative_paths": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Repo Relative Paths"
+          }
+        },
+        "type": "object",
+        "required": [
+          "armoriq_sdk_version",
+          "armoriq_key_present",
+          "llm_key_present",
+          "llm_provider",
+          "llm_model",
+          "enforcement_mode",
+          "live_runs_enabled",
+          "python_version",
+          "repo_relative_paths"
+        ],
+        "title": "EnvResponse"
+      },
+      "EvidenceIndexResponse": {
+        "properties": {
+          "total_files": {
+            "type": "integer",
+            "title": "Total Files"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_files",
+          "items"
+        ],
+        "title": "EvidenceIndexResponse"
+      },
+      "EvidenceItem": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "claims_supported": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Claims Supported"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path",
+          "size_bytes",
+          "sha256",
+          "claims_supported"
+        ],
+        "title": "EvidenceItem"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Service status"
+          },
+          "time": {
+            "type": "string",
+            "title": "Time",
+            "description": "Current UTC timestamp"
+          },
+          "git_commit": {
+            "type": "string",
+            "title": "Git Commit",
+            "description": "Short git commit hash"
+          },
+          "branch": {
+            "type": "string",
+            "title": "Branch",
+            "description": "Current git branch"
+          },
+          "dirty": {
+            "type": "boolean",
+            "title": "Dirty",
+            "description": "Whether working tree is dirty"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "time",
+          "git_commit",
+          "branch",
+          "dirty"
+        ],
+        "title": "HealthResponse"
+      },
+      "JailBurstProbe": {
+        "properties": {
+          "attempt": {
+            "type": "string",
+            "title": "Attempt"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "armoriq_decision": {
+            "type": "string",
+            "title": "Armoriq Decision"
+          },
+          "jail_decision": {
+            "type": "string",
+            "title": "Jail Decision"
+          },
+          "fake_key_bytes": {
+            "type": "integer",
+            "title": "Fake Key Bytes"
+          },
+          "verdict": {
+            "type": "string",
+            "title": "Verdict"
+          }
+        },
+        "type": "object",
+        "required": [
+          "attempt",
+          "path",
+          "armoriq_decision",
+          "jail_decision",
+          "fake_key_bytes",
+          "verdict"
+        ],
+        "title": "JailBurstProbe"
+      },
+      "JailBurstResponse": {
+        "properties": {
+          "total_probes": {
+            "type": "integer",
+            "title": "Total Probes"
+          },
+          "passed_probes": {
+            "type": "integer",
+            "title": "Passed Probes"
+          },
+          "probe_scope": {
+            "type": "string",
+            "title": "Probe Scope"
+          },
+          "reconciliation_note": {
+            "type": "string",
+            "title": "Reconciliation Note"
+          },
+          "probes": {
+            "items": {
+              "$ref": "#/components/schemas/JailBurstProbe"
+            },
+            "type": "array",
+            "title": "Probes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_probes",
+          "passed_probes",
+          "probe_scope",
+          "reconciliation_note",
+          "probes"
+        ],
+        "title": "JailBurstResponse"
+      },
+      "JobCreateRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "Job kind from allowlist"
+          },
+          "params": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Params",
+            "description": "Job parameters"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirm Token",
+            "description": "Confirmation token for live runs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "JobCreateRequest"
+      },
+      "JobResponse": {
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          },
+          "live": {
+            "type": "boolean",
+            "title": "Live"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "exit_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exit Code"
+          },
+          "output_preview": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Output Preview",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_id",
+          "kind",
+          "params",
+          "live",
+          "status"
+        ],
+        "title": "JobResponse"
+      },
+      "MeasuredResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "manifest": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Manifest"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/MeasuredRow"
+            },
+            "type": "array",
+            "title": "Rows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "manifest",
+          "rows"
+        ],
+        "title": "MeasuredResponse"
+      },
+      "MeasuredRow": {
+        "properties": {
+          "arm": {
+            "type": "string",
+            "title": "Arm"
+          },
+          "attack": {
+            "type": "string",
+            "title": "Attack"
+          },
+          "k": {
+            "type": "integer",
+            "title": "K"
+          },
+          "attempted_ratio": {
+            "type": "string",
+            "title": "Attempted Ratio"
+          },
+          "executed_ratio": {
+            "type": "string",
+            "title": "Executed Ratio"
+          },
+          "decided_by": {
+            "type": "string",
+            "title": "Decided By"
+          },
+          "wilson_ci_95": {
+            "type": "string",
+            "title": "Wilson Ci 95"
+          },
+          "refusal_rate": {
+            "type": "string",
+            "title": "Refusal Rate"
+          },
+          "protection_rate": {
+            "type": "string",
+            "title": "Protection Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "arm",
+          "attack",
+          "k",
+          "attempted_ratio",
+          "executed_ratio",
+          "decided_by",
+          "wilson_ci_95",
+          "refusal_rate",
+          "protection_rate"
+        ],
+        "title": "MeasuredRow"
+      },
+      "PlatformChecklistItem": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "evidence_file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence File"
+          },
+          "instruction": {
+            "type": "string",
+            "title": "Instruction"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "title",
+          "status",
+          "instruction"
+        ],
+        "title": "PlatformChecklistItem"
+      },
+      "PlatformChecklistResponse": {
+        "properties": {
+          "platform_url": {
+            "type": "string",
+            "title": "Platform Url"
+          },
+          "agent_id": {
+            "type": "string",
+            "title": "Agent Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PlatformChecklistItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform_url",
+          "agent_id",
+          "items"
+        ],
+        "title": "PlatformChecklistResponse"
+      },
+      "ReceiptDetail": {
+        "properties": {
+          "receipt_id": {
+            "type": "string",
+            "title": "Receipt Id"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "raw_json": {
+            "type": "string",
+            "title": "Raw Json"
+          },
+          "armoriq_ref": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Armoriq Ref"
+          },
+          "sidecar_link_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sidecar Link Hash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "receipt_id",
+          "data",
+          "raw_json"
+        ],
+        "title": "ReceiptDetail"
+      },
+      "ReceiptSummary": {
+        "properties": {
+          "receipt_id": {
+            "type": "string",
+            "title": "Receipt Id"
+          },
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "tool": {
+            "type": "string",
+            "title": "Tool"
+          },
+          "tripline_decision": {
+            "type": "string",
+            "title": "Tripline Decision"
+          },
+          "armoriq_decision": {
+            "type": "string",
+            "title": "Armoriq Decision"
+          },
+          "canonical_hash": {
+            "type": "string",
+            "title": "Canonical Hash"
+          },
+          "created_at": {
+            "type": "string",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "receipt_id",
+          "run_id",
+          "tool",
+          "tripline_decision",
+          "armoriq_decision",
+          "canonical_hash",
+          "created_at"
+        ],
+        "title": "ReceiptSummary"
+      },
+      "ReceiptTamperResponse": {
+        "properties": {
+          "receipt_id": {
+            "type": "string",
+            "title": "Receipt Id"
+          },
+          "tampered_field": {
+            "type": "string",
+            "title": "Tampered Field"
+          },
+          "original_value": {
+            "title": "Original Value"
+          },
+          "tampered_value": {
+            "title": "Tampered Value"
+          },
+          "tamper_detected": {
+            "type": "boolean",
+            "title": "Tamper Detected"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "verifier_reason": {
+            "type": "string",
+            "title": "Verifier Reason"
+          },
+          "original_file_untouched": {
+            "type": "boolean",
+            "title": "Original File Untouched"
+          }
+        },
+        "type": "object",
+        "required": [
+          "receipt_id",
+          "tampered_field",
+          "original_value",
+          "tampered_value",
+          "tamper_detected",
+          "status",
+          "verifier_reason",
+          "original_file_untouched"
+        ],
+        "title": "ReceiptTamperResponse"
+      },
+      "ReceiptVerifyResponse": {
+        "properties": {
+          "receipt_id": {
+            "type": "string",
+            "title": "Receipt Id"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "canonical_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Hash"
+          },
+          "command": {
+            "type": "string",
+            "title": "Command"
+          }
+        },
+        "type": "object",
+        "required": [
+          "receipt_id",
+          "verified",
+          "status",
+          "reason",
+          "command"
+        ],
+        "title": "ReceiptVerifyResponse"
+      },
+      "RunDetail": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "model_id": {
+            "type": "string",
+            "title": "Model Id"
+          },
+          "prompt_rung": {
+            "type": "integer",
+            "title": "Prompt Rung"
+          },
+          "records": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Events",
+            "default": []
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "date",
+          "model_id",
+          "prompt_rung",
+          "records"
+        ],
+        "title": "RunDetail"
+      },
+      "RunSummary": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "model_id": {
+            "type": "string",
+            "title": "Model Id"
+          },
+          "prompt_rung": {
+            "type": "integer",
+            "title": "Prompt Rung"
+          },
+          "outcome_summary": {
+            "type": "string",
+            "title": "Outcome Summary"
+          },
+          "attack_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attack Class"
+          },
+          "tripline_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tripline Decision"
+          },
+          "armoriq_decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Armoriq Decision"
+          },
+          "executed": {
+            "type": "integer",
+            "title": "Executed",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "date",
+          "model_id",
+          "prompt_rung",
+          "outcome_summary"
+        ],
+        "title": "RunSummary"
+      },
+      "RunTranscript": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "transcript": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transcript"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id"
+        ],
+        "title": "RunTranscript"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WitnessSummaryResponse": {
+        "properties": {
+          "total_records": {
+            "type": "integer",
+            "title": "Total Records"
+          },
+          "mcp_logs": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Mcp Logs"
+          },
+          "execution_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Execution Counts"
+          },
+          "chain_status": {
+            "type": "string",
+            "title": "Chain Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_records",
+          "mcp_logs",
+          "execution_counts",
+          "chain_status"
+        ],
+        "title": "WitnessSummaryResponse"
+      },
+      "WitnessTamperResponse": {
+        "properties": {
+          "tamper_detected": {
+            "type": "boolean",
+            "title": "Tamper Detected"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "verifier_reason": {
+            "type": "string",
+            "title": "Verifier Reason"
+          },
+          "original_log_untouched": {
+            "type": "boolean",
+            "title": "Original Log Untouched"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tamper_detected",
+          "status",
+          "verifier_reason",
+          "original_log_untouched"
+        ],
+        "title": "WitnessTamperResponse"
+      },
+      "WitnessVerifyResponse": {
+        "properties": {
+          "valid": {
+            "type": "boolean",
+            "title": "Valid"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "log_name": {
+            "type": "string",
+            "title": "Log Name"
+          },
+          "inspected_records": {
+            "type": "integer",
+            "title": "Inspected Records"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valid",
+          "reason",
+          "log_name",
+          "inspected_records"
+        ],
+        "title": "WitnessVerifyResponse"
+      }
+    }
+  }
+}

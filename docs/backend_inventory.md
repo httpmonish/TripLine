@@ -19,14 +19,14 @@
 | **CAP-06** | Make Target | `make tamper` | None | Tamper demo report | Reads files, tests copies | Offline | Yes | `POST /api/jobs` (`tamper_demo`) |
 | **CAP-07** | Make Target | `make burst` | None | Jail burst probe table | Writes burst results | Deterministic / offline | Yes | `POST /api/jobs` (`jail_burst`) |
 | **CAP-08** | Make Target | `make demo` | Mock/Live fixtures | Demo logs & receipts in `results/demo/` | Resets demo repo, runs attacks | Offline stubs / Live | No (standalone terminal run) | Historical data displayed |
-| **CAP-09** | Make Target | `make explain` | `results/demo/events.jsonl` | Formatted timeline to stdout | Read-only | Offline | Yes | UI Events viewer |
+| **CAP-09** | Make Target | `make explain` | `results/demo/events.jsonl` | Formatted timeline to stdout | Read-only | Offline | Yes | `GET /api/runs/{id}` |
 | **CAP-10** | Make Target | `make video` | Storyboard & captures | `video/out/tripline_demo_90s.mp4` | CPU intensive (rendering) | Offline | No | `GET /api/video` (serve built) |
 | **CAP-11** | Script | `scripts/jail_burst.py` | None | Probe table stdout | Deterministic | Offline | Yes | `POST /api/jobs` (`jail_burst`) & `GET /api/jail-burst` |
 | **CAP-12** | Script | `scripts/tamper_demo.py` | None | Tamper demonstration report | Temp files created & deleted | Offline | Yes | `POST /api/jobs` (`tamper_demo`) |
 | **CAP-13** | Script | `scripts/verify_links.py` | `results/phase3/armoriq_links.jsonl` | Chain verification stdout | Read-only | Offline | Yes | `GET /api/audit-links` |
 | **CAP-14** | Script | `scripts/armoriq_proof.py` | ArmorIQ credentials | Verification output | Live API calls to ArmorIQ | Live | Yes (with confirm token) | `POST /api/jobs` (`armoriq_proof`) |
 | **CAP-15** | Script | `scripts/run_phase3_scenario.py` | `--rung <0-4>` | `results/phase3/scenario/*.jsonl` | Creates new run logs & receipts | Rung 0 (offline) / Rung 1-4 (live) | Yes (Rung 0 default; live guarded) | `POST /api/jobs` (`scenario`) |
-| **CAP-16** | Script | `scripts/number_check.py` | None | Number audit stdout | Read-only | Offline | Yes | Checked via `make audit` |
+| **CAP-16** | Script | `scripts/number_check.py` | None | Number audit stdout | Read-only | Offline | No (internal audit script run offline via make audit) | N/A (tested via audit) |
 | **CAP-17** | Module | `receipts.verify` | Raw receipt dict / JSON | `(bool, str)` verification tuple | Read-only | Offline | Yes | `POST /api/receipts/{id}/verify` |
 | **CAP-18** | Module | `witness.reconcile` | Witness `.jsonl` path | `(bool, reason)` chain verification | Read-only | Offline | Yes | `POST /api/witness/verify` |
 | **CAP-19** | Module | `canary.scan` | String payload | Detected canary tokens list | Read-only | Offline | Yes | Internal to gateway & jobs |
