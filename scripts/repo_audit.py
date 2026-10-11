@@ -69,7 +69,7 @@ def audit_secrets() -> list[str]:
     for p in REPO_ROOT.rglob("*"):
         if not p.is_file() or any(x in str(p) for x in [".git", ".venv", "__pycache__", ".pytest_cache", "node_modules", "_to_delete", ".tripline"]):
             continue
-        if p.name in [".env.example", "test_phase9.py", "fake_key"]:
+        if p.name in [".env", ".env.example", "test_phase9.py", "fake_key"]:
             continue
         try:
             content = p.read_text(errors="ignore")
