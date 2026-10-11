@@ -1,71 +1,116 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import {
-  Check,
-  Copy,
-  Download,
-  Eye,
-  FileText,
-  Play,
-  RefreshCw,
-  Shield,
-  ShieldAlert,
-  ShieldCheck,
-  Square,
-  Terminal,
-  Waypoints,
-  X,
-  AlertTriangle,
-  Lock,
+  Check, Copy, Download, Eye, FileText, Play, RefreshCw, Shield,
+  ShieldAlert, ShieldCheck, Square, Terminal, Waypoints, X,
+  AlertTriangle, Lock, Menu, ChevronRight, ExternalLink,
+  Hash, Clock, Zap, Layers, Search, Filter
 } from 'lucide-react'
 import {
-  api,
-  HealthInfo,
-  EnvInfo,
-  RunSummary,
-  RunDetail,
-  ReceiptSummary,
-  ReceiptDetail,
-  JailBurstResponse,
-  AttributionResponse,
-  MeasuredResponse,
-  WitnessSummary,
-  JobRecord,
-  EvidenceIndexResponse,
-  ClaimsLedgerResponse,
-  PlatformChecklistResponse,
+  api, HealthInfo, EnvInfo, RunSummary, RunDetail, ReceiptSummary, ReceiptDetail,
+  JailBurstResponse, AttributionResponse, MeasuredResponse, WitnessSummary,
+  JobRecord, EvidenceIndexResponse, ClaimsLedgerResponse, PlatformChecklistResponse,
 } from '../lib/api'
 
+// ── Types ──────────────────────────────────────────────────────────
 type TabKey =
-  | 'overview'
-  | 'console'
-  | 'attribution'
-  | 'burst'
-  | 'receipts'
-  | 'witness'
-  | 'measured'
-  | 'evidence'
-  | 'video'
-  | 'claims'
-  | 'platform'
-  | 'about'
+  | 'overview' | 'console' | 'attribution' | 'burst' | 'receipts'
+  | 'witness' | 'measured' | 'evidence' | 'video' | 'claims'
+  | 'platform' | 'about'
 
+interface SummaryData {
+  runs: number; receipts: number; probes_total: number;
+  probes_passed: number; witness_records: number;
+  measured_rows: number; data_timestamp: string;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────
+function formatTime(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    return d.toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    })
+  } catch { return iso }
+}
+
+function formatTimeWithTooltip(iso: string | null | undefined) {
+  if (!iso) return <span>—</span>
+  return <span title={`UTC: ${iso}`}>{formatTime(iso)}</span>
+}
+
+function truncHash(hash: string, len = 12): string {
+  if (!hash) return '—'
+  return hash.length > len ? hash.slice(0, len) + '…' : hash
+}
+
+function badgeClass(decision: string): string {
+  const d = (decision || '').toUpperCase()
+  if (d.includes('DENY') || d.includes('FAILED') || d.includes('BLOCK')) return 'badge--deny'
+  if (d.includes('ALLOW') || d.includes('VERIFIED') || d.includes('PASS') || d.includes('VALID') || d === 'COMPLETED') return 'badge--allow'
+  if (d.includes('HOLD') || d.includes('PENDING') || d === 'RUNNING') return 'badge--hold'
+  if (d.includes('ATTEST') || d.includes('SEAL') || d.includes('RECORD')) return 'badge--record'
+  return 'badge--neutral'
+}
+
+// ── StatusBadge Component ──────────────────────────────────────────
+function StatusBadge({ status, icon }: { status: string; icon?: React.ReactNode }) {
+  return (
+    <span className={`badge ${badgeClass(status)}`}>
+      {icon}
+      {status}
+    </span>
+  )
+}
+
+// ── HashChip Component ─────────────────────────────────────────────
+function HashChip({ hash, full }: { hash: string; full?: string }) {
+  const [copied, setCopied] = useState(false)
+  const v = full || hash
+  return (
+    <span
+      className="hash-chip"
+      title={v}
+      onClick={() => { navigator.clipboard?.writeText(v); setCopied(true); setTimeout(() => setCopied(false), 1200) }}
+    >
+      <Hash style={{ width: 10, height: 10 }} />
+      {truncHash(hash)}
+      {copied ? <Check style={{ width: 10, height: 10, color: 'var(--allow)' }} /> : <Copy style={{ width: 10, height: 10 }} />}
+    </span>
+  )
+}
+
+// ── EmptyState Component ───────────────────────────────────────────
+function EmptyState({ title, description, command }: { title: string; description?: string; command?: string }) {
+  return (
+    <div className="empty-state" data-testid="empty-state">
+      <h3>{title}</h3>
+      {description && <p>{description}</p>}
+      {command && <code>{command}</code>}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN APP COMPONENT
+// ═══════════════════════════════════════════════════════════════════
 export default function App() {
+  // ── State ──
   const [tab, setTab] = useState<TabKey>('overview')
   const [health, setHealth] = useState<HealthInfo | null>(null)
   const [env, setEnv] = useState<EnvInfo | null>(null)
+  const [summary, setSummary] = useState<SummaryData | null>(null)
   const [runs, setRuns] = useState<RunSummary[]>([])
   const [selectedRunId, setSelectedRunId] = useState<string>('')
   const [currentRunDetail, setCurrentRunDetail] = useState<RunDetail | null>(null)
   const [transcript, setTranscript] = useState<{ id: string; text: string | null; msg?: string | null } | null>(null)
-
-  // Replay & Overview state
   const [activeIncidentIndex, setActiveIncidentIndex] = useState(0)
   const [copiedCmd, setCopiedCmd] = useState(false)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Console / Jobs state
+  // Console
   const [jobs, setJobs] = useState<JobRecord[]>([])
   const [selectedKind, setSelectedKind] = useState<string>('jail_burst')
   const [activeJobId, setActiveJobId] = useState<string | null>(null)
@@ -74,103 +119,70 @@ export default function App() {
   const [isJobRunning, setIsJobRunning] = useState(false)
   const [jobError, setJobError] = useState<string | null>(null)
 
-  // Attribution
+  // Data pages
   const [attribution, setAttribution] = useState<AttributionResponse | null>(null)
-
-  // Jail Burst
   const [burst, setBurst] = useState<JailBurstResponse | null>(null)
-
-  // Receipts
   const [receipts, setReceipts] = useState<ReceiptSummary[]>([])
   const [selectedReceiptId, setSelectedReceiptId] = useState<string>('')
   const [selectedReceiptDetail, setSelectedReceiptDetail] = useState<ReceiptDetail | null>(null)
   const [receiptVerifyResult, setReceiptVerifyResult] = useState<any>(null)
   const [receiptTamperResult, setReceiptTamperResult] = useState<any>(null)
-
-  // Witness
   const [witness, setWitness] = useState<WitnessSummary | null>(null)
   const [witnessVerifyResult, setWitnessVerifyResult] = useState<any>(null)
   const [witnessTamperResult, setWitnessTamperResult] = useState<any>(null)
-
-  // Measured
   const [measured, setMeasured] = useState<MeasuredResponse | null>(null)
-
-  // Evidence
   const [evidence, setEvidence] = useState<EvidenceIndexResponse | null>(null)
   const [viewingFile, setViewingFile] = useState<{ path: string; content: string } | null>(null)
-
-  // Claims
   const [claims, setClaims] = useState<ClaimsLedgerResponse | null>(null)
-
-  // Platform
   const [platform, setPlatform] = useState<PlatformChecklistResponse | null>(null)
-
-  // Audit Links & Docs
   const [auditLinks, setAuditLinks] = useState<any>(null)
   const [docsList, setDocsList] = useState<any[]>([])
-
-  // Doc
   const [docContent, setDocContent] = useState<{ name: string; content: string } | null>(null)
+  const [receiptFilter, setReceiptFilter] = useState<string>('')
 
   const sseRef = useRef<EventSource | null>(null)
+  const terminalRef = useRef<HTMLDivElement | null>(null)
 
-  // 1. Initial Load: Health, Env, Runs
+  // ── Initial Load ──
   useEffect(() => {
     api.getHealth().then(setHealth).catch(() => {})
     api.getEnv().then(setEnv).catch(() => {})
+    api.getSummary().then(setSummary).catch(() => {})
     api.getRuns().then((data) => {
       setRuns(data)
-      if (data.length > 0) {
-        setSelectedRunId(data[0].run_id)
-      }
+      if (data.length > 0) setSelectedRunId(data[0].run_id)
     }).catch(() => {})
 
     if (typeof window !== 'undefined' && window.location.hash) {
       const h = window.location.hash.replace('#', '') as TabKey
-      if (['overview', 'console', 'attribution', 'burst', 'receipts', 'witness', 'measured', 'evidence', 'video', 'claims', 'platform', 'about'].includes(h)) {
-        setTab(h)
-      }
+      const valid: TabKey[] = ['overview','console','attribution','burst','receipts','witness','measured','evidence','video','claims','platform','about']
+      if (valid.includes(h)) setTab(h)
     }
   }, [])
 
-  // 2. Fetch Run Detail when selected
+  // ── Run detail ──
   useEffect(() => {
-    if (selectedRunId) {
-      api.getRun(selectedRunId).then(setCurrentRunDetail).catch(() => {})
-    }
+    if (selectedRunId) api.getRun(selectedRunId).then(setCurrentRunDetail).catch(() => {})
   }, [selectedRunId])
 
-  // 3. Tab-specific data loading
+  // ── Tab data loading ──
   useEffect(() => {
-    if (tab === 'console') {
-      api.listJobs().then(setJobs).catch(() => {})
-    } else if (tab === 'attribution') {
-      api.getAttribution().then(setAttribution).catch(() => {})
-    } else if (tab === 'burst') {
-      api.getJailBurst().then(setBurst).catch(() => {})
-    } else if (tab === 'receipts') {
-      api.getReceipts().then((data) => {
-        setReceipts(data)
-        if (data.length > 0 && !selectedReceiptId) {
-          setSelectedReceiptId(data[0].receipt_id)
-        }
-      }).catch(() => {})
-    } else if (tab === 'witness') {
-      api.getWitness().then(setWitness).catch(() => {})
-    } else if (tab === 'measured') {
-      api.getMeasured().then(setMeasured).catch(() => {})
-    } else if (tab === 'evidence') {
-      api.getEvidenceIndex().then(setEvidence).catch(() => {})
-    } else if (tab === 'claims') {
-      api.getClaims().then(setClaims).catch(() => {})
-    } else if (tab === 'platform') {
-      api.getPlatformChecklist().then(setPlatform).catch(() => {})
-    } else if (tab === 'about') {
-      api.getDoc('architecture').then((d) => setDocContent({ name: d.name, content: d.content })).catch(() => {})
+    const loaders: Record<string, () => void> = {
+      console: () => api.listJobs().then(setJobs).catch(() => {}),
+      attribution: () => api.getAttribution().then(setAttribution).catch(() => {}),
+      burst: () => api.getJailBurst().then(setBurst).catch(() => {}),
+      receipts: () => api.getReceipts().then((d) => { setReceipts(d); if (d.length > 0 && !selectedReceiptId) setSelectedReceiptId(d[0].receipt_id) }).catch(() => {}),
+      witness: () => api.getWitness().then(setWitness).catch(() => {}),
+      measured: () => api.getMeasured().then(setMeasured).catch(() => {}),
+      evidence: () => api.getEvidenceIndex().then(setEvidence).catch(() => {}),
+      claims: () => api.getClaims().then(setClaims).catch(() => {}),
+      platform: () => api.getPlatformChecklist().then(setPlatform).catch(() => {}),
+      about: () => api.getDoc('architecture').then((d) => setDocContent({ name: d.name, content: d.content })).catch(() => {}),
     }
+    loaders[tab]?.()
   }, [tab])
 
-  // 4. Fetch selected receipt detail
+  // ── Receipt detail ──
   useEffect(() => {
     if (selectedReceiptId) {
       setReceiptVerifyResult(null)
@@ -179,50 +191,37 @@ export default function App() {
     }
   }, [selectedReceiptId])
 
-  // Job SSE EventSource management
-  const subscribeJobLogs = (jobId: string) => {
-    if (sseRef.current) {
-      sseRef.current.close()
-    }
+  // ── Auto-scroll terminal ──
+  useEffect(() => {
+    if (terminalRef.current) terminalRef.current.scrollTop = terminalRef.current.scrollHeight
+  }, [consoleLogs])
+
+  // ── SSE ──
+  const subscribeJobLogs = useCallback((jobId: string) => {
+    if (sseRef.current) sseRef.current.close()
     const es = new EventSource(`/api/jobs/${encodeURIComponent(jobId)}/events`)
     sseRef.current = es
-
     es.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data)
-        if (payload.line) {
-          setConsoleLogs((prev) => [...prev, payload.line])
-        }
-        if (payload.done) {
-          setIsJobRunning(false)
-          es.close()
-          api.listJobs().then(setJobs).catch(() => {})
-        }
-      } catch {
-        // parse error
-      }
+        if (payload.line) setConsoleLogs(prev => [...prev, payload.line])
+        if (payload.done) { setIsJobRunning(false); es.close(); api.listJobs().then(setJobs).catch(() => {}) }
+      } catch {}
     }
-
-    es.onerror = () => {
-      setIsJobRunning(false)
-      es.close()
-    }
-  }
+    es.onerror = () => { setIsJobRunning(false); es.close() }
+  }, [])
 
   const handleStartJob = async () => {
-    setJobError(null)
-    setIsJobRunning(true)
+    setJobError(null); setIsJobRunning(true)
     setConsoleLogs([`[INIT] Launching job '${selectedKind}'...`])
     try {
       const confirmToken = liveConfirmChecked ? 'CONFIRMED_LIVE_EXECUTION' : undefined
       const res = await api.createJob(selectedKind, {}, confirmToken)
-      setActiveJobId(res.job_id)
-      subscribeJobLogs(res.job_id)
+      setActiveJobId(res.job_id); subscribeJobLogs(res.job_id)
       api.listJobs().then(setJobs).catch(() => {})
     } catch (err: any) {
-      setIsJobRunning(false)
-      setJobError(err.message || 'Failed to start job')
-      setConsoleLogs((prev) => [...prev, `[ERROR] ${err.message}`])
+      setIsJobRunning(false); setJobError(err.message || 'Failed to start job')
+      setConsoleLogs(prev => [...prev, `[ERROR] ${err.message}`])
     }
   }
 
@@ -230,18 +229,14 @@ export default function App() {
     if (!activeJobId) return
     try {
       await api.cancelJob(activeJobId)
-      setConsoleLogs((prev) => [...prev, `[USER] Job cancellation requested.`])
+      setConsoleLogs(prev => [...prev, `[USER] Job cancellation requested.`])
       if (sseRef.current) sseRef.current.close()
-      setIsJobRunning(false)
-      api.listJobs().then(setJobs).catch(() => {})
-    } catch (err: any) {
-      setJobError(err.message)
-    }
+      setIsJobRunning(false); api.listJobs().then(setJobs).catch(() => {})
+    } catch (err: any) { setJobError(err.message) }
   }
 
   const handleCopy = (text: string) => {
-    navigator.clipboard?.writeText(text)
-    setCopiedCmd(true)
+    navigator.clipboard?.writeText(text); setCopiedCmd(true)
     setTimeout(() => setCopiedCmd(false), 1500)
   }
 
@@ -251,668 +246,503 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const txt = await res.text()
       setViewingFile({ path, content: txt })
-    } catch (err: any) {
-      setViewingFile({ path, content: `Error opening file: ${err.message}` })
-    }
+    } catch (err: any) { setViewingFile({ path, content: `Error opening file: ${err.message}` }) }
   }
 
-  const activeRun = runs.find((r) => r.run_id === selectedRunId) || runs[0]
-  const currentIncident = currentRunDetail?.records?.[activeIncidentIndex] || {
-    issue: 'issue-304 (P2: Path Jail)',
-    action: 'read_file(../../fake_home/.ssh/id_rsa)',
-    armoriq: 'ALLOW',
-    tripline: 'DENY (JAIL)',
-    outcome: 'DENIED-JAIL',
-    receipt: 'receipt_P2_JAIL_DENY.json',
+  const switchTab = (t: TabKey) => {
+    setTab(t)
+    setMobileOpen(false)
+    if (typeof window !== 'undefined') window.location.hash = t
   }
+
+  // ── Derived data ──
+  const currentIncident = currentRunDetail?.records?.[activeIncidentIndex]
+  const filteredReceipts = receipts.filter(r => {
+    if (!receiptFilter) return true
+    return r.tripline_decision.toLowerCase().includes(receiptFilter.toLowerCase()) ||
+      r.tool.toLowerCase().includes(receiptFilter.toLowerCase()) ||
+      r.receipt_id.toLowerCase().includes(receiptFilter.toLowerCase())
+  })
+
+  // ── Nav items ──
+  const navItems: { key: TabKey; label: string }[] = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'console', label: 'Console' },
+    { key: 'attribution', label: 'Attribution' },
+    { key: 'burst', label: 'Jail Burst' },
+    { key: 'receipts', label: 'Receipts' },
+    { key: 'witness', label: 'Witness' },
+    { key: 'measured', label: 'Measured' },
+    { key: 'evidence', label: 'Evidence' },
+    { key: 'video', label: 'Video' },
+    { key: 'claims', label: 'Claims' },
+    { key: 'platform', label: 'Checklist' },
+    { key: 'about', label: 'About' },
+  ]
 
   return (
     <div className="site-shell">
-      {/* ── TOPBAR HEADER (RULE 5.6) ── */}
-      <header className="topbar">
-        <a
-          href="/"
-          className="brand"
-          onClick={(e) => {
-            e.preventDefault()
-            setTab('overview')
-          }}
-          data-testid="brand-button"
-          data-local="navigate-overview"
-          aria-label="Tripline home"
-        >
+      {/* Skip to content */}
+      <a href="#main-content" className="skip-link">Skip to content</a>
+
+      {/* ── HEADER ── */}
+      <header className="topbar" role="banner">
+        <a href="/" className="brand" onClick={(e) => { e.preventDefault(); switchTab('overview') }}
+          data-testid="brand-button" data-local="navigate-overview" aria-label="Tripline home">
           <picture>
             <source media="(prefers-color-scheme: light)" srcSet="/tripline-lockup-on-light.svg" />
-            <img
-              src="/tripline-lockup-on-dark.svg"
-              alt="Tripline"
-              className="brand-logo-img"
-              width={140}
-              height={30}
-            />
+            <img src="/tripline-lockup-on-dark.svg" alt="Tripline" className="brand-logo-img" width={140} height={28} />
           </picture>
         </a>
 
-        <nav style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
-          <button
-            className={`nav-tab ${tab === 'overview' ? 'active' : ''}`}
-            onClick={() => setTab('overview')}
-            data-testid="nav-overview"
-            data-local="switch-tab-overview"
-            type="button"
-          >
-            Overview
-          </button>
-          <button
-            className={`nav-tab ${tab === 'console' ? 'active' : ''}`}
-            onClick={() => setTab('console')}
-            data-testid="nav-console"
-            data-local="switch-tab-console"
-            type="button"
-          >
-            Console
-          </button>
-          <button
-            className={`nav-tab ${tab === 'attribution' ? 'active' : ''}`}
-            onClick={() => setTab('attribution')}
-            data-testid="nav-attribution"
-            data-local="switch-tab-attribution"
-            type="button"
-          >
-            Attribution
-          </button>
-          <button
-            className={`nav-tab ${tab === 'burst' ? 'active' : ''}`}
-            onClick={() => setTab('burst')}
-            data-testid="nav-burst"
-            data-local="switch-tab-burst"
-            type="button"
-          >
-            Jail Burst
-          </button>
-          <button
-            className={`nav-tab ${tab === 'receipts' ? 'active' : ''}`}
-            onClick={() => setTab('receipts')}
-            data-testid="nav-receipts"
-            data-local="switch-tab-receipts"
-            type="button"
-          >
-            Receipts
-          </button>
-          <button
-            className={`nav-tab ${tab === 'witness' ? 'active' : ''}`}
-            onClick={() => setTab('witness')}
-            data-testid="nav-witness"
-            data-local="switch-tab-witness"
-            type="button"
-          >
-            Witness
-          </button>
-          <button
-            className={`nav-tab ${tab === 'measured' ? 'active' : ''}`}
-            onClick={() => setTab('measured')}
-            data-testid="nav-measured"
-            data-local="switch-tab-measured"
-            type="button"
-          >
-            Measured
-          </button>
-          <button
-            className={`nav-tab ${tab === 'evidence' ? 'active' : ''}`}
-            onClick={() => setTab('evidence')}
-            data-testid="nav-evidence"
-            data-local="switch-tab-evidence"
-            type="button"
-          >
-            Evidence
-          </button>
-          <button
-            className={`nav-tab ${tab === 'video' ? 'active' : ''}`}
-            onClick={() => setTab('video')}
-            data-testid="nav-video"
-            data-local="switch-tab-video"
-            type="button"
-          >
-            Video
-          </button>
-          <button
-            className={`nav-tab ${tab === 'claims' ? 'active' : ''}`}
-            onClick={() => setTab('claims')}
-            data-testid="nav-claims"
-            data-local="switch-tab-claims"
-            type="button"
-          >
-            Claims
-          </button>
-          <button
-            className={`nav-tab ${tab === 'platform' ? 'active' : ''}`}
-            onClick={() => setTab('platform')}
-            data-testid="nav-platform"
-            data-local="switch-tab-platform"
-            type="button"
-          >
-            Checklist
-          </button>
-          <button
-            className={`nav-tab ${tab === 'about' ? 'active' : ''}`}
-            onClick={() => setTab('about')}
-            data-testid="nav-about"
-            data-local="switch-tab-about"
-            type="button"
-          >
-            About
-          </button>
+        <nav aria-label="Main navigation">
+          {navItems.map(n => (
+            <button key={n.key} className={`nav-tab ${tab === n.key ? 'active' : ''}`}
+              onClick={() => switchTab(n.key)} data-testid={`nav-${n.key}`}
+              data-local={`switch-tab-${n.key}`} type="button"
+              aria-current={tab === n.key ? 'page' : undefined}>
+              {n.label}
+            </button>
+          ))}
         </nav>
+
+        <button className="mobile-nav-btn" onClick={() => setMobileOpen(!mobileOpen)}
+          aria-expanded={mobileOpen} aria-label="Toggle navigation" type="button">
+          {mobileOpen ? <X style={{ width: 22, height: 22 }} /> : <Menu style={{ width: 22, height: 22 }} />}
+        </button>
       </header>
 
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="mobile-drawer open" role="navigation" aria-label="Mobile navigation">
+          {navItems.map(n => (
+            <button key={n.key} className={`nav-tab ${tab === n.key ? 'active' : ''}`}
+              onClick={() => switchTab(n.key)} data-testid={`mobile-nav-${n.key}`} type="button">
+              {n.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* ── MAIN CONTENT ROUTER ── */}
-      <main className="wrap view-panel">
-        {/* 1. OVERVIEW & LATEST RUN VIEW */}
+      {/* ── MAIN CONTENT ── */}
+      <main id="main-content" role="main">
+
+        {/* ═══════════════════════════════════════════════════════════
+            OVERVIEW — Product narrative homepage
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'overview' && (
-          <div>
-            <section className="hero" style={{ padding: '40px 0 60px' }}>
-              <div className="hero-copy">
-                <p className="kicker">// FORENSIC EVIDENCE FOR AI AGENT ACTIONS</p>
-                <h1>Blocked isn&apos;t evidence.</h1>
-                <p className="hero-support">Every denied agent action gets a signed receipt. ArmorIQ decides. Tripline proves.</p>
-                <div className="hero-actions">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => setTab('receipts')}
-                    data-testid="btn-hero-receipts"
-                    data-local="switch-tab-receipts"
-                    type="button"
-                  >
-                    INSPECT RECEIPTS →
-                  </button>
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => setTab('console')}
-                    data-testid="btn-hero-console"
-                    data-local="switch-tab-console"
-                    type="button"
-                  >
-                    RUN CONSOLE ↗
-                  </button>
-                </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
-                  <code className="dimline">
-                    {env?.enforcement_mode || 'SessionOptions mode="sdk"'} · {health?.branch || 'phase9-ui'}
-                  </code>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={() => api.getEnv().then(setEnv)}
-                    data-testid="btn-inspect-env"
-                    data-api="GET /api/env"
-                    type="button"
-                    style={{ fontSize: 11, padding: '2px 8px' }}
-                  >
-                    <RefreshCw style={{ width: 11, height: 11 }} /> Env
-                  </button>
-                </div>
-              </div>
-
-              <div className="grain-panel">
-                <span>PROPOSAL</span>
-                <span>TRIPLINE</span>
-                <span>EXECUTION</span>
-                <span>RECEIPT</span>
-                <div className="crosshair" />
-                <div className="replay-chip">
-                  <code>{currentIncident.action || 'read_file(../../fake_home/.ssh/id_rsa)'}</code>
-                  <span className="badge-tag allow">ALLOW · ArmorIQ Platform</span>
-                  <span className="badge-tag deny">{currentIncident.tripline || 'DENY (JAIL)'}</span>
-                  <small>0 physical executions witnessed</small>
-                </div>
-                <small className="panel-caption">Replay of active scenario run.</small>
-              </div>
-            </section>
-
-            {/* Proof Tiles */}
-            <section className="proof" style={{ paddingTop: 30 }}>
-              <div>
-                <strong>{runs.length || 2}</strong>
-                <p>Recorded scenario and attack runs available.</p>
-                <code>results/phase3/scenario/</code>
-              </div>
-              <div>
-                <strong>{receipts.length || 5}</strong>
-                <p>Cryptographically signed RFC-8785 receipts.</p>
-                <code>results/demo/receipt_*.json</code>
-              </div>
-              <div>
-                <strong>8 / 8</strong>
-                <p>Deterministic path containment probes verified.</p>
-                <code>scripts/jail_burst.py</code>
-              </div>
-            </section>
-
-            {/* Replay Section */}
-            <section className="replay" style={{ paddingTop: 60 }} id="runs">
-              <p className="kicker">// REPLAY &amp; EVIDENCE</p>
-              <h2>Replay recorded incidents.</h2>
-              <p>Select an action proposal from the active scenario queue:</p>
-
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', margin: '14px 0', flexWrap: 'wrap' }}>
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => api.getRuns().then(setRuns)}
-                  data-testid="btn-refresh-runs"
-                  data-api="GET /api/runs"
-                  type="button"
-                >
-                  <RefreshCw style={{ width: 12, height: 12 }} /> Refresh Runs
-                </button>
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => api.getLatestRun().then((r) => { setSelectedRunId(r.run_id); setCurrentRunDetail(r); })}
-                  data-testid="btn-load-latest-run"
-                  data-api="GET /api/runs/latest"
-                  type="button"
-                >
-                  Load Latest Run
-                </button>
-                {runs.length > 0 && (
-                  <select
-                    value={selectedRunId}
-                    onChange={(e) => {
-                      setSelectedRunId(e.target.value)
-                      api.getRun(e.target.value).then(setCurrentRunDetail)
-                    }}
-                    data-testid="select-active-run"
-                    data-api="GET /api/runs/{run_id}"
-                    style={{ padding: '6px 10px', background: '#0a0a0a', color: '#fff', border: '1px solid var(--border)' }}
-                  >
-                    {runs.map((r) => (
-                      <option key={r.run_id} value={r.run_id}>
-                        {r.run_id} ({r.model_id || 'scenario'})
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {selectedRunId && (
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={() => api.getRunTranscript(selectedRunId).then(setTranscript)}
-                    data-testid="btn-view-run-transcript"
-                    data-api="GET /api/runs/{run_id}/transcript"
-                    type="button"
-                  >
-                    <FileText style={{ width: 12, height: 12 }} /> View Transcript
-                  </button>
-                )}
-              </div>
-
-              {transcript && (
-                <div className="card" style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <strong>Transcript: {transcript.id}</strong>
-                    <button
-                      onClick={() => setTranscript(null)}
-                      data-testid="btn-close-transcript"
-                      data-local="close-transcript"
-                      type="button"
-                      style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
-                    >
-                      <X style={{ width: 14, height: 14 }} />
-                    </button>
+          <>
+            {/* S1: HERO (dark) */}
+            <div className="section section--dark">
+              <div className="wrap">
+                <section className="hero-section">
+                  <div>
+                    <p className="hero-eyebrow">Forensic evidence for AI agent actions</p>
+                    <h1 className="hero-title">
+                      Blocked isn't <span className="highlight">evidence.</span>
+                    </h1>
+                    <p className="hero-subtitle">
+                      A denial is a verdict, not a record. Tripline turns every denied agent action into
+                      a signed receipt you can verify.
+                    </p>
+                    <div className="hero-actions">
+                      <button className="btn btn-primary" onClick={() => switchTab('receipts')}
+                        data-testid="btn-hero-receipts" data-local="switch-tab-receipts" type="button">
+                        <ShieldCheck style={{ width: 14, height: 14 }} /> Inspect receipts
+                      </button>
+                      <button className="btn btn-secondary" onClick={() => switchTab('console')}
+                        data-testid="btn-hero-console" data-local="switch-tab-console" type="button">
+                        <Terminal style={{ width: 14, height: 14 }} /> Open run console
+                      </button>
+                    </div>
+                    <div className="hero-meta">
+                      <code>{env?.enforcement_mode || 'Loading…'}</code>
+                      <span>·</span>
+                      <code>{health?.branch || '—'}</code>
+                    </div>
                   </div>
-                  <pre style={{ fontSize: 11, maxHeight: 180, overflow: 'auto', background: '#070707', padding: 8 }}>
-                    {transcript.text || transcript.msg || 'No transcript text available.'}
-                  </pre>
-                </div>
-              )}
 
-              {currentRunDetail?.records && currentRunDetail.records.length > 0 && (
-                <div className="tabs">
-                  {currentRunDetail.records.map((r, i) => (
-                    <button
-                      key={i}
-                      className={activeIncidentIndex === i ? 'active' : ''}
-                      onClick={() => setActiveIncidentIndex(i)}
-                      data-testid={`incident-tab-${i}`}
-                      data-local={`select-incident-${i}`}
-                      type="button"
-                    >
-                      {r.issue || `Step ${i + 1}`}
+                  <div className="grain-panel">
+                    <span className="corner-label">PROPOSAL</span>
+                    <span className="corner-label">ARMORIQ</span>
+                    <span className="corner-label">TRIPLINE</span>
+                    <span className="corner-label">RECEIPT</span>
+                    {currentIncident ? (
+                      <div className="replay-chip">
+                        <code>{currentIncident.action || currentIncident.issue}</code>
+                        <StatusBadge status={currentIncident.armoriq || 'UNKNOWN'} />
+                        <StatusBadge status={currentIncident.tripline || 'UNKNOWN'} />
+                        <small>Recorded run {selectedRunId ? truncHash(selectedRunId, 16) : '—'}</small>
+                      </div>
+                    ) : (
+                      <div className="replay-chip">
+                        <span className="illustration-label">Architecture (not a live decision)</span>
+                        <code>agent → ArmorIQ → Tripline → receipt</code>
+                        <small>No recorded run loaded</small>
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                {/* Proof metrics */}
+                <div className="proof-strip" data-testid="proof-metrics">
+                  <div className="proof-metric">
+                    <strong>{summary?.runs ?? '—'}</strong>
+                    <p>Recorded scenario and attack runs</p>
+                    <code>results/phase3/scenario/</code>
+                  </div>
+                  <div className="proof-metric">
+                    <strong>{summary?.receipts ?? '—'}</strong>
+                    <p>Signed receipts (canonical JSON + HMAC-SHA256)</p>
+                    <code>results/demo/ + results/phase3/</code>
+                  </div>
+                  <div className="proof-metric">
+                    <strong>{summary ? `${summary.probes_passed} / ${summary.probes_total}` : '—'}</strong>
+                    <p>Path containment probes verified</p>
+                    <code>scripts/jail_burst.py</code>
+                  </div>
+                </div>
+
+                {summary && (
+                  <div className="freshness" style={{ marginTop: 16 }}>
+                    <span className="freshness-dot" />
+                    Data from {formatTime(summary.data_timestamp)}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* S2: THE PROBLEM (light) */}
+            <div className="section section--light">
+              <div className="wrap">
+                <h2 style={{ marginBottom: 12 }}>A block is a verdict.<br />It is not a record.</h2>
+                <p style={{ color: 'var(--text-secondary)', maxWidth: 'var(--text-max)', marginBottom: 40, fontSize: '1.0625rem' }}>
+                  An authorization decision tells you what was allowed or denied. A forensic receipt tells you
+                  <em> who proposed it, what was inspected, which layer stopped it, whether anything executed,
+                  and provides a verifiable cryptographic signature</em>.
+                </p>
+                <div className="compare-grid">
+                  <div className="compare-col">
+                    <h4>What a block tells you</h4>
+                    <div className="card">
+                      <StatusBadge status="DENY" icon={<ShieldAlert style={{ width: 12, height: 12 }} />} />
+                      <p style={{ marginTop: 12, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                        {currentIncident?.armoriq || 'DENY — unauthorized tool call'}<br />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--dim)' }}>That's it. No receipt, no witness, no proof of non-execution.</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="compare-col">
+                    <h4>What a receipt gives you</h4>
+                    <div className="card" style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-mono, monospace)' }}>
+                      {selectedReceiptDetail ? (
+                        <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: 'var(--text-secondary)', maxHeight: 200, overflow: 'auto' }}>
+                          {selectedReceiptDetail.raw_json?.slice(0, 600)}
+                          {(selectedReceiptDetail.raw_json?.length || 0) > 600 ? '\n…' : ''}
+                        </pre>
+                      ) : receipts.length > 0 ? (
+                        <p style={{ color: 'var(--text-secondary)' }}>Select a receipt to preview its fields →</p>
+                      ) : (
+                        <p style={{ color: 'var(--text-secondary)' }}>No receipts loaded yet. Visit the Receipts page.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* S3: THREE STAGES (dark) */}
+            <div className="section section--dark">
+              <div className="wrap">
+                <p className="hero-eyebrow" style={{ marginBottom: 16 }}>Three stages of control</p>
+                <h2 style={{ marginBottom: 40 }}>Defense in depth, with receipts.</h2>
+                <div className="stage-cards">
+                  <div className="stage-card">
+                    <div className="stage-num">01</div>
+                    <Shield style={{ width: 28, height: 28, color: 'var(--text-secondary)', marginBottom: 12 }} />
+                    <h3>Authorize</h3>
+                    <p>ArmorIQ evaluates each tool call against the session policy. Unauthorized calls are denied before Tripline sees them.</p>
+                    <span className="stage-owner stage-owner--platform">ArmorIQ Platform</span>
+                  </div>
+                  <div className="stage-card">
+                    <div className="stage-num">02</div>
+                    <Lock style={{ width: 28, height: 28, color: 'var(--trip-red)', marginBottom: 12 }} />
+                    <h3>Contain</h3>
+                    <p>Tripline's path jail blocks directory traversal. The egress gateway scans outbound payloads for planted canary tokens.</p>
+                    <span className="stage-owner stage-owner--tripline">Tripline</span>
+                  </div>
+                  <div className="stage-card">
+                    <div className="stage-num">03</div>
+                    <FileText style={{ width: 28, height: 28, color: 'var(--allow)', marginBottom: 12 }} />
+                    <h3>Prove</h3>
+                    <p>The witness log records every tool execution with HMAC chains. Each incident produces a signed receipt you can verify independently.</p>
+                    <span className="stage-owner stage-owner--tripline">Tripline</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* S8: PROOF LINKS (light) */}
+            <div className="section section--light">
+              <div className="wrap">
+                <h2 style={{ marginBottom: 32 }}>Explore the evidence.</h2>
+                <div className="proof-links">
+                  {[
+                    { key: 'console' as TabKey, title: 'Run Console', status: `${jobs.length} jobs in history` },
+                    { key: 'burst' as TabKey, title: 'Jail Burst', status: summary ? `${summary.probes_passed}/${summary.probes_total} probes` : 'Loading…' },
+                    { key: 'receipts' as TabKey, title: 'Receipts', status: summary ? `${summary.receipts} signed receipts` : 'Loading…' },
+                    { key: 'witness' as TabKey, title: 'Witness', status: summary ? `${summary.witness_records} log records` : 'Loading…' },
+                    { key: 'measured' as TabKey, title: 'Measured', status: 'Defense rate matrix' },
+                    { key: 'evidence' as TabKey, title: 'Evidence', status: evidence ? `${evidence.total_files} files indexed` : 'Loading…' },
+                    { key: 'claims' as TabKey, title: 'Claims & Limits', status: claims ? `${claims.verified_count} verified` : 'Loading…' },
+                    { key: 'platform' as TabKey, title: 'Checklist', status: 'Platform onboarding' },
+                    { key: 'video' as TabKey, title: 'Demo Video', status: 'Forensic walkthrough' },
+                  ].map(item => (
+                    <button key={item.key} className="proof-link" onClick={() => switchTab(item.key)}
+                      data-testid={`proof-link-${item.key}`} type="button">
+                      <div>
+                        <div className="proof-link-title">{item.title}</div>
+                        <div className="proof-link-status">{item.status}</div>
+                      </div>
+                      <span className="proof-link-arrow">→</span>
                     </button>
                   ))}
                 </div>
-              )}
+              </div>
+            </div>
 
-              <div className="replay-panel">
-                <div>
-                  <code>proposed action</code>
-                  <pre>{currentIncident.action || currentIncident.issue}</pre>
-                </div>
-                <div className="gates">
-                  <span>
-                    ARMORIQ<br />
-                    <span className={`badge-tag ${currentIncident.armoriq?.includes('DENY') ? 'deny' : 'allow'}`}>
-                      {currentIncident.armoriq || 'ALLOW'}
-                    </span>
-                  </span>
-                  <b>↓</b>
-                  <span>
-                    TRIPLINE<br />
-                    <span className={`badge-tag ${currentIncident.tripline?.includes('HOLD') ? 'hold' : (currentIncident.tripline?.includes('DENY') ? 'deny' : 'allow')}`}>
-                      {currentIncident.tripline || 'DENY (JAIL)'}
-                    </span>
-                  </span>
-                </div>
-                <div>
-                  <code>verdict</code>
-                  <p>
-                    <span className="badge-tag deny">{currentIncident.outcome || 'DENIED'}</span>
-                  </p>
-                  <code>Witnessed executions: 0</code>
-                  {currentIncident.receipt && (
-                    <button
-                      className="copy-button"
-                      onClick={() => handleCopy(`make verify FILE=results/phase3/scenario/${currentIncident.receipt}`)}
-                      data-testid="btn-copy-verify-replay"
-                      data-local="copy-verify-replay"
-                      type="button"
-                    >
-                      <code>{copiedCmd ? 'COPIED TO CLIPBOARD' : `make verify FILE=results/phase3/scenario/${currentIncident.receipt}`}</code>
-                      {copiedCmd ? <Check style={{ width: 14, height: 14 }} /> : <Copy style={{ width: 14, height: 14 }} />}
-                    </button>
-                  )}
+            {/* S9: CLOSING (dark) */}
+            <div className="section section--dark">
+              <div className="wrap">
+                <div className="closing-statement">
+                  <h2>ArmorIQ decides. Tripline <span className="highlight">proves.</span></h2>
+                  <p>Built for the ArmorIQ Flow State hackathon. Sandbox environment with fixture data. Not a production security system.</p>
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                    <button className="btn btn-primary" onClick={() => switchTab('receipts')} type="button">Inspect receipts</button>
+                    <button className="btn btn-secondary" onClick={() => switchTab('claims')} type="button">Claims & Limits</button>
+                  </div>
                 </div>
               </div>
-            </section>
-          </div>
+            </div>
+          </>
         )}
 
-        {/* 2. RUN CONSOLE VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            CONSOLE
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'console' && (
-          <div>
-            <div className="view-header">
+          <div className="wrap view-panel">
+            <div className="page-header">
               <h2>Run Console</h2>
-              <p>Dispatch allowlisted verification jobs with real-time SSE output streaming.</p>
+              <p>Dispatch verification jobs with real-time SSE output streaming.</p>
             </div>
 
             <div className="card" style={{ marginBottom: 24 }}>
               <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                <label style={{ font: '13px ui-monospace, monospace' }}>
-                  Select Job Kind:
-                  <select
-                    value={selectedKind}
-                    onChange={(e) => setSelectedKind(e.target.value)}
-                    data-testid="select-job-kind"
-                    data-local="select-job-kind"
-                    style={{ marginLeft: 8, padding: '6px 10px', background: '#070707', color: '#fff', border: '1px solid var(--border)' }}
-                  >
-                    <option value="jail_burst">jail_burst (Path containment burst, offline)</option>
-                    <option value="tamper_demo">tamper_demo (Cryptographic tamper demo)</option>
-                    <option value="verify_all">verify_all (Sidecar & receipt chain verification)</option>
-                    <option value="audit">audit (Repo truth & hygiene audit)</option>
-                    <option value="tests">tests (Offline unit test suite)</option>
-                    <option value="scenario">scenario (Phase 3 multi-issue runner, rung 0)</option>
-                    <option value="armoriq_proof">armoriq_proof (Live ArmorIQ platform check)</option>
+                <label style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-mono, monospace)' }}>
+                  Job kind:
+                  <select value={selectedKind} onChange={(e) => setSelectedKind(e.target.value)}
+                    data-testid="select-job-kind" data-local="select-job-kind"
+                    style={{ marginLeft: 8, padding: '6px 10px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 4 }}>
+                    <option value="jail_burst">jail_burst — Path containment, offline</option>
+                    <option value="tamper_demo">tamper_demo — Cryptographic tamper demo</option>
+                    <option value="verify_all">verify_all — Receipt & chain verification</option>
+                    <option value="audit">audit — Repo truth audit</option>
+                    <option value="tests">tests — Offline unit tests</option>
+                    <option value="scenario">scenario — Phase 3 multi-issue runner</option>
+                    <option value="armoriq_proof">armoriq_proof — Live ArmorIQ check</option>
                   </select>
                 </label>
 
                 {selectedKind === 'armoriq_proof' && (
-                  <label style={{ font: '12px ui-monospace, monospace', color: 'var(--hold)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <input
-                      type="checkbox"
-                      checked={liveConfirmChecked}
+                  <label style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono, monospace)', color: 'var(--hold)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <input type="checkbox" checked={liveConfirmChecked}
                       onChange={(e) => setLiveConfirmChecked(e.target.checked)}
-                      data-testid="checkbox-live-confirm"
-                      data-local="toggle-live-confirm"
-                    />
-                    Confirm live execution against ArmorIQ API (requires active key)
+                      data-testid="checkbox-live-confirm" data-local="toggle-live-confirm" />
+                    Confirm live execution (requires active key)
                   </label>
                 )}
 
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleStartJob}
+                  <button className="btn btn-primary" onClick={handleStartJob}
                     disabled={isJobRunning || (selectedKind === 'armoriq_proof' && !liveConfirmChecked)}
-                    data-testid="btn-start-job"
-                    data-api="POST /api/jobs"
-                    type="button"
-                  >
-                    <Play style={{ width: 14, height: 14 }} /> START JOB
+                    data-testid="btn-start-job" data-api="POST /api/jobs" type="button">
+                    <Play style={{ width: 14, height: 14 }} /> Start
                   </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={handleCancelJob}
-                    disabled={!isJobRunning}
-                    data-testid="btn-cancel-job"
-                    data-api="POST /api/jobs/{id}/cancel"
-                    type="button"
-                  >
-                    <Square style={{ width: 14, height: 14 }} /> CANCEL
+                  <button className="btn btn-danger" onClick={handleCancelJob} disabled={!isJobRunning}
+                    data-testid="btn-cancel-job" data-api="POST /api/jobs/{id}/cancel" type="button">
+                    <Square style={{ width: 14, height: 14 }} /> Cancel
                   </button>
                 </div>
               </div>
-
-              {jobError && (
-                <div style={{ color: 'var(--deny)', fontSize: 13, marginTop: 12 }}>
-                  [ERROR] {jobError}
-                </div>
-              )}
+              {jobError && <div style={{ color: 'var(--deny)', fontSize: '0.8125rem', marginTop: 12 }}>[ERROR] {jobError}</div>}
             </div>
 
-            {/* Live Terminal */}
-            <div style={{ marginBottom: 30 }}>
+            {/* Terminal */}
+            <div style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ font: '12px ui-monospace, monospace', color: 'var(--dim)' }}>
-                  <Terminal style={{ width: 14, height: 14, display: 'inline', marginRight: 4 }} />
-                  Live Output Feed ({activeJobId || 'idle'})
+                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono, monospace)', color: 'var(--dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Terminal style={{ width: 14, height: 14 }} />
+                  Live Output ({activeJobId || 'idle'})
                 </span>
-                <span style={{ fontSize: 11, color: isJobRunning ? 'var(--hold)' : 'var(--muted)' }}>
-                  {isJobRunning ? 'STREAMING VIA SSE...' : 'TERMINAL IDLE'}
-                </span>
+                <StatusBadge status={isJobRunning ? 'STREAMING' : 'IDLE'} />
               </div>
-              <div className="console-terminal" id="console-stream" data-testid="console-output-stream">
+              <div className="terminal" ref={terminalRef} id="console-stream" data-testid="console-output-stream"
+                role="log" aria-live="polite" aria-label="Job output">
                 {consoleLogs.length === 0 ? (
-                  <span style={{ color: 'var(--dim)' }}>No job active. Select a job kind and click Start Job.</span>
-                ) : (
-                  consoleLogs.map((line, idx) => (
-                    <div key={idx} className="console-line">{line}</div>
-                  ))
-                )}
+                  <span style={{ color: 'var(--dim)' }}>No active job. Select a kind and click Start.</span>
+                ) : consoleLogs.map((line, idx) => (
+                  <div key={idx} className="terminal-line">{line}</div>
+                ))}
               </div>
             </div>
 
-            {/* History Table */}
-            <div>
-              <h3>Job Execution History</h3>
+            {/* Job history */}
+            <h3 style={{ marginBottom: 16 }}>Job History</h3>
+            <div className="data-table-wrap">
               <table className="data-table" data-testid="jobs-history-table">
-                <thead>
-                  <tr>
-                    <th>Job ID</th>
-                    <th>Kind</th>
-                    <th>Status</th>
-                    <th>Started At</th>
-                    <th>Exit Code</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+                <thead><tr>
+                  <th>Job ID</th><th>Kind</th><th>Status</th><th>Started</th><th>Exit</th><th>Actions</th>
+                </tr></thead>
                 <tbody>
                   {jobs.length === 0 ? (
-                    <tr><td colSpan={6} style={{ textAlign: 'center' }}>No jobs executed yet.</td></tr>
-                  ) : (
-                    jobs.map((j) => (
-                      <tr key={j.job_id}>
-                        <td><code>{j.job_id}</code></td>
-                        <td>{j.kind}</td>
-                        <td>
-                          <span className={`badge-tag ${j.status === 'completed' ? 'allow' : (j.status === 'failed' ? 'deny' : 'hold')}`}>
-                            {j.status}
-                          </span>
-                        </td>
-                        <td>{j.started_at || 'unknown'}</td>
-                        <td><code>{j.exit_code ?? '-'}</code></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button
-                              className="btn btn-outline btn-sm"
-                              onClick={() => api.getJob(j.job_id).then((res) => setConsoleLogs((prev) => [...prev, `[JOB ${res.job_id}] ${res.status}`]))}
-                              data-testid={`btn-inspect-job-${j.job_id}`}
-                              data-api="GET /api/jobs/{job_id}"
-                              type="button"
-                              style={{ padding: '2px 8px', fontSize: 11 }}
-                            >
-                              Inspect
-                            </button>
-                            <button
-                              className="btn btn-outline btn-sm"
-                              onClick={() => { setActiveJobId(j.job_id); subscribeJobLogs(j.job_id); }}
-                              data-testid={`btn-stream-job-${j.job_id}`}
-                              data-api="GET /api/jobs/{job_id}/events"
-                              type="button"
-                              style={{ padding: '2px 8px', fontSize: 11 }}
-                            >
-                              Stream
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32 }}>No jobs executed yet.</td></tr>
+                  ) : jobs.map(j => (
+                    <tr key={j.job_id}>
+                      <td><code>{truncHash(j.job_id, 16)}</code></td>
+                      <td>{j.kind}</td>
+                      <td><StatusBadge status={j.status} /></td>
+                      <td>{formatTimeWithTooltip(j.started_at)}</td>
+                      <td><code>{j.exit_code ?? '—'}</code></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-ghost btn-sm"
+                            onClick={() => api.getJob(j.job_id).then(res => setConsoleLogs(prev => [...prev, `[INSPECT ${res.job_id}] ${res.status} exit=${res.exit_code ?? '—'}`]))}
+                            data-testid={`btn-inspect-job-${j.job_id}`} data-api="GET /api/jobs/{job_id}" type="button">
+                            Inspect
+                          </button>
+                          <button className="btn btn-ghost btn-sm"
+                            onClick={() => { setActiveJobId(j.job_id); subscribeJobLogs(j.job_id) }}
+                            data-testid={`btn-stream-job-${j.job_id}`} data-api="GET /api/jobs/{job_id}/events" type="button">
+                            Stream
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
-        {/* 3. ATTRIBUTION VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            ATTRIBUTION
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'attribution' && (
-          <div>
-            <div className="view-header">
+          <div className="wrap view-panel">
+            <div className="page-header">
               <h2>Layer Attribution</h2>
               <p>Defense-in-depth architectural boundaries and containment responsibilities.</p>
             </div>
-
             <div className="card" style={{ marginBottom: 24 }}>
-              <p style={{ margin: 0, color: 'var(--text)' }}>
-                <strong>Attribution Principle:</strong> ArmorIQ decides tool permissions. Tripline inspects arguments, traps traversals, quarantines canary tokens, records physical execution counts, and signs receipts.
+              <p style={{ margin: 0, fontSize: '0.875rem' }}>
+                <strong>Attribution principle:</strong> ArmorIQ decides tool permissions. Tripline inspects arguments, traps traversals, quarantines canary tokens, records physical execution counts, and signs receipts.
               </p>
             </div>
-
-            <table className="data-table" data-testid="attribution-table" data-api="GET /api/attribution">
-              <thead>
-                <tr>
-                  <th>Layer</th>
-                  <th>Name</th>
-                  <th>Boundary</th>
-                  <th>Mechanism</th>
-                  <th>Decision</th>
-                  <th>Attacks Stopped</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attribution?.layers?.map((l) => (
-                  <tr key={l.layer}>
-                    <td><code>Layer {l.layer}</code></td>
-                    <td><strong>{l.name}</strong></td>
-                    <td>{l.boundary}</td>
-                    <td style={{ fontSize: 12 }}>{l.mechanism}</td>
-                    <td><span className="badge-tag deny">{l.decision_type}</span></td>
-                    <td>{l.stops.join(', ')}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="data-table-wrap">
+              <table className="data-table" data-testid="attribution-table" data-api="GET /api/attribution">
+                <thead><tr><th>Layer</th><th>Name</th><th>Boundary</th><th>Mechanism</th><th>Decision</th><th>Attacks Stopped</th></tr></thead>
+                <tbody>
+                  {attribution?.layers?.map(l => (
+                    <tr key={l.layer}>
+                      <td><code>L{l.layer}</code></td>
+                      <td><strong>{l.name}</strong></td>
+                      <td style={{ fontSize: '0.75rem' }}>{l.boundary}</td>
+                      <td style={{ fontSize: '0.75rem' }}>{l.mechanism}</td>
+                      <td>
+                        {l.decision_type === 'ATTEST' || l.decision_type === 'SEAL'
+                          ? <StatusBadge status={l.decision_type} />
+                          : <StatusBadge status={l.decision_type} />
+                        }
+                      </td>
+                      <td style={{ fontSize: '0.75rem' }}>{l.stops.join(', ')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
-        {/* 4. JAIL BURST VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            JAIL BURST
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'burst' && (
-          <div>
-            <div className="view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="wrap view-panel">
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2>Path Jail Burst Probes</h2>
                 <p>Deterministic verification of in-MCP path traversal containment.</p>
               </div>
-              <button
-                className="btn btn-outline"
-                onClick={() => api.getJailBurst().then(setBurst)}
-                data-testid="btn-refresh-burst"
-                data-api="GET /api/jail-burst"
-                type="button"
-              >
-                <RefreshCw style={{ width: 14, height: 14 }} /> Refresh Probes
+              <button className="btn btn-secondary btn-sm" onClick={() => api.getJailBurst().then(setBurst)}
+                data-testid="btn-refresh-burst" data-api="GET /api/jail-burst" type="button">
+                <RefreshCw style={{ width: 14, height: 14 }} /> Refresh
               </button>
             </div>
-
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', gap: 24, font: '13px ui-monospace, monospace' }}>
-                <div>Total Probes: <strong>{burst?.total_probes || 8}</strong></div>
-                <div>Passed (0 leaks): <strong style={{ color: 'var(--allow)' }}>{burst?.passed_probes || 8}</strong></div>
-                <div>ArmorIQ Decision: <span className="badge-tag neutral">not checked (tool authorized)</span></div>
-              </div>
-              <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 12, marginBottom: 0 }}>
-                {burst?.reconciliation_note}
-              </p>
-            </div>
-
-            <table className="data-table" data-testid="jail-burst-table">
-              <thead>
-                <tr>
-                  <th>Probe Attempt</th>
-                  <th>Tested Path</th>
-                  <th>ArmorIQ Check</th>
-                  <th>Tripline Path Jail</th>
-                  <th>Bytes Read</th>
-                  <th>Verdict</th>
-                </tr>
-              </thead>
-              <tbody>
-                {burst?.probes?.map((p, idx) => (
-                  <tr key={idx}>
-                    <td><strong>{p.attempt}</strong></td>
-                    <td><code>{p.path}</code></td>
-                    <td><span className="badge-tag neutral">{p.armoriq_decision}</span></td>
-                    <td>
-                      <span className={`badge-tag ${p.jail_decision.includes('DENIED') ? 'deny' : 'allow'}`}>
-                        {p.jail_decision}
-                      </span>
-                    </td>
-                    <td><code>{p.fake_key_bytes}</code></td>
-                    <td>
-                      <span className={`badge-tag ${p.verdict.includes('PASS') ? 'allow' : 'deny'}`}>
-                        {p.verdict}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {burst ? (
+              <>
+                <div className="card" style={{ marginBottom: 24 }}>
+                  <div style={{ display: 'flex', gap: 32, fontSize: '0.8125rem', fontFamily: 'var(--font-mono, monospace)', flexWrap: 'wrap' }}>
+                    <div>Total Probes: <strong>{burst.total_probes}</strong></div>
+                    <div>Passed: <strong style={{ color: 'var(--allow)' }}>{burst.passed_probes}</strong></div>
+                    <div>ArmorIQ: <StatusBadge status="not checked (tool authorized)" /></div>
+                  </div>
+                  {burst.reconciliation_note && (
+                    <p style={{ fontSize: '0.75rem', color: 'var(--dim)', marginTop: 12, marginBottom: 0 }}>{burst.reconciliation_note}</p>
+                  )}
+                </div>
+                <div className="data-table-wrap">
+                  <table className="data-table" data-testid="jail-burst-table">
+                    <thead><tr><th>Probe</th><th>Path</th><th>ArmorIQ</th><th>Jail Decision</th><th>Bytes</th><th>Verdict</th></tr></thead>
+                    <tbody>
+                      {burst.probes?.map((p, idx) => (
+                        <tr key={idx}>
+                          <td><strong>{p.attempt}</strong></td>
+                          <td><code style={{ fontSize: '0.6875rem', wordBreak: 'break-all' }}>{p.path}</code></td>
+                          <td><StatusBadge status={p.armoriq_decision} /></td>
+                          <td><StatusBadge status={p.jail_decision} /></td>
+                          <td><code>{p.fake_key_bytes}</code></td>
+                          <td><StatusBadge status={p.verdict} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <EmptyState title="Loading probes…" description="The jail burst test runs deterministic path traversal probes against the real MCP tool." />
+            )}
           </div>
         )}
 
-        {/* 5. RECEIPTS VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            RECEIPTS
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'receipts' && (
-          <div>
-            <div className="view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="wrap view-panel">
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <h2>Incident Receipts</h2>
-                <p>Cryptographic RFC-8785 canonical hash verification and 1-byte tamper demonstration.</p>
+                <p>Canonical JSON + SHA-256 hash verification and 1-byte tamper demonstration.</p>
               </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => api.getReceipts().then(setReceipts)}
-                  data-testid="btn-refresh-receipts"
-                  data-api="GET /api/receipts"
-                  type="button"
-                >
-                  <RefreshCw style={{ width: 14, height: 14 }} /> Refresh Receipts
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => api.getReceipts().then(setReceipts)}
+                  data-testid="btn-refresh-receipts" data-api="GET /api/receipts" type="button">
+                  <RefreshCw style={{ width: 14, height: 14 }} /> Refresh
                 </button>
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => api.getAuditLinks().then(setAuditLinks)}
-                  data-testid="btn-audit-links"
-                  data-api="GET /api/audit-links"
-                  type="button"
-                >
+                <button className="btn btn-secondary btn-sm" onClick={() => api.getAuditLinks().then(setAuditLinks)}
+                  data-testid="btn-audit-links" data-api="GET /api/audit-links" type="button">
                   <Waypoints style={{ width: 14, height: 14 }} /> Audit Links
                 </button>
               </div>
@@ -922,511 +752,413 @@ export default function App() {
               <div className="card" style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <strong>Sidecar Audit Links Chain ({auditLinks.chain_length} links)</strong>
-                  <span className={`badge-tag ${auditLinks.valid ? 'allow' : 'deny'}`}>
-                    {auditLinks.valid ? 'CHAIN VALID' : 'CHAIN BROKEN'}
-                  </span>
+                  <StatusBadge status={auditLinks.valid ? 'CHAIN VALID' : 'CHAIN BROKEN'} />
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
-                  Reason: {auditLinks.reason}
-                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--dim)', margin: 0 }}>Reason: {auditLinks.reason}</p>
               </div>
             )}
 
-            <div className="grid-2">
-              <div>
-                <h3>Recorded Receipts</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 450, overflowY: 'auto' }}>
-                  {receipts.map((r) => (
-                    <div
-                      key={r.receipt_id}
-                      onClick={() => setSelectedReceiptId(r.receipt_id)}
-                      data-testid={`receipt-row-${r.receipt_id}`}
-                      data-api="GET /api/receipts/{id}"
-                      style={{
-                        padding: 12,
-                        background: selectedReceiptId === r.receipt_id ? '#1a1a1a' : 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <code style={{ fontSize: 11 }}>{r.receipt_id}</code>
-                        <span className={`badge-tag ${r.tripline_decision.includes('DENY') ? 'deny' : 'hold'}`}>
-                          {r.tripline_decision}
-                        </span>
+            {receipts.length > 0 ? (
+              <div className="grid-2">
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <h3>Recorded Receipts ({receipts.length})</h3>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <input type="text" placeholder="Filter by tool, decision, or ID…" value={receiptFilter}
+                      onChange={e => setReceiptFilter(e.target.value)}
+                      style={{ width: '100%', padding: '8px 12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)', fontSize: '0.8125rem' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 500, overflowY: 'auto' }}>
+                    {filteredReceipts.map(r => (
+                      <div key={r.receipt_id} className={`card card--interactive ${selectedReceiptId === r.receipt_id ? 'card--selected' : ''}`}
+                        onClick={() => setSelectedReceiptId(r.receipt_id)}
+                        data-testid={`receipt-row-${r.receipt_id}`} data-api="GET /api/receipts/{id}"
+                        style={{ padding: 14 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <code style={{ fontSize: '0.6875rem' }}>{truncHash(r.receipt_id, 20)}</code>
+                          <StatusBadge status={r.tripline_decision} />
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--dim)' }}>
+                          Tool: <code>{r.tool}</code> · <HashChip hash={truncHash(r.canonical_hash, 12)} full={r.canonical_hash} />
+                        </div>
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-                        Tool: <code>{r.tool}</code> · Hash: <code style={{ fontSize: 10 }}>{r.canonical_hash.slice(0, 16)}...</code>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 style={{ marginBottom: 12 }}>Receipt Inspector</h3>
+                  {selectedReceiptDetail ? (
+                    <div className="card">
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                        <button className="btn btn-primary btn-sm" onClick={() => api.verifyReceipt(selectedReceiptId).then(setReceiptVerifyResult)}
+                          data-testid="btn-verify-receipt" data-api="POST /api/receipts/{id}/verify" type="button">
+                          <ShieldCheck style={{ width: 14, height: 14 }} /> Verify
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => api.tamperReceipt(selectedReceiptId).then(setReceiptTamperResult)}
+                          data-testid="btn-tamper-receipt" data-api="POST /api/receipts/{id}/tamper-check" type="button">
+                          <AlertTriangle style={{ width: 14, height: 14 }} /> Tamper test
+                        </button>
                       </div>
+
+                      {receiptVerifyResult && (
+                        <div style={{ padding: 12, background: 'rgba(61,214,140,0.06)', border: '1px solid var(--allow)', borderRadius: 6, marginBottom: 12 }}>
+                          <div style={{ color: 'var(--allow)', fontWeight: 600, fontSize: '0.8125rem' }}>✓ {receiptVerifyResult.status || 'VERIFIED'}</div>
+                          <code style={{ fontSize: '0.6875rem', display: 'block', marginTop: 4, color: 'var(--dim)' }}>{receiptVerifyResult.command}</code>
+                        </div>
+                      )}
+
+                      {receiptTamperResult && (
+                        <div style={{ padding: 12, background: 'rgba(255,99,105,0.06)', border: '1px solid var(--deny)', borderRadius: 6, marginBottom: 12 }}>
+                          <div style={{ color: 'var(--deny)', fontWeight: 600, fontSize: '0.8125rem' }}>✕ TAMPER DETECTED</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 4 }}>{receiptTamperResult.verifier_reason}</div>
+                          <small style={{ color: 'var(--dim)', display: 'block', marginTop: 4 }}>Original receipt file remained byte-identical.</small>
+                        </div>
+                      )}
+
+                      <pre style={{ maxHeight: 300, overflow: 'auto', fontSize: '0.6875rem', background: 'var(--ink-950)', padding: 14, borderRadius: 6, margin: 0 }}>
+                        {selectedReceiptDetail.raw_json}
+                      </pre>
                     </div>
-                  ))}
+                  ) : (
+                    <EmptyState title="Select a receipt" description="Click a receipt from the list to inspect its fields, verify its signature, or run a tamper test." />
+                  )}
                 </div>
               </div>
-
-              <div>
-                <h3>Receipt Inspector &amp; Verifiers</h3>
-                {selectedReceiptDetail ? (
-                  <div className="card">
-                    <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => api.verifyReceipt(selectedReceiptId).then(setReceiptVerifyResult)}
-                        data-testid="btn-verify-receipt"
-                        data-api="POST /api/receipts/{id}/verify"
-                        type="button"
-                      >
-                        <ShieldCheck style={{ width: 14, height: 14 }} /> VERIFY RECEIPT
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => api.tamperReceipt(selectedReceiptId).then(setReceiptTamperResult)}
-                        data-testid="btn-tamper-receipt"
-                        data-api="POST /api/receipts/{id}/tamper-check"
-                        type="button"
-                      >
-                        <AlertTriangle style={{ width: 14, height: 14 }} /> TEST 1-BYTE TAMPER
-                      </button>
-                    </div>
-
-                    {receiptVerifyResult && (
-                      <div style={{ padding: 12, background: '#07180d', border: '1px solid var(--allow)', marginBottom: 16 }}>
-                        <div style={{ color: 'var(--allow)', fontWeight: 600 }}>[✓] VERIFIED: Signature Authentic</div>
-                        <code style={{ fontSize: 11, display: 'block', marginTop: 4 }}>{receiptVerifyResult.command}</code>
-                      </div>
-                    )}
-
-                    {receiptTamperResult && (
-                      <div style={{ padding: 12, background: '#240a0c', border: '1px solid var(--deny)', marginBottom: 16 }}>
-                        <div style={{ color: 'var(--deny)', fontWeight: 600 }}>[✕] TAMPER DETECTED: Signature Mismatch</div>
-                        <div style={{ fontSize: 12, color: '#ffb3b8', marginTop: 4 }}>{receiptTamperResult.verifier_reason}</div>
-                        <small style={{ color: 'var(--muted)', display: 'block', marginTop: 4 }}>
-                          Original receipt file remained byte-identical.
-                        </small>
-                      </div>
-                    )}
-
-                    <pre style={{ maxHeight: 280, overflow: 'auto', fontSize: 11, background: '#050505', padding: 12 }}>
-                      {selectedReceiptDetail.raw_json}
-                    </pre>
-                  </div>
-                ) : (
-                  <div className="empty-state">Select a receipt to inspect.</div>
-                )}
-              </div>
-            </div>
+            ) : (
+              <EmptyState title="No receipts found" description="Run a scenario to generate signed receipts." command="make scenario" />
+            )}
           </div>
         )}
 
-        {/* 6. WITNESS VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            WITNESS
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'witness' && (
-          <div>
-            <div className="view-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="wrap view-panel">
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2>Witness Log &amp; HMAC Hash Chain</h2>
-                <p>Append-only HMAC chain ensuring zero unrecorded tool executions.</p>
+                <h2>Witness Log & HMAC Chain</h2>
+                <p>Append-only HMAC-chained log recording every tool execution.</p>
               </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => api.verifyWitness().then(setWitnessVerifyResult)}
-                  data-testid="btn-verify-witness"
-                  data-api="POST /api/witness/verify"
-                  type="button"
-                >
-                  <ShieldCheck style={{ width: 14, height: 14 }} /> VERIFY CHAIN
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => api.verifyWitness().then(setWitnessVerifyResult)}
+                  data-testid="btn-verify-witness" data-api="POST /api/witness/verify" type="button">
+                  <ShieldCheck style={{ width: 14, height: 14 }} /> Verify Chain
                 </button>
-                <button
-                  className="btn btn-outline"
-                  onClick={() => api.tamperWitness().then(setWitnessTamperResult)}
-                  data-testid="btn-tamper-witness"
-                  data-api="POST /api/witness/tamper-check"
-                  type="button"
-                >
-                  <AlertTriangle style={{ width: 14, height: 14 }} /> TAMPER CHAIN COPY
+                <button className="btn btn-secondary btn-sm" onClick={() => api.tamperWitness().then(setWitnessTamperResult)}
+                  data-testid="btn-tamper-witness" data-api="POST /api/witness/tamper-check" type="button">
+                  <AlertTriangle style={{ width: 14, height: 14 }} /> Tamper Copy
                 </button>
               </div>
             </div>
 
             {witnessVerifyResult && (
-              <div style={{ padding: 12, background: '#07180d', border: '1px solid var(--allow)', marginBottom: 16 }}>
-                <div style={{ color: 'var(--allow)', fontWeight: 600 }}>
-                  [✓] WITNESS CHAIN VALID ({witnessVerifyResult.inspected_records} records verified)
+              <div style={{ padding: 12, background: 'rgba(61,214,140,0.06)', border: '1px solid var(--allow)', borderRadius: 6, marginBottom: 16 }}>
+                <div style={{ color: 'var(--allow)', fontWeight: 600, fontSize: '0.8125rem' }}>
+                  ✓ WITNESS CHAIN VALID ({witnessVerifyResult.inspected_records} records verified)
                 </div>
               </div>
             )}
-
             {witnessTamperResult && (
-              <div style={{ padding: 12, background: '#240a0c', border: '1px solid var(--deny)', marginBottom: 16 }}>
-                <div style={{ color: 'var(--deny)', fontWeight: 600 }}>[✕] CHAIN TAMPER DETECTED: {witnessTamperResult.verifier_reason}</div>
+              <div style={{ padding: 12, background: 'rgba(255,99,105,0.06)', border: '1px solid var(--deny)', borderRadius: 6, marginBottom: 16 }}>
+                <div style={{ color: 'var(--deny)', fontWeight: 600, fontSize: '0.8125rem' }}>✕ CHAIN TAMPER DETECTED: {witnessTamperResult.verifier_reason}</div>
               </div>
             )}
 
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', gap: 32, font: '13px ui-monospace, monospace' }}>
-                <div>Total Logged Records: <strong>{witness?.total_records || 61}</strong></div>
-                <div>Status: <span className="badge-tag allow">{witness?.chain_status || 'valid'}</span></div>
+            <div className="card" style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', gap: 32, fontSize: '0.8125rem', fontFamily: 'var(--font-mono, monospace)' }}>
+                <div>Total Records: <strong>{witness?.total_records ?? '—'}</strong></div>
+                <div>Status: <StatusBadge status={witness?.chain_status || 'loading'} /></div>
               </div>
             </div>
 
-            <h3>Active MCP Witness Logs</h3>
-            <table className="data-table" data-testid="witness-logs-table" data-api="GET /api/witness">
-              <thead>
-                <tr>
-                  <th>Log File</th>
-                  <th>Path</th>
-                  <th>Total Events</th>
-                  <th>Physical Executions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {witness?.mcp_logs && Object.entries(witness.mcp_logs).map(([name, count]) => (
-                  <tr key={name}>
-                    <td><strong>{name}</strong></td>
-                    <td><code>.tripline/witness/{name}</code></td>
-                    <td><code>{count}</code></td>
-                    <td><code>{name.includes('repo') ? 1 : 0}</code></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <h3 style={{ marginBottom: 16 }}>MCP Witness Logs</h3>
+            <div className="data-table-wrap">
+              <table className="data-table" data-testid="witness-logs-table" data-api="GET /api/witness">
+                <thead><tr><th>Log File</th><th>Path</th><th>Events</th><th>Executions</th></tr></thead>
+                <tbody>
+                  {witness?.mcp_logs && Object.entries(witness.mcp_logs).map(([name, count]) => (
+                    <tr key={name}>
+                      <td><strong>{name}</strong></td>
+                      <td><code>.tripline/witness/{name}</code></td>
+                      <td><code>{count as number}</code></td>
+                      <td><code>{name.includes('repo') ? 1 : 0}</code></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
-        {/* 7. MEASURED VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            MEASURED
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'measured' && (
-          <div>
-            <div className="view-header">
-              <h2>Measured Runs &amp; Defense Rates</h2>
+          <div className="wrap view-panel">
+            <div className="page-header">
+              <h2>Measured Runs & Defense Rates</h2>
               <p>Statistical findings across Arms A (No Defense), B (ArmorIQ Only), and C (ArmorIQ + Tripline).</p>
             </div>
-
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div style={{ font: '12px ui-monospace, monospace', color: 'var(--muted)' }}>
-                <span>Manifest Status: <strong style={{ color: 'var(--hold)' }}>{measured?.status || 'UNVERIFIED_NO_LLM_KEY'}</strong></span> ·
-                <span style={{ marginLeft: 8 }}>Session Cap: 80</span> ·
-                <span style={{ marginLeft: 8 }}>k per cell: 5</span>
+            <div className="card" style={{ marginBottom: 24 }}>
+              <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono, monospace)', color: 'var(--dim)' }}>
+                Status: <strong style={{ color: 'var(--hold)' }}>{measured?.status || 'UNVERIFIED_NO_LLM_KEY'}</strong>
+                <span style={{ marginLeft: 16 }}>Session Cap: 80</span>
+                <span style={{ marginLeft: 16 }}>k per cell: 5</span>
               </div>
-              <p style={{ fontSize: 13, color: 'var(--dim)', marginTop: 8, marginBottom: 0 }}>
-                Disclosure: LLM emissions require live API keys. Offline runs reflect deterministic M2 forced-compliance stubs.
+              <p style={{ fontSize: '0.8125rem', color: 'var(--dim)', marginTop: 8, marginBottom: 0 }}>
+                No statistical claim: this model, these prompts, this fixture set. Offline runs reflect deterministic M2 forced-compliance stubs.
               </p>
             </div>
-
-            <table className="data-table" data-testid="measured-table" data-api="GET /api/measured">
-              <thead>
-                <tr>
-                  <th>Arm</th>
-                  <th>Attack</th>
-                  <th>k</th>
-                  <th>Attempted (Emitted)</th>
-                  <th>Executed (Sandboxed)</th>
-                  <th>Decided By</th>
-                  <th>Protection Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {measured?.rows?.map((r, idx) => (
-                  <tr key={idx}>
-                    <td><strong>{r.arm}</strong></td>
-                    <td><code>{r.attack}</code></td>
-                    <td>{r.k}</td>
-                    <td>{r.attempted_ratio}</td>
-                    <td><code>{r.executed_ratio}</code></td>
-                    <td>{r.decided_by}</td>
-                    <td>
-                      <span className={`badge-tag ${r.protection_rate === '100%' ? 'allow' : (r.protection_rate === '0%' ? 'deny' : 'neutral')}`}>
-                        {r.protection_rate}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="data-table-wrap">
+              <table className="data-table" data-testid="measured-table" data-api="GET /api/measured">
+                <thead><tr><th>Arm</th><th>Attack</th><th>k</th><th>Attempted</th><th>Executed</th><th>Decided By</th><th>Protection</th></tr></thead>
+                <tbody>
+                  {measured?.rows?.map((r, idx) => (
+                    <tr key={idx}>
+                      <td><strong>{r.arm}</strong></td>
+                      <td><code>{r.attack}</code></td>
+                      <td>{r.k}</td>
+                      <td>{r.attempted_ratio}</td>
+                      <td><code>{r.executed_ratio}</code></td>
+                      <td>{r.decided_by}</td>
+                      <td><StatusBadge status={r.protection_rate} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
-        {/* 8. EVIDENCE INDEX & FILE VIEWER */}
+        {/* ═══════════════════════════════════════════════════════════
+            EVIDENCE
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'evidence' && (
-          <div>
-            <div className="view-header">
-              <h2>Evidence Index &amp; Audit Trail</h2>
+          <div className="wrap view-panel">
+            <div className="page-header">
+              <h2>Evidence Index</h2>
               <p>Cryptographic catalog of all evidence files with computed SHA-256 digests.</p>
             </div>
+            <div className="data-table-wrap">
+              <table className="data-table" data-testid="evidence-table" data-api="GET /api/evidence">
+                <thead><tr><th>File</th><th>Size</th><th>SHA-256</th><th>Claim</th><th>Action</th></tr></thead>
+                <tbody>
+                  {evidence?.items?.map(item => (
+                    <tr key={item.path}>
+                      <td><code style={{ fontSize: '0.6875rem' }}>{item.path}</code></td>
+                      <td>{item.size_bytes} B</td>
+                      <td><HashChip hash={truncHash(item.sha256)} full={item.sha256} /></td>
+                      <td style={{ fontSize: '0.75rem' }}>{item.claims_supported.join(', ')}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleViewEvidence(item.path)}
+                            data-testid={`btn-view-${item.path}`} data-api="GET /api/evidence/file" type="button">
+                            <Eye style={{ width: 12, height: 12 }} /> View
+                          </button>
+                          <a className="btn btn-ghost btn-sm" href={`/api/evidence/file?path=${encodeURIComponent(item.path)}`}
+                            download data-testid={`btn-download-${item.path}`} data-api="GET /api/evidence/file">
+                            <Download style={{ width: 12, height: 12 }} />
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-            <table className="data-table" data-testid="evidence-table" data-api="GET /api/evidence">
-              <thead>
-                <tr>
-                  <th>File Path</th>
-                  <th>Size</th>
-                  <th>SHA-256 Digest</th>
-                  <th>Supported Claim</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evidence?.items?.map((item) => (
-                  <tr key={item.path}>
-                    <td><code>{item.path}</code></td>
-                    <td>{item.size_bytes} B</td>
-                    <td><code style={{ fontSize: 11 }}>{item.sha256.slice(0, 16)}...</code></td>
-                    <td>{item.claims_supported.join(', ')}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button
-                          className="btn btn-outline btn-sm"
-                          onClick={() => handleViewEvidence(item.path)}
-                          data-testid={`btn-view-${item.path}`}
-                          data-api="GET /api/evidence/file"
-                          type="button"
-                        >
-                          <Eye style={{ width: 12, height: 12 }} /> View
-                        </button>
-                        <a
-                          className="btn btn-outline btn-sm"
-                          href={`/api/evidence/file?path=${encodeURIComponent(item.path)}`}
-                          download
-                          data-testid={`btn-download-${item.path}`}
-                          data-api="GET /api/evidence/file"
-                        >
-                          <Download style={{ width: 12, height: 12 }} />
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Modal Viewer */}
             {viewingFile && (
-              <div
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  background: 'rgba(0,0,0,0.8)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 100,
-                  padding: 20,
-                }}
-              >
-                <div style={{ background: '#111', border: '1px solid var(--border)', width: 'min(900px, 100%)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 20 }}
+                onClick={(e) => { if (e.target === e.currentTarget) setViewingFile(null) }}>
+                <div style={{ background: 'var(--ink-900)', border: '1px solid var(--border)', borderRadius: 8, width: 'min(900px, 100%)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: 16, borderBottom: '1px solid var(--border)' }}>
-                    <code>{viewingFile.path}</code>
-                    <button
-                      onClick={() => setViewingFile(null)}
-                      data-testid="btn-close-evidence-modal"
-                      data-local="close-evidence-modal"
-                      type="button"
-                      style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
-                    >
+                    <code style={{ fontSize: '0.8125rem' }}>{viewingFile.path}</code>
+                    <button onClick={() => setViewingFile(null)} data-testid="btn-close-evidence-modal"
+                      data-local="close-evidence-modal" type="button"
+                      style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer' }}>
                       <X style={{ width: 16, height: 16 }} />
                     </button>
                   </div>
-                  <pre style={{ padding: 16, overflow: 'auto', fontSize: 12, margin: 0 }}>
-                    {viewingFile.content}
-                  </pre>
+                  <pre style={{ padding: 16, overflow: 'auto', fontSize: '0.75rem', margin: 0 }}>{viewingFile.content}</pre>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* 9. VIDEO VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            VIDEO
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'video' && (
-          <div>
-            <div className="view-header">
-              <h2>Demo Video &amp; Captions</h2>
-              <p>86-second continuous forensic walkthrough with synchronized captions.</p>
+          <div className="wrap view-panel">
+            <div className="page-header">
+              <h2>Demo Video</h2>
+              <p>Forensic walkthrough with synchronized captions.</p>
             </div>
-
             <div className="card" style={{ maxWidth: 860, margin: 'auto' }}>
-              <video
-                controls
-                style={{ width: '100%', borderRadius: 4, background: '#000' }}
-                data-testid="demo-video-player"
-                data-api="GET /api/video"
-              >
+              <video controls style={{ width: '100%', borderRadius: 6, background: '#000' }}
+                data-testid="demo-video-player" data-api="GET /api/video">
                 <source src="/api/video" type="video/mp4" />
                 <track src="/api/video/captions" kind="subtitles" srcLang="en" label="English" default />
                 Your browser does not support the video tag.
               </video>
-
               <div style={{ marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ font: '12px ui-monospace, monospace', color: 'var(--muted)' }}>
-                  Duration: 86.00s · H.264 / AAC · 1080p
+                <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono, monospace)', color: 'var(--dim)' }}>
+                  H.264 / AAC · 1080p
                 </span>
-                <a
-                  className="btn btn-outline btn-sm"
-                  href="/api/video"
-                  download="tripline_demo_90s.mp4"
-                  data-testid="btn-download-video"
-                  data-api="GET /api/video"
-                >
-                  <Download style={{ width: 12, height: 12 }} /> Download MP4
+                <a className="btn btn-secondary btn-sm" href="/api/video" download="tripline_demo.mp4"
+                  data-testid="btn-download-video" data-api="GET /api/video">
+                  <Download style={{ width: 12, height: 12 }} /> Download
                 </a>
               </div>
             </div>
           </div>
         )}
 
-        {/* 10. CLAIMS LEDGER VIEW */}
+        {/* ═══════════════════════════════════════════════════════════
+            CLAIMS
+        ═══════════════════════════════════════════════════════════ */}
         {tab === 'claims' && (
-          <div>
-            <div className="view-header">
-              <h2>Claims Ledger &amp; Limitations</h2>
-              <p>Factual audit matrix verifying all statements across public project documents.</p>
+          <div className="wrap view-panel">
+            <div className="page-header">
+              <h2>Claims & Limits</h2>
+              <p>Factual audit matrix verifying all statements across project documents.</p>
             </div>
-
-            <div className="card" style={{ marginBottom: 20 }}>
-              <div style={{ display: 'flex', gap: 24, font: '13px ui-monospace, monospace' }}>
-                <div>Total Statements: <strong>{claims?.total_claims || 18}</strong></div>
-                <div>Verified: <strong style={{ color: 'var(--allow)' }}>{claims?.verified_count || 18}</strong></div>
-                <div>Unverified: <strong>{claims?.unverified_count || 0}</strong></div>
-                <div>Failed: <strong style={{ color: 'var(--deny)' }}>{claims?.failed_count || 0}</strong></div>
-              </div>
-            </div>
-
-            <table className="data-table" data-testid="claims-table" data-api="GET /api/claims">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Statement / Claim</th>
-                  <th>Evidence Path</th>
-                  <th>Verdict</th>
-                </tr>
-              </thead>
-              <tbody>
-                {claims?.items?.map((c) => (
-                  <tr key={c.id}>
-                    <td><code>{c.id}</code></td>
-                    <td>{c.claim}</td>
-                    <td><code>{c.evidence_path}</code></td>
-                    <td>
-                      <span className={`badge-tag ${c.verdict === 'VERIFIED' ? 'allow' : 'deny'}`}>
-                        {c.verdict}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* 11. PLATFORM CHECKLIST VIEW */}
-        {tab === 'platform' && (
-          <div>
-            <div className="view-header">
-              <h2>ArmorIQ Platform Checklist</h2>
-              <p>Onboarding and configuration verification on platform.armoriq.ai.</p>
-            </div>
-
-            <div className="card" style={{ marginBottom: 20 }}>
-              <p style={{ margin: 0, font: '13px ui-monospace, monospace' }}>
-                Platform Host: <strong>{platform?.platform_url}</strong> · Registered Agent: <strong>{platform?.agent_id}</strong>
+            <div className="card" style={{ marginBottom: 24, borderColor: 'var(--hold)' }}>
+              <h3 style={{ fontSize: '1rem', marginBottom: 8 }}>⚠ Limits and Residuals</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Tripline is built for the ArmorIQ Flow State hackathon. It runs in a sandbox with fixture data.
+                Receipts use HMAC-SHA256 (symmetric key) — a holder of the key could forge them.
+                The witness log is a local file, not a distributed ledger.
+                Statistical measurements use forced-compliance stubs when no LLM key is configured.
               </p>
             </div>
-
-            <table className="data-table" data-testid="platform-table" data-api="GET /api/platform-checklist">
-              <thead>
-                <tr>
-                  <th>Item ID</th>
-                  <th>Onboarding Step</th>
-                  <th>Status</th>
-                  <th>Evidence</th>
-                  <th>Instruction</th>
-                </tr>
-              </thead>
-              <tbody>
-                {platform?.items?.map((item) => (
-                  <tr key={item.item_id}>
-                    <td><code>{item.item_id}</code></td>
-                    <td><strong>{item.title}</strong></td>
-                    <td>
-                      <span className={`badge-tag ${item.status === 'VERIFIED' ? 'allow' : 'hold'}`}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td>
-                      {item.evidence_file ? <code>{item.evidence_file}</code> : <span style={{ color: 'var(--dim)' }}>Pending</span>}
-                    </td>
-                    <td style={{ fontSize: 12 }}>{item.instruction}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="card" style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', gap: 24, fontSize: '0.8125rem', fontFamily: 'var(--font-mono, monospace)' }}>
+                <div>Total: <strong>{claims?.total_claims ?? '—'}</strong></div>
+                <div>Verified: <strong style={{ color: 'var(--allow)' }}>{claims?.verified_count ?? '—'}</strong></div>
+                <div>Unverified: <strong>{claims?.unverified_count ?? '—'}</strong></div>
+                <div>Failed: <strong style={{ color: 'var(--deny)' }}>{claims?.failed_count ?? '—'}</strong></div>
+              </div>
+            </div>
+            <div className="data-table-wrap">
+              <table className="data-table" data-testid="claims-table" data-api="GET /api/claims">
+                <thead><tr><th>ID</th><th>Claim</th><th>Evidence</th><th>Verdict</th></tr></thead>
+                <tbody>
+                  {claims?.items?.map(c => (
+                    <tr key={c.id}>
+                      <td><code>{c.id}</code></td>
+                      <td>{c.claim}</td>
+                      <td><code style={{ fontSize: '0.6875rem' }}>{c.evidence_path}</code></td>
+                      <td><StatusBadge status={c.verdict} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
-        {/* 12. ABOUT / SYSTEM INFO VIEW */}
-        {tab === 'about' && (
-          <div>
-            <div className="view-header">
-              <h2>About Tripline</h2>
-              <p>Architecture, design principles, and local system metadata.</p>
+        {/* ═══════════════════════════════════════════════════════════
+            CHECKLIST
+        ═══════════════════════════════════════════════════════════ */}
+        {tab === 'platform' && (
+          <div className="wrap view-panel">
+            <div className="page-header">
+              <h2>ArmorIQ Platform Checklist</h2>
+              <p>Onboarding and configuration verification.</p>
             </div>
+            <div className="card" style={{ marginBottom: 24 }}>
+              <p style={{ margin: 0, fontSize: '0.8125rem', fontFamily: 'var(--font-mono, monospace)' }}>
+                Platform: <strong>{platform?.platform_url || '—'}</strong> · Agent: <strong>{platform?.agent_id || '—'}</strong>
+              </p>
+            </div>
+            <div className="data-table-wrap">
+              <table className="data-table" data-testid="platform-table" data-api="GET /api/platform-checklist">
+                <thead><tr><th>ID</th><th>Step</th><th>Status</th><th>Evidence</th><th>Instruction</th></tr></thead>
+                <tbody>
+                  {platform?.items?.map(item => (
+                    <tr key={item.item_id}>
+                      <td><code>{item.item_id}</code></td>
+                      <td><strong>{item.title}</strong></td>
+                      <td><StatusBadge status={item.status} /></td>
+                      <td>{item.evidence_file ? <code style={{ fontSize: '0.6875rem' }}>{item.evidence_file}</code> : <span style={{ color: 'var(--dim)' }}>Pending</span>}</td>
+                      <td style={{ fontSize: '0.75rem' }}>{item.instruction}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
+        {/* ═══════════════════════════════════════════════════════════
+            ABOUT
+        ═══════════════════════════════════════════════════════════ */}
+        {tab === 'about' && (
+          <div className="wrap view-panel">
+            <div className="page-header">
+              <h2>About Tripline</h2>
+              <p>Architecture, design principles, and system metadata.</p>
+            </div>
             <div className="grid-2" style={{ marginBottom: 24 }}>
               <div className="card">
-                <h3>System Information</h3>
-                <table style={{ width: '100%', font: '12px ui-monospace, monospace', borderCollapse: 'collapse' }}>
+                <h3 style={{ marginBottom: 16 }}>System Information</h3>
+                <table style={{ width: '100%', fontSize: '0.8125rem', fontFamily: 'var(--font-mono, monospace)', borderCollapse: 'collapse' }}>
                   <tbody>
-                    <tr><td style={{ padding: '6px 0', color: 'var(--dim)' }}>Python:</td><td>{env?.python_version}</td></tr>
-                    <tr><td style={{ padding: '6px 0', color: 'var(--dim)' }}>ArmorIQ SDK:</td><td>{env?.armoriq_sdk_version}</td></tr>
-                    <tr><td style={{ padding: '6px 0', color: 'var(--dim)' }}>Git Branch:</td><td>{health?.branch}</td></tr>
-                    <tr><td style={{ padding: '6px 0', color: 'var(--dim)' }}>Commit:</td><td><code>{health?.git_commit}</code></td></tr>
-                    <tr><td style={{ padding: '6px 0', color: 'var(--dim)' }}>Enforcement:</td><td>{env?.enforcement_mode}</td></tr>
+                    <tr><td style={{ padding: '8px 0', color: 'var(--dim)', width: 140 }}>Python:</td><td>{env?.python_version || '—'}</td></tr>
+                    <tr><td style={{ padding: '8px 0', color: 'var(--dim)' }}>ArmorIQ SDK:</td><td>{env?.armoriq_sdk_version || '—'}</td></tr>
+                    <tr><td style={{ padding: '8px 0', color: 'var(--dim)' }}>Branch:</td><td>{health?.branch || '—'}</td></tr>
+                    <tr><td style={{ padding: '8px 0', color: 'var(--dim)' }}>Commit:</td><td><code>{health?.git_commit || '—'}</code></td></tr>
+                    <tr><td style={{ padding: '8px 0', color: 'var(--dim)' }}>Enforcement:</td><td>{env?.enforcement_mode || '—'}</td></tr>
+                    <tr><td style={{ padding: '8px 0', color: 'var(--dim)' }}>LLM Provider:</td><td>{env?.llm_provider || '—'}</td></tr>
+                    <tr><td style={{ padding: '8px 0', color: 'var(--dim)' }}>LLM Model:</td><td>{env?.llm_model || '—'}</td></tr>
                   </tbody>
                 </table>
               </div>
-
               <div className="card">
-                <h3>Architecture Docs</h3>
-                <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-                  Tripline sits as an MCP security proxy middleware inspecting tool proposals between LLM dispatch and execution.
+                <h3 style={{ marginBottom: 12 }}>What Tripline does</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+                  Tripline sits as an MCP security proxy inspecting tool proposals between LLM dispatch and execution.
+                  It provides path containment (jail), egress canary detection, HMAC-chained witness logging, and
+                  signed incident receipts.
                 </p>
-                <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={() => api.getDocs().then(setDocsList)}
-                    data-testid="btn-list-docs"
-                    data-api="GET /api/docs"
-                    type="button"
-                  >
-                    <RefreshCw style={{ width: 12, height: 12 }} /> Index Docs
+                <h3 style={{ marginBottom: 12 }}>What it does NOT do</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                  Tripline does not prevent prompt injection. It does not provide tamper-proof storage (receipts use
+                  symmetric HMAC keys). It does not replace ArmorIQ's authorization — it supplements it with forensic evidence.
+                  This is a hackathon project running in a sandbox.
+                </p>
+                <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                  <button className="btn btn-secondary btn-sm" onClick={() => api.getDocs().then(setDocsList)}
+                    data-testid="btn-list-docs" data-api="GET /api/docs" type="button">
+                    Index Docs
                   </button>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={() => api.getDoc('limitations').then((d) => setDocContent({ name: d.name, content: d.content }))}
-                    data-testid="btn-doc-limitations"
-                    data-api="GET /api/docs/limitations"
-                    type="button"
-                  >
+                  <button className="btn btn-secondary btn-sm"
+                    onClick={() => api.getDoc('limitations').then(d => setDocContent({ name: d.name, content: d.content }))}
+                    data-testid="btn-doc-limitations" data-api="GET /api/docs/limitations" type="button">
                     Limitations
                   </button>
-                  <button
-                    className="btn btn-outline btn-sm"
-                    onClick={() => api.getDoc('judge_qa').then((d) => setDocContent({ name: d.name, content: d.content }))}
-                    data-testid="btn-doc-judge-qa"
-                    data-api="GET /api/docs/judge_qa"
-                    type="button"
-                  >
-                    Judge Q&amp;A
+                  <button className="btn btn-secondary btn-sm"
+                    onClick={() => api.getDoc('judge_qa').then(d => setDocContent({ name: d.name, content: d.content }))}
+                    data-testid="btn-doc-judge-qa" data-api="GET /api/docs/judge_qa" type="button">
+                    Judge Q&A
                   </button>
                 </div>
                 {docsList.length > 0 && (
-                  <div style={{ marginTop: 12, fontSize: 12 }}>
-                    <strong>Available Docs:</strong> {docsList.map((d) => d.name).join(', ')}
+                  <div style={{ marginTop: 12, fontSize: '0.75rem' }}>
+                    <strong>Available:</strong> {docsList.map(d => d.name).join(', ')}
                   </div>
                 )}
               </div>
             </div>
-
             {docContent && (
               <div className="card">
                 <h3>{docContent.name.toUpperCase()}</h3>
-                <pre style={{ maxHeight: 350, overflow: 'auto', fontSize: 12, padding: 12, background: '#050505' }}>
+                <pre style={{ maxHeight: 400, overflow: 'auto', fontSize: '0.75rem', padding: 14, background: 'var(--ink-950)', borderRadius: 6, marginTop: 12 }}>
                   {docContent.content}
                 </pre>
               </div>
@@ -1436,37 +1168,42 @@ export default function App() {
       </main>
 
       {/* ── FOOTER ── */}
-      <footer className="footer wrap">
-        <div>
-          <picture style={{ display: 'inline-block', marginBottom: 6 }}>
-            <source media="(prefers-color-scheme: light)" srcSet="/tripline-lockup-on-light.svg" />
-            <img
-              src="/tripline-lockup-on-dark.svg"
-              alt="Tripline"
-              width={112}
-              height={24}
-              style={{ height: '24px', width: 'auto', display: 'block' }}
-            />
-          </picture>
-          <p>It&apos;s not about blocking. It&apos;s about proof.</p>
+      <footer className="footer" role="contentinfo">
+        <div className="wrap">
+          <div className="footer-grid">
+            <div className="footer-brand">
+              <picture>
+                <source media="(prefers-color-scheme: light)" srcSet="/tripline-lockup-on-light.svg" />
+                <img src="/tripline-lockup-on-dark.svg" alt="Tripline" width={112} height={24}
+                  style={{ height: 24, width: 'auto', display: 'block' }} />
+              </picture>
+              <p>Blocked isn't evidence. Every denied action gets a receipt.</p>
+            </div>
+            <div className="footer-col">
+              <code>Product</code>
+              <button onClick={() => switchTab('receipts')} data-testid="footer-link-receipts" data-local="footer-receipts" type="button">Receipts</button>
+              <button onClick={() => switchTab('overview')} data-testid="footer-link-runs" data-local="footer-runs" type="button">Overview</button>
+              <button onClick={() => switchTab('attribution')} data-testid="footer-link-boundary" data-local="footer-boundary" type="button">Attribution</button>
+            </div>
+            <div className="footer-col">
+              <code>Evidence</code>
+              <button onClick={() => switchTab('measured')} data-testid="footer-link-scoreboard" data-local="footer-scoreboard" type="button">Measured</button>
+              <button onClick={() => switchTab('claims')} data-testid="footer-link-limitations" data-local="footer-limitations" type="button">Claims & Limits</button>
+              <button onClick={() => switchTab('witness')} type="button">Witness</button>
+              <button onClick={() => switchTab('evidence')} type="button">Evidence Index</button>
+            </div>
+            <div className="footer-col">
+              <code>System</code>
+              <button onClick={() => switchTab('console')} data-testid="footer-link-console" data-local="footer-console" type="button">Run Console</button>
+              <button onClick={() => switchTab('platform')} data-testid="footer-link-checklist" data-local="footer-checklist" type="button">Checklist</button>
+              <button onClick={() => switchTab('about')} type="button">About</button>
+              <button onClick={() => switchTab('video')} type="button">Demo Video</button>
+            </div>
+            <div className="footer-bottom">
+              © 2026 Tripline · Built for ArmorIQ Flow State · Every denied action gets a receipt
+            </div>
+          </div>
         </div>
-        <div>
-          <code>PRODUCT</code>
-          <button onClick={() => setTab('receipts')} data-testid="footer-link-receipts" data-local="footer-receipts" style={{ background: 'none', border: 'none', color: 'var(--muted)', display: 'block', cursor: 'pointer', padding: 0, marginTop: 5 }}>Receipts</button>
-          <button onClick={() => setTab('overview')} data-testid="footer-link-runs" data-local="footer-runs" style={{ background: 'none', border: 'none', color: 'var(--muted)', display: 'block', cursor: 'pointer', padding: 0, marginTop: 5 }}>Runs</button>
-          <button onClick={() => setTab('attribution')} data-testid="footer-link-boundary" data-local="footer-boundary" style={{ background: 'none', border: 'none', color: 'var(--muted)', display: 'block', cursor: 'pointer', padding: 0, marginTop: 5 }}>Boundary</button>
-        </div>
-        <div>
-          <code>EVIDENCE</code>
-          <button onClick={() => setTab('measured')} data-testid="footer-link-scoreboard" data-local="footer-scoreboard" style={{ background: 'none', border: 'none', color: 'var(--muted)', display: 'block', cursor: 'pointer', padding: 0, marginTop: 5 }}>Benchmark data</button>
-          <button onClick={() => setTab('claims')} data-testid="footer-link-limitations" data-local="footer-limitations" style={{ background: 'none', border: 'none', color: 'var(--muted)', display: 'block', cursor: 'pointer', padding: 0, marginTop: 5 }}>Limitations</button>
-        </div>
-        <div>
-          <code>SYSTEM</code>
-          <button onClick={() => setTab('console')} data-testid="footer-link-console" data-local="footer-console" style={{ background: 'none', border: 'none', color: 'var(--muted)', display: 'block', cursor: 'pointer', padding: 0, marginTop: 5 }}>Run Console</button>
-          <button onClick={() => setTab('platform')} data-testid="footer-link-checklist" data-local="footer-checklist" style={{ background: 'none', border: 'none', color: 'var(--muted)', display: 'block', cursor: 'pointer', padding: 0, marginTop: 5 }}>Checklist</button>
-        </div>
-        <small>© 2026 Tripline · Built for ArmorIQ Flow State Hackathon · Every denied action gets a receipt</small>
       </footer>
     </div>
   )
