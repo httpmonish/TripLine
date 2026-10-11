@@ -17,9 +17,20 @@ FIXTURES_DIR = pathlib.Path(__file__).parent.parent / "fixtures"
 DEMO_REPO_DIR = FIXTURES_DIR / "demo_repo"
 
 @pytest.fixture(autouse=True)
-def clean_env():
+def clean_env(tmp_path):
+    global FIXTURES_DIR, DEMO_REPO_DIR
+    import shutil
+    test_fix = tmp_path / "fixtures"
+    shutil.copytree(pathlib.Path(__file__).parent.parent / "fixtures", test_fix)
+    prev_fix = FIXTURES_DIR
+    prev_repo = DEMO_REPO_DIR
+    FIXTURES_DIR = test_fix
+    DEMO_REPO_DIR = test_fix / "demo_repo"
     reset()
     yield
+    FIXTURES_DIR = prev_fix
+    DEMO_REPO_DIR = prev_repo
+
 
 def test_canary_mint():
     run_id = str(uuid.uuid4())
