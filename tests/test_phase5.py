@@ -106,21 +106,7 @@ def test_hash_verification():
     tampered_item = dataclasses.replace(item, normalized_content="Tampered")
     assert verify_context_item(tampered_item) == False
 
-API_KEY = os.environ.get("ARMORIQ_API_KEY", "")
-HAS_KEY = bool(API_KEY)
-if not HAS_KEY:
-    try:
-        import pathlib
-        _cred_file = pathlib.Path.home() / ".armoriq" / "credentials.json"
-        if _cred_file.exists():
-            _data = json.loads(_cred_file.read_text())
-            _k = _data.get("apiKey", "")
-            if isinstance(_k, str) and _k.startswith("ak_"):
-                HAS_KEY = True
-    except Exception:
-        pass
-
-needs_key = pytest.mark.skipif(not HAS_KEY, reason="ARMORIQ_API_KEY not set")
+from tests.helpers import needs_key
 
 # TEST 4, 5, 6, 7 - AGENT LOOP TESTS
 @needs_key

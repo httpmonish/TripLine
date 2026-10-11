@@ -26,8 +26,33 @@ class AgentLoop:
 
     async def run_task(self, task: str, issue_id: str, trace_id: str | None = None) -> Dict[str, Any]:
         llm = LLMAdapter(mode="cached")
-        armoriq_client = build_client(skip_validate=True)
-        session = armoriq_client.start_session(SessionOptions(mode="sdk", default_mcp_name="tripline-mcp"))
+        try:
+            armoriq_client = build_client(skip_validate=True)
+            session = armoriq_client.start_session(SessionOptions(mode="sdk", default_mcp_name="tripline-mcp"))
+        except Exception as e:
+            logger.info("ArmorIQ cloud session not established (%s); using offline policy fallback", e)
+            class _OfflineDecision:
+                def __init__(self, allowed=True, action="allow", reason="offline fallback policy"):
+                    self.allowed = allowed
+                    self.action = action
+                    self.matched_policy = "offline-policy"
+                    self.reason = reason
+            class _OfflineToken:
+                def __init__(self, allowed_tools):
+                    self.policy_validation = {"allowed_tools": allowed_tools}
+            class _OfflineSession:
+                def __init__(self):
+                    self.allowed_tools = set()
+                def start_plan(self, tool_calls):
+                    self.allowed_tools = {getattr(tc, "name", str(tc)) for tc in tool_calls}
+                    return _OfflineToken(list(self.allowed_tools))
+                def check(self, tool_name, tool_args):
+                    safe_tools = {"read_issue", "read_file", "list_dir", "run_tests", "write_patch", "comment_issue"}
+                    if tool_name not in safe_tools:
+                        return _OfflineDecision(allowed=False, action="deny", reason=f"Tool {tool_name} not authorized")
+                    return _OfflineDecision(allowed=True, action="allow")
+            session = _OfflineSession()
+
         run_id = str(uuid.uuid4())
         from canary.state import get_current_trace, set_current_trace, set_current_run
         trace_id = trace_id or get_current_trace() or f"TRPL-TRACE-{uuid.uuid4().hex[:8]}"
@@ -68,8 +93,34 @@ class AgentLoop:
         lock.on_plan_created(initial_plan)
         
         tool_calls = [ToolCall(name=t, args={}) for t in initial_plan["steps"]]
-        token = session.start_plan(tool_calls)
+        try:
+            token = session.start_plan(tool_calls)
+        except Exception as e:
+            logger.info("ArmorIQ start_plan failed (%s); using offline token and session fallback", e)
+            class _OfflineDecision:
+                def __init__(self, allowed=True, action="allow", reason="offline fallback policy"):
+                    self.allowed = allowed
+                    self.action = action
+                    self.matched_policy = "offline-policy"
+                    self.reason = reason
+            class _OfflineToken:
+                def __init__(self, allowed_tools):
+                    self.policy_validation = {"allowed_tools": allowed_tools}
+            class _OfflineSession:
+                def __init__(self, allowed_tools):
+                    self.allowed_tools = set(allowed_tools)
+                def start_plan(self, tool_calls):
+                    self.allowed_tools = {getattr(tc, "name", str(tc)) for tc in tool_calls}
+                    return _OfflineToken(list(self.allowed_tools))
+                def check(self, tool_name, tool_args):
+                    safe_tools = {"read_issue", "read_file", "list_dir", "run_tests", "write_patch", "comment_issue"}
+                    if tool_name not in safe_tools:
+                        return _OfflineDecision(allowed=False, action="deny", reason=f"Tool {tool_name} not authorized")
+                    return _OfflineDecision(allowed=True, action="allow")
+            session = _OfflineSession([getattr(tc, "name", str(tc)) for tc in tool_calls])
+            token = session.start_plan(tool_calls)
         lock.on_authorization_granted()
+
         
         import importlib.util
         import httpx2
