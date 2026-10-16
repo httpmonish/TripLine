@@ -1,0 +1,106 @@
+{
+  "source": "docs/FINAL_CLAIMS_AUDIT.md",
+  "claims": [
+    {
+      "id": "CLM-01",
+      "claim": "Blocked isn't evidence. Every denied action gets a receipt.",
+      "source": "README.md (Header), docs/SUBMISSION.md",
+      "evidence": "results/phase3/scenario/*.json, receipts/models.py",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-02",
+      "claim": "ArmorIQ decides. Tripline proves.",
+      "source": "README.md, docs/SUBMISSION.md",
+      "evidence": "docs/phase3_layer_attribution.md",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-03",
+      "claim": "delete_branch attack stopped by ArmorIQ platform policy.",
+      "source": "README.md (Sec. 1), docs/SUBMISSION.md",
+      "evidence": "scripts/armoriq_proof.py, docs/phase2_report.md",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-04",
+      "claim": "Action delete_branch never reaches MCP server when blocked upstream (0 executions).",
+      "source": "README.md, docs/JUDGE_QA.md Q14",
+      "evidence": "results/phase3/scenario/receipt_P1_ARMORIQ_DENY.json",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-05",
+      "claim": "ArmorIQ legitimately allowed read_file and comment_issue under registered tool policy.",
+      "source": "README.md (Sec. 1), docs/ARCHITECTURE.md",
+      "evidence": "results/phase3/scenario/receipt_P2_JAIL_DENY.json",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-06",
+      "claim": "Tripline Path Jail traps directory traversal escapes via fstat inode check (0 bytes read).",
+      "source": "README.md (Sec. 1), docs/ARCHITECTURE.md",
+      "evidence": "mcp/common/jail.py, tests/test_phase3_wow.py",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-07",
+      "claim": "Tripline Egress Gateway traps planted canary tokens in comments before network egress.",
+      "source": "README.md (Sec. 1), docs/ARCHITECTURE.md",
+      "evidence": "gateway/taint_rule.py, canary/scan.py",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-08",
+      "claim": "Every denied action generates an HMAC-signed Canonical JSON Incident Receipt.",
+      "source": "README.md (Sec. 3), docs/SUBMISSION.md",
+      "evidence": "receipts/builder.py, receipts/verify.py",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-09",
+      "claim": "Modifying 1 byte of a covered receipt field triggers TAMPER_DETECTED.",
+      "source": "README.md (Sec. 4), docs/JUDGE_QA.md Q4",
+      "evidence": "scripts/tamper_demo.py, tests/test_phase4_dashboard.py",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-10",
+      "claim": "Path traversal burst: 0 of 24 escaped; positive control succeeded.",
+      "source": "README.md (Sec. 6), scripts/jail_burst.py",
+      "evidence": "scripts/jail_burst.py, tests/test_phase3_wow.py",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-11",
+      "claim": "Model refusal rate on adversarial prompts is 40% (2/5 runs refused in benign phase).",
+      "source": "README.md (Sec. 6), results/phase3/measured/summary.md",
+      "evidence": "results/phase3/measured/summary.md",
+      "status": "VERIFIED"
+    },
+    {
+      "id": "CLM-12",
+      "claim": "Overall system protection rate against adversarial prompt injection is 100%.",
+      "source": "results/phase3/measured/summary.md",
+      "evidence": "results/phase3/measured/summary.md",
+      "status": "VERIFIED"
+    }
+  ],
+  "known_limits": [
+    {
+      "title": "Exact Substring Canary Scan",
+      "description": "Egress canary scan does not detect Base64-encoded, reversed, or fragmented canary tokens across comments.",
+      "source": "docs/limitations.md & docs/phase3_layer_attribution.md Sec. 3"
+    },
+    {
+      "title": "Decision Proof Replay Window",
+      "description": "Decision proof tokens minted by ArmorIQ carry a 60-second TTL. Replay within the active 60s window is permitted.",
+      "source": "mcp/common/proof.py & docs/JUDGE_QA.md Q9"
+    },
+    {
+      "title": "Local Witness Key Custody",
+      "description": "Witness key is stored locally in .tripline/witness_key.txt. HMAC detects modification of covered fields, but key holder could forge entries.",
+      "source": "receipts/verify.py & docs/JUDGE_QA.md Q4"
+    }
+  ]
+}
