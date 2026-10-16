@@ -51,9 +51,9 @@ export default function StyleGuidePage() {
               Buttons &amp; Links
             </h3>
             <div className="flex flex-wrap gap-4 items-center">
-              <Button variant="primary">Inspect Receipts</Button>
-              <Button variant="secondary">Run Open Console</Button>
-              <Button variant="ghost" showArrow>
+              <Button variant="primary" data-local="styleguide-btn-1">Inspect Receipts</Button>
+              <Button variant="secondary" data-local="styleguide-btn-2">Run Open Console</Button>
+              <Button variant="ghost" showArrow data-local="styleguide-btn-3">
                 View Evidence Index
               </Button>
             </div>

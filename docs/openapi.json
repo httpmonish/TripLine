@@ -69,6 +69,25 @@
         }
       }
     },
+    "/api/summary": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Summary Compat",
+        "operationId": "get_summary_compat_api_summary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs": {
       "get": {
         "tags": [
@@ -357,6 +376,46 @@
         ],
         "summary": "Verify Receipt Endpoint",
         "operationId": "verify_receipt_endpoint_api_receipts__identifier__verify_post",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReceiptVerifyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Verify Receipt Endpoint",
+        "operationId": "verify_receipt_endpoint_api_receipts__identifier__verify_get",
         "parameters": [
           {
             "name": "identifier",
@@ -893,13 +952,13 @@
         }
       }
     },
-    "/api/summary": {
+    "/api/demo-data": {
       "get": {
         "tags": [
           "Tripline API"
         ],
-        "summary": "Get Summary Compat",
-        "operationId": "get_summary_compat_api_summary_get",
+        "summary": "Get Demo Data Compat",
+        "operationId": "get_demo_data_compat_api_demo_data_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -912,13 +971,389 @@
         }
       }
     },
-    "/api/demo-data": {
+    "/api/events": {
       "get": {
         "tags": [
           "Tripline API"
         ],
-        "summary": "Get Demo Data Compat",
-        "operationId": "get_demo_data_compat_api_demo_data_get",
+        "summary": "Get Events",
+        "operationId": "get_events_api_events_get",
+        "parameters": [
+          {
+            "name": "trace_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Trace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scoreboard": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Scoreboard",
+        "operationId": "get_scoreboard_api_scoreboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/boundary": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Boundary",
+        "operationId": "get_boundary_api_boundary_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/limitations": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Limitations",
+        "operationId": "get_limitations_api_limitations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Status",
+        "operationId": "get_status_api_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/canary-hits": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Canary Hits",
+        "operationId": "get_canary_hits_api_canary_hits_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/witness/{trace_id}": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Witness By Trace",
+        "operationId": "get_witness_by_trace_api_witness__trace_id__get",
+        "parameters": [
+          {
+            "name": "trace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Trace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/crew": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Agent Crew",
+        "operationId": "get_agent_crew_api_agent_crew_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/runs": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "List Agent Runs",
+        "operationId": "list_agent_runs_api_agent_runs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Start Agent Run",
+        "operationId": "start_agent_run_api_agent_runs_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Agent Run",
+        "operationId": "get_agent_run_api_agent_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/runs/{run_id}/events": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Stream Agent Run Events",
+        "operationId": "stream_agent_run_events_api_agent_runs__run_id__events_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agent/runs/{run_id}/stop": {
+      "post": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Stop Agent Run",
+        "operationId": "stop_agent_run_api_agent_runs__run_id__stop_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/status": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Platform Status",
+        "operationId": "get_platform_status_api_platform_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/glossary": {
+      "get": {
+        "tags": [
+          "Tripline API"
+        ],
+        "summary": "Get Glossary",
+        "operationId": "get_glossary_api_glossary_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1202,6 +1637,43 @@
               "text/html": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{slug}": {
+      "get": {
+        "summary": "Serve Frontend Page",
+        "operationId": "serve_frontend_page__slug__get",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2023,8 +2495,81 @@
               }
             ],
             "title": "Sidecar Link Hash"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "canary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canary"
+          },
+          "witness": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Witness"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
           }
         },
+        "additionalProperties": true,
         "type": "object",
         "required": [
           "receipt_id",
@@ -2062,6 +2607,28 @@
           "created_at": {
             "type": "string",
             "title": "Created At"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
+          },
+          "receipt_signature": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt Signature"
           }
         },
         "type": "object",
@@ -2256,6 +2823,28 @@
               }
             ],
             "title": "Attack Class"
+          },
+          "class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision"
           },
           "tripline_decision": {
             "anyOf": [

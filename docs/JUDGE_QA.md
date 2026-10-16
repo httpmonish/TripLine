@@ -103,3 +103,16 @@ This document provides concise, factual answers to 16 questions a skeptical hack
 2. **Platform-Initiated ArmorIQ HOLD**: Full integration with ArmorIQ's upcoming asynchronous human-in-the-loop review queue.
 3. **Hardware / Enclave Witness Sealing**: Binding witness records to hardware TPM/enclave roots for tamper-resistant cryptographic attestation.  
 *Evidence*: `docs/limitations.md`.
+
+---
+
+### Q17: How does Phase 11's Governed Agent integrate with ArmorIQ?
+**A:** In **MODE B** ("ArmorIQ authorizes each action before Tripline's MCP executes it; calls are not proxied through the platform"). The orchestrator proposes planned tool actions, validates them against ArmorIQ session checks (`session.check(tool, args)`), and executes approved calls on Tripline's safe MCP. If ArmorIQ platform access is offline, cached policy rules and local safety caps ensure consistent enforcement without hallucinated permissions.  
+*Evidence*: `docs/ARMORIQ_INTEGRATION_MODE.md`, `agent/executor.py`, `dashboard/api.py`.
+
+---
+
+### Q18: How does Tripline implement multi-agent crew delegation and attribution?
+**A:** Tripline uses scoped delegation from an orchestrator (`tripline-maintainer`) to two disjoint sub-agents: `reader` (inspection privileges only: `list_issues`, `read_issue`, `read_file`, `list_dir`) and `responder` (triage comments and labels: `comment_issue`, `label_issue`). At run start, ephemeral Ed25519 keypairs are generated in-memory for each delegate; private keys never touch disk. All actions carry user attribution (`sandbox-maintainer@example.invalid`) and are broadcast over a typed SSE event stream (`/api/agent/runs/{id}/events`).  
+*Evidence*: `agent/crew.py`, `agent/events.py`, `tripline-frontend/app/agent/page.tsx`.
+

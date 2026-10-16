@@ -99,6 +99,7 @@ export default function ReceiptsPage() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by action, ID, or layer..."
+                    data-local="receipts-search"
                     className="w-full pl-9 pr-3 py-1.5 rounded-[2px] bg-[#141418] border border-[var(--border-dark)] text-xs font-mono text-white placeholder-[var(--text-faint-on-dark)] focus-ring"
                   />
                 </div>

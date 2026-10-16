@@ -8,6 +8,7 @@ Secret-scrubbing applied to all outputs.
 
 from __future__ import annotations
 
+import asyncio
 import datetime
 import hashlib
 import importlib.metadata
@@ -1329,4 +1330,222 @@ async def get_witness_by_trace(trace_id: str):
         "chain_status": "valid",
         "executions": executions,
     })
+
+
+# ── 10. Phase 11 Agent & Platform Endpoints ────────────────────────────────────
+
+@api_router.get("/agent/crew")
+async def get_agent_crew():
+    from agent.crew import AgentCrew
+    crew = AgentCrew()
+    return sanitize_payload(crew.to_crew_manifest())
+
+
+@api_router.get("/agent/runs")
+async def list_agent_runs():
+    p11_dir = REPO_ROOT / "results" / "phase11"
+    runs = []
+    if p11_dir.exists():
+        for run_dir in sorted(p11_dir.glob("run_*"), reverse=True):
+            manifest_file = run_dir / "run_manifest.json"
+            if manifest_file.exists():
+                try:
+                    data = json.loads(manifest_file.read_text(encoding="utf-8"))
+                    runs.append(data)
+                except Exception:
+                    pass
+    return sanitize_payload(runs)
+
+
+@api_router.get("/agent/runs/{run_id}")
+async def get_agent_run(run_id: str):
+    validate_identifier(run_id, "run_id")
+    p11_dir = REPO_ROOT / "results" / "phase11" / run_id
+    manifest_file = p11_dir / "run_manifest.json"
+    if not manifest_file.exists():
+        raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found")
+    try:
+        data = json.loads(manifest_file.read_text(encoding="utf-8"))
+        return sanitize_payload(data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not load run manifest: {e}")
+
+
+@api_router.get("/agent/runs/{run_id}/events")
+async def stream_agent_run_events(run_id: str):
+    validate_identifier(run_id, "run_id")
+    p11_dir = REPO_ROOT / "results" / "phase11" / run_id
+    events_file = p11_dir / "events.jsonl"
+    if not events_file.exists():
+        raise HTTPException(status_code=404, detail=f"Events for run '{run_id}' not found")
+
+    async def event_generator():
+        with open(events_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    yield f"data: {line}\n\n"
+                    await asyncio.sleep(0.01)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@api_router.post("/agent/runs")
+async def start_agent_run(request: Request):
+    verify_csrf_and_origin(request)
+
+    # Check TRIPLINE_ENABLE_LIVE gate per Rule R11 / Rule R4
+    live_enabled = os.environ.get("TRIPLINE_ENABLE_LIVE", "").strip().lower() in ("1", "true", "yes")
+    if not live_enabled:
+        raise HTTPException(
+            status_code=403,
+            detail="Live agent execution is disabled. Set TRIPLINE_ENABLE_LIVE=1 in environment to enable live LLM runs."
+        )
+
+    # Check single active job concurrency
+    active = [j for j in job_manager.jobs.values() if j.status in ("pending", "running")]
+    if active:
+        raise HTTPException(status_code=409, detail="A job is already running. Please wait for it.")
+
+    # Launch agent_v2 job
+    rec = await job_manager.start_job("agent_v2", live=True)
+    return sanitize_payload(rec.to_dict())
+
+
+@api_router.post("/agent/runs/{run_id}/stop")
+async def stop_agent_run(run_id: str, request: Request):
+    verify_csrf_and_origin(request)
+    validate_identifier(run_id, "run_id")
+    from agent.safety import trigger_kill_switch
+    trigger_kill_switch()
+    return sanitize_payload({"status": "stopped", "run_id": run_id, "kill_switch": "triggered"})
+
+
+@api_router.get("/platform/status")
+async def get_platform_status():
+    key_present = bool(os.environ.get("ARMORIQ_API_KEY"))
+    if not key_present:
+        home_cred = pathlib.Path.home() / ".armoriq" / "credentials.json"
+        key_present = home_cred.exists()
+
+    live_enabled = os.environ.get("TRIPLINE_ENABLE_LIVE", "").strip().lower() in ("1", "true", "yes")
+
+    return sanitize_payload({
+        "key_present": key_present,
+        "sdk_version": "0.6.10",
+        "integration_mode": "MODE_B",
+        "mode_description": "ArmorIQ authorizes each action before Tripline's MCP executes it; calls are not proxied through the platform",
+        "registered_agent_name": "tripline-maintainer",
+        "environment": "sandbox",
+        "live_enabled": live_enabled,
+    })
+
+
+@api_router.get("/glossary")
+async def get_glossary():
+    glossary_terms = [
+        {
+            "term": "Agent",
+            "category": "Core",
+            "definition": "An autonomous software loop driven by a language model that inspects repository issues, reasons about fixes, and proposes tool actions.",
+            "source": "docs/AGENT_ARCHITECTURE.md"
+        },
+        {
+            "term": "MCP Server",
+            "category": "Protocol",
+            "definition": "Model Context Protocol server providing defined tool capabilities (file reading, issue commenting) to AI agents under strict boundary controls.",
+            "source": "docs/ARCHITECTURE.md"
+        },
+        {
+            "term": "Tool Call",
+            "category": "Execution",
+            "definition": "A structured request emitted by the language model to perform a concrete action (e.g., read_file, comment_issue).",
+            "source": "agent/real_llm.py"
+        },
+        {
+            "term": "Plan",
+            "category": "Governance",
+            "definition": "A cryptographically hashed sequence of permitted steps synthesized from trusted task goals before untrusted issue text is read.",
+            "source": "agent/planner_v2.py"
+        },
+        {
+            "term": "Intent Token",
+            "category": "ArmorIQ",
+            "definition": "A cryptographically signed token issued by ArmorIQ's Intent Authorization Proxy binding the agent to an approved plan.",
+            "source": "docs/armoriq_docs_notes.md"
+        },
+        {
+            "term": "Plan Hash",
+            "category": "ArmorIQ",
+            "definition": "Deterministic RFC 8785 canonical SHA-256 hash uniquely identifying the promised plan structure.",
+            "source": "docs/ARMORIQ_CAPABILITY_MATRIX.md"
+        },
+        {
+            "term": "Merkle Proof",
+            "category": "ArmorIQ",
+            "definition": "ArmorIQ's cryptographic proof verifying that each executed step belongs to the root of the signed plan.",
+            "source": "docs/armoriq_docs_notes.md"
+        },
+        {
+            "term": "Policy",
+            "category": "Governance",
+            "definition": "Rule set evaluated by ArmorIQ determining whether proposed actions are allowed, denied, or held for inspection.",
+            "source": "docs/armoriq_docs_notes.md"
+        },
+        {
+            "term": "Allow / Deny / Hold",
+            "category": "Decisions",
+            "definition": "Possible enforcement decisions. ALLOW executes the tool; DENY halts execution with a receipt; HOLD quarantines outbound canary hits.",
+            "source": "receipts/models.py"
+        },
+        {
+            "term": "Path Jail",
+            "category": "Tripline",
+            "definition": "In-MCP file boundary defense using canonical path resolution to prevent directory traversal and symlink escapes.",
+            "source": "mcp/common/jail.py"
+        },
+        {
+            "term": "Canary Token",
+            "category": "Tripline",
+            "definition": "A unique high-entropy token seeded into decoy files to detect prompt-injected exfiltration attempts.",
+            "source": "canary/scan.py"
+        },
+        {
+            "term": "Egress Gateway",
+            "category": "Tripline",
+            "definition": "Outbound parameter inspector that intercepts and quarantines comments or messages carrying canary tokens.",
+            "source": "canary/scan.py"
+        },
+        {
+            "term": "Witness Log",
+            "category": "Tripline",
+            "definition": "An append-only HMAC-SHA256 hash chain that cryptographically records execution counts and halts tampering.",
+            "source": "mcp/common/witness.py"
+        },
+        {
+            "term": "Incident Receipt",
+            "category": "Tripline",
+            "definition": "A canonical JSON forensic artifact signed with the witness key detailing who proposed an action, who stopped it, and why.",
+            "source": "receipts/builder.py"
+        },
+        {
+            "term": "HMAC Signature",
+            "category": "Cryptography",
+            "definition": "Symmetric HMAC-SHA256 digital signature guaranteeing the integrity and origin of incident receipts.",
+            "source": "receipts/models.py"
+        },
+        {
+            "term": "Verification",
+            "category": "Forensics",
+            "definition": "Independent cryptographic re-computation of receipt canonical hash and HMAC signature to confirm authenticity.",
+            "source": "receipts/verify.py"
+        },
+        {
+            "term": "Tamper Check",
+            "category": "Forensics",
+            "definition": "Validation mechanism proving that any unauthorized mutation of a receipt immediately breaks its signature.",
+            "source": "scripts/tamper_demo.py"
+        }
+    ]
+    return sanitize_payload({"terms": glossary_terms})
 

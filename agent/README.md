@@ -32,7 +32,7 @@ python scripts/run_agent.py --arm c --issues benign
 
 ## 5. Provider & Model Configuration
 The agent supports native REST integrations for:
-- Google Gemini (`GEMINI_API_KEY`, default model: `gemini-2.5-flash`)
+- Google Gemini (`GEMINI_API_KEY`, default model: `gemini-3.8-flash`)
 - OpenAI (`OPENAI_API_KEY`, default model: `gpt-4o-mini`)
 - Anthropic (`ANTHROPIC_API_KEY`, default model: `claude-3-5-haiku-20241022`)
 
