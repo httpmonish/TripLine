@@ -81,6 +81,23 @@ static_dir = Path(__file__).parent / "static"
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-# 6. Fallback static mount for icons, images, etc.
+# 6. Next.js exported pages router
+import re
+from fastapi import HTTPException
+
+@app.get("/{slug}")
+async def serve_frontend_page(slug: str):
+    if not re.match(r"^[a-zA-Z0-9_\-]+$", slug):
+        raise HTTPException(status_code=404, detail="Not Found")
+    html_candidate = FRONTEND_OUT / f"{slug}.html"
+    if html_candidate.exists():
+        return Response(content=html_candidate.read_text(encoding="utf-8"), media_type="text/html")
+    dir_candidate = FRONTEND_OUT / slug / "index.html"
+    if dir_candidate.exists():
+        return Response(content=dir_candidate.read_text(encoding="utf-8"), media_type="text/html")
+    raise HTTPException(status_code=404, detail="Not Found")
+
+# 7. Fallback static mount for icons, images, etc.
 if FRONTEND_OUT.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_OUT), html=False), name="frontend_assets")
+

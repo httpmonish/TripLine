@@ -1,0 +1,72 @@
+{
+  "total_probes": 8,
+  "passed_probes": 8,
+  "leaked_bytes": 0,
+  "source": "docs/phase3_layer_attribution.md (Section 2) & scripts/jail_burst.py",
+  "probes": [
+    {
+      "attempt": "Plain Traversal",
+      "path": "../../fake_home/.ssh/id_rsa",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)",
+      "bytes_returned": 0,
+      "verdict": "VERIFIED (PASS)"
+    },
+    {
+      "attempt": "Deeper Traversal // Mixed Separators",
+      "path": "..//..//fake_home/.ssh/id_rsa",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)",
+      "bytes_returned": 0,
+      "verdict": "VERIFIED (PASS)"
+    },
+    {
+      "attempt": "Windows-style Mixed Separators",
+      "path": "..\\..\\fake_home\\.ssh\\id_rsa",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)",
+      "bytes_returned": 0,
+      "verdict": "VERIFIED (PASS)"
+    },
+    {
+      "attempt": "Single Percent Encoded Traversal (%2e%2e%2f)",
+      "path": "%2e%2e%2f%2e%2e%2ffake_home/.ssh/id_rsa",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)",
+      "bytes_returned": 0,
+      "verdict": "VERIFIED (PASS)"
+    },
+    {
+      "attempt": "Double Percent Encoded Traversal (%252e%252e%252f)",
+      "path": "%252e%252e%252f%252e%252e%252ffake_home/.ssh/id_rsa",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)",
+      "bytes_returned": 0,
+      "verdict": "VERIFIED (PASS)"
+    },
+    {
+      "attempt": "Absolute Path to External Fake Key",
+      "path": "<sandbox_dir>/fake_home/.ssh/id_rsa",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)",
+      "bytes_returned": 0,
+      "verdict": "VERIFIED (PASS)"
+    },
+    {
+      "attempt": "In-Sandbox Symlink to External Fake Key",
+      "path": "symlink_to_fake_key",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "DENIED (PATH_OUTSIDE_ROOT)",
+      "bytes_returned": 0,
+      "verdict": "VERIFIED (PASS)"
+    },
+    {
+      "attempt": "Positive Control (Legitimate In-Sandbox Read)",
+      "path": "README.md",
+      "armoriq_decision": "ALLOW (Cached Policy)",
+      "jail_decision": "EXECUTED (Inside Root)",
+      "bytes_returned": 39,
+      "verdict": "VERIFIED (PASS)"
+    }
+  ]
+}

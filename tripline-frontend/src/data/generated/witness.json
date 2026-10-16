@@ -1,0 +1,10 @@
+{
+  "total_records": 71,
+  "mcp_logs": {
+    "issues-mcp.jsonl": 9,
+    "repo-mcp.jsonl": 61,
+    "tripline-mcp.jsonl": 1
+  },
+  "chain_status": "VALID",
+  "source": ".tripline/witness/"
+}

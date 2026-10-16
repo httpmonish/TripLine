@@ -96,3 +96,13 @@ Each enforcement layer operates within strict, well-defined visibility boundarie
 No security system prevents all threats, and Tripline reports its limitations with complete transparency:
 * **Obfuscated / Transformed Egress**: Tripline's egress scanner performs exact substring matching for canary tokens. If an adversarial agent transforms the token (e.g., Base64 encoding, reversing, or splitting across multiple comments), the exact substring match fails and the exfiltration is not trapped by either layer (*documented in `docs/phase3_layer_attribution.md` Section 3*).
 * **Action Replay**: Decision proofs carry a 60-second TTL. Replaying an identical valid proof within the active 60-second window is permitted by design.
+
+---
+
+## 4. Website Architecture
+
+The Tripline website is implemented in `tripline-frontend/` (aliased as `web/`):
+- **Framework**: Next.js (App Router) static export served by FastAPI unified dashboard at port 8080.
+- **Visual Design**: Alternating dark and light editorial sections, SVG architecture diagrams (D1 Hero Intercept, D2 Checkpoint Pipeline, D3 Layer Matrix, D5 Verify Strip), and restrained enterprise typography.
+- **Evidence Integrity**: All metrics, counts, hashes, and receipts are synced directly from `results/` and `docs/` at build time via `scripts/sync-data.ts`. Zero third-party network requests, zero synthetic counters.
+

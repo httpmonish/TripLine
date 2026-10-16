@@ -14,5 +14,6 @@ These files mention the terms solely to define enforcement rules, document audit
 6. **`docs/disclosure_snippets.md`**: Reference snippets documenting prompt rules.
 7. **`docs/phase5_report.md`**: Phase 5 final report summarizing the audit verification.
 8. **`docs/phase6_report.md`**: Phase 6 final report summarizing the video and wording verification.
+9. **`docs/phase10_report.md`**: Phase 10 report summarizing terminology eradication.
 
 No other code, documentation, dashboard template, or marketing text in the repository may contain these terms.

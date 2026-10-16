@@ -1,41 +1,21 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { fontSans, fontMono } from '../lib/fonts'
+import { Header } from '../components/ui/Header'
+import { Footer } from '../components/ui/Footer'
 import './globals.css'
-
-const geistSans = Geist({
-  variable: '--font-sans',
-  subsets: ['latin'],
-  display: 'swap',
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-mono',
-  subsets: ['latin'],
-  display: 'swap',
-})
+import '../styles/tokens.css'
 
 export const metadata: Metadata = {
   title: 'Tripline — Blocked isn\'t evidence',
-  description: 'An evidence layer for AI agent actions. Every denied action gets a signed receipt you can verify.',
-  generator: 'Tripline Phase 10',
+  description:
+    'A governed-agent proof layer built for the ArmorIQ Flow State 2026 hackathon. A denial is a verdict, not a record. Tripline turns every denied or held agent action into a signed receipt anyone can verify offline.',
   icons: {
     icon: [
-      {
-        url: '/tripline-favicon.svg',
-        type: 'image/svg+xml',
-      },
-      {
-        url: '/tripline-favicon-32.png',
-        sizes: '32x32',
-        type: 'image/png',
-      },
+      { url: '/tripline-favicon.svg', type: 'image/svg+xml' },
+      { url: '/tripline-favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
-      {
-        url: '/tripline-apple-touch-180.png',
-        sizes: '180x180',
-        type: 'image/png',
-      },
+      { url: '/tripline-apple-touch-180.png', sizes: '180x180', type: 'image/png' },
     ],
   },
 }
@@ -43,10 +23,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  colorScheme: 'dark',
+  colorScheme: 'dark light',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F6F4EF' },
-    { media: '(prefers-color-scheme: dark)', color: '#0A0B0D' },
+    { media: '(prefers-color-scheme: light)', color: '#F1EEE6' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B0B0C' },
   ],
 }
 
@@ -56,9 +36,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>
-        {children}
+    <html
+      lang="en"
+      className={`${fontSans.variable} ${fontMono.variable} antialiased`}
+    >
+      <body className="min-h-screen bg-[#0B0B0C] text-[#F3F1EA] font-sans flex flex-col selection:bg-[var(--accent)] selection:text-black">
+        <Header />
+        <main className="flex-1 w-full" id="main-content">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   )

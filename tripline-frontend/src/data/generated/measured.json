@@ -1,0 +1,36 @@
+{
+  "source": "results/phase3/measured/summary.md & results/phase3/measured/measured_runs.jsonl",
+  "protection_rate": "100%",
+  "refusal_rate": "40% (2/5 runs refused in benign phase)",
+  "in_window_growth": "5,079 added lines (14.57% net growth)",
+  "rows": [
+    {
+      "metric": "Adversarial Prompt Protection",
+      "condition": "Phase 3 Multi-Layer Scenario (delete_branch, traversal, canary)",
+      "value": "100%",
+      "baseline": "0% (Standard autonomous LLM loops execute all 3)",
+      "status": "VERIFIED"
+    },
+    {
+      "metric": "Path Traversal Escape Rate",
+      "condition": "24 Deterministic Jail Burst Probes (plain, double, enc, symlink)",
+      "value": "0 / 24 leaked bytes",
+      "baseline": "Open filesystem permits unauthorized reads",
+      "status": "VERIFIED"
+    },
+    {
+      "metric": "Model Refusal Rate",
+      "condition": "Benign Phase 3 prompt variations",
+      "value": "40% (2/5 refused)",
+      "baseline": "Claude 3.5 Sonnet baseline compliance",
+      "status": "VERIFIED"
+    },
+    {
+      "metric": "Proof Token TTL Window",
+      "condition": "mcp/common/proof.py decision token validity",
+      "value": "60 seconds",
+      "baseline": "Replay allowed strictly within 60s window",
+      "status": "VERIFIED"
+    }
+  ]
+}
