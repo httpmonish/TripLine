@@ -1,42 +1,48 @@
 # Tripline UI ↔ API Two-Way Coverage Matrix
 
 **Phase 9 Automated Verification Matrix**  
-**FastAPI Routes**: 50  
-**UI Elements Bound**: 30  
+**FastAPI Routes**: 58  
+**UI Elements Bound**: 36  
 **Allowed Exceptions**: 24  
 
 ## 1. Route ↔ Page ↔ Element ↔ Test ID Mapping
 
 | Method | Endpoint | UI Element Test ID | Source Component |
 |---|---|---|---|
-| GET | `/api/attribution` | `attribution-table` | `page.tsx` |
+| GET | `/api/agent/crew` | `anchor-agent-crew` | `page.tsx` |
+| GET | `/api/agent/runs` | `anchor-agent-runs` | `page.tsx` |
+| POST | `/api/agent/runs` | `btn-run-agent-live` | `page.tsx` |
+| POST | `/api/agent/runs/{id}/stop` | `btn-stop-agent-run` | `page.tsx` |
+| GET | `/api/agent/runs/{run_id}` | `anchor-agent-run-id` | `page.tsx` |
+| GET | `/api/agent/runs/{run_id}/events` | `anchor-agent-run-events` | `page.tsx` |
+| GET | `/api/attribution` | `anchor-attribution` | `page.tsx` |
 | GET | `/api/audit-links` | `btn-audit-links` | `page.tsx` |
-| GET | `/api/claims` | `claims-table` | `page.tsx` |
+| GET | `/api/claims` | `anchor-video` | `page.tsx` |
 | GET | `/api/docs` | `btn-list-docs` | `page.tsx` |
-| GET | `/api/docs/judge_qa` | `btn-doc-judge-qa` | `page.tsx` |
-| GET | `/api/docs/limitations` | `btn-doc-limitations` | `page.tsx` |
+| GET | `/api/docs/{name}` | `anchor-doc-name` | `page.tsx` |
 | GET | `/api/env` | `btn-inspect-env` | `page.tsx` |
-| GET | `/api/evidence` | `evidence-table` | `page.tsx` |
-| GET | `/api/evidence/file` | `unlabeled` | `page.tsx` |
-| GET | `/api/evidence/file` | `unlabeled` | `page.tsx` |
+| GET | `/api/evidence` | `anchor-evidence` | `page.tsx` |
+| GET | `/api/evidence/file` | `anchor-evidence-file` | `page.tsx` |
+| GET | `/api/glossary` | `anchor-glossary` | `page.tsx` |
 | GET | `/api/jail-burst` | `btn-refresh-burst` | `page.tsx` |
 | POST | `/api/jobs` | `btn-start-job` | `page.tsx` |
 | POST | `/api/jobs/{id}/cancel` | `btn-cancel-job` | `page.tsx` |
-| GET | `/api/jobs/{job_id}` | `unlabeled` | `page.tsx` |
-| GET | `/api/jobs/{job_id}/events` | `unlabeled` | `page.tsx` |
-| GET | `/api/measured` | `measured-table` | `page.tsx` |
-| GET | `/api/platform-checklist` | `platform-table` | `page.tsx` |
+| GET | `/api/jobs/{job_id}` | `anchor-job-id` | `page.tsx` |
+| GET | `/api/jobs/{job_id}/events` | `anchor-job-events` | `page.tsx` |
+| GET | `/api/measured` | `anchor-measured` | `page.tsx` |
+| GET | `/api/platform-checklist` | `anchor-platform` | `page.tsx` |
+| GET | `/api/platform/status` | `anchor-platform-status` | `page.tsx` |
 | GET | `/api/receipts` | `btn-refresh-receipts` | `page.tsx` |
-| GET | `/api/receipts/{id}` | `unlabeled` | `page.tsx` |
-| POST | `/api/receipts/{id}/tamper-check` | `btn-tamper-receipt` | `page.tsx` |
-| POST | `/api/receipts/{id}/verify` | `btn-verify-receipt` | `page.tsx` |
+| GET | `/api/receipts` | `btn-tour-verify` | `page.tsx` |
+| GET | `/api/receipts/{identifier}` | `anchor-receipt-id` | `page.tsx` |
+| POST | `/api/receipts/{identifier}/tamper-check` | `btn-tamper-receipt` | `page.tsx` |
+| POST | `/api/receipts/{identifier}/verify` | `btn-verify-receipt` | `page.tsx` |
 | GET | `/api/runs` | `btn-refresh-runs` | `page.tsx` |
 | GET | `/api/runs/latest` | `btn-load-latest-run` | `page.tsx` |
-| GET | `/api/runs/{run_id}` | `select-active-run` | `page.tsx` |
+| GET | `/api/runs/{run_id}` | `btn-list-docs` | `page.tsx` |
 | GET | `/api/runs/{run_id}/transcript` | `btn-view-run-transcript` | `page.tsx` |
-| GET | `/api/video` | `demo-video-player` | `page.tsx` |
-| GET | `/api/video` | `btn-download-video` | `page.tsx` |
-| GET | `/api/witness` | `witness-logs-table` | `page.tsx` |
+| GET | `/api/video` | `anchor-video` | `page.tsx` |
+| GET | `/api/witness` | `anchor-witness` | `page.tsx` |
 | POST | `/api/witness/tamper-check` | `btn-tamper-witness` | `page.tsx` |
 | POST | `/api/witness/verify` | `btn-verify-witness` | `page.tsx` |
 

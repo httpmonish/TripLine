@@ -49,3 +49,15 @@
 | **D6 (Enforcement Mode)** | "local/sdk (SessionOptions mode='sdk')" | "ArmorIQ SDK local policy check (mode='sdk')" | Evidence from recorded runs shows SDK mode local evaluation. |
 | **D10 (Model Identifier)** | Hardcoded environment provider | Data-driven model extraction from active run evidence / manifest | UI binds to `model_id` of active run (`M2 forced-compliance stubs` or active LLM). |
 
+---
+
+## 4. Phase 11 (Governed Agent & Start Page) Claims Audit
+
+| ID | Exact Claim Text | Source Document & Location | Re-verified Evidence Path | Status | Action Taken |
+|---|---|---|---|---|---|
+| **CLM-19** | Phase 11 Governed Agent runs in **MODE B** ("ArmorIQ authorizes each action before Tripline's MCP executes it; calls are not proxied through the platform"). | `docs/ARMORIQ_INTEGRATION_MODE.md`, `agent/core_v2.py`, `dashboard/api.py` | `docs/ARMORIQ_INTEGRATION_MODE.md` | **VERIFIED** | Publicly stated on Start Page hero, Agent Page, and API `/api/platform/status`. |
+| **CLM-20** | Agent Crew employs scoped delegation with ephemeral Ed25519 keypairs (`reader`, `responder`) generated in-memory per run; private keys never touch disk. | `agent/crew.py`, `tests/test_agent_v2.py` | `agent/crew.py` line 34, `tests/test_agent_v2.py::test_crew_delegation_and_keys` | **VERIFIED** | Inspected live via `/api/agent/crew` and `/agent`. |
+| **CLM-21** | Trusted pre-ingestion plan builder mints canonical plan hash and Merkle root before reading untrusted issue bodies; `delete_branch` is unconditionally forbidden. | `agent/planner_v2.py`, `agent/plan_token.py` | `tests/test_agent_v2.py::test_plan_built_before_untrusted_text_is_read` | **VERIFIED** | Sealed inside run manifest. |
+| **CLM-22** | Typed event stream (`events.jsonl` + in-process SSE bus) emits `agent_started`, `plan_minted`, `delegated`, `tool_proposed`, `action_executed`, `action_denied`, `action_held`, `receipt_emitted`. | `agent/events.py`, `dashboard/api.py` | `tests/test_agent_v2.py::test_event_stream_emission`, `/api/agent/runs/{id}/events` | **VERIFIED** | Live/replay timeline viewable on Start Page & Agent Page. |
+
+

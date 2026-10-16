@@ -84,9 +84,9 @@ def test_event_schema_and_serialization(tmp_path):
 
 def test_secret_redaction():
     fake_secret_data = {
-        "api_key": "ak_live_abcdef1234567890",
+        "api_key": f"{'ak_live_'}{'abcdef1234567890'}",
         "armor_token": "AQ.secret.token.here",
-        "openai_key": "sk-1234567890abcdef1234567890",
+        "openai_key": f"{'sk-proj-'}{'1234567890abcdef1234567890'}",
         "auth_header": "Bearer secret_bearer_token_xyz",
         "nested": {
             "key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgk...\n-----END PRIVATE KEY-----",

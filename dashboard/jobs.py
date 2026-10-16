@@ -73,6 +73,13 @@ JOB_KINDS: Dict[str, Dict[str, Any]] = {
         "side_effects": "Scans repository truth, forbidden wording, and secret hygiene",
         "cmd": [sys.executable, "scripts/repo_audit.py"],
     },
+    "agent_v2": {
+        "live": True,
+        "cost_estimate": "$0.00 (Mode B local execution + session check)",
+        "timeout": 120,
+        "side_effects": "Executes 5-issue queue through Agent v2 pipeline, generating receipts under results/phase11/",
+        "cmd": [sys.executable, "scripts/run_agent_v2.py", "--mode", "B"],
+    },
 }
 
 

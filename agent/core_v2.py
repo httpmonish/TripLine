@@ -70,7 +70,7 @@ class TriplineAgentV2:
     ):
         self.mode = mode
         self.identity = AgentIdentity.load(user_email_override=user_email)
-        self.model_name = model_name or os.environ.get("TRIPLINE_MODEL", "gemini-2.5-flash")
+        self.model_name = model_name or os.environ.get("TRIPLINE_MODEL", "gemini-3.8-flash")
         self.output_dir = output_dir or (REPO_ROOT / "results" / "phase11")
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.armoriq_client = armoriq_client

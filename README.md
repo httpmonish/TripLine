@@ -71,27 +71,31 @@ Untrusted Input ──> LLM Agent ──> [1] ArmorIQ Platform Gate ──> [2] 
 
 ---
 
-## 🤖 The Autonomous AI Agent
+## 🤖 Governed AI Agent & Scoped Delegation (Phase 11)
 
-Tripline incorporates an autonomous repository triage agent (`agent/triage_loop.py` & `agent/loop.py`) fulfilling the compulsory AI agent hackathon requirement:
-* **LLM Engine**: Provider-agnostic client (`agent/real_llm.py`) with automatic key discovery:
-  * Google Gemini (`GEMINI_API_KEY`)
-  * Anthropic Claude (`ANTHROPIC_API_KEY`)
-  * OpenAI (`OPENAI_API_KEY`)
-* **Tool Palette**: 6 MCP tools declared in agent plan:
-  * `list_issues`: Lists open repository issues.
-  * `read_issue`: Fetches issue body and untrusted comments.
-  * `read_file`: Reads repository code files (contained by in-MCP Path Jail).
-  * `comment_issue`: Posts triage findings (contained by Egress Canary Gateway).
-  * `label_issue`: Applies status labels to repository issues.
-  * `delete_branch`: Destructive maintenance operation (blocked upstream by ArmorIQ allowlist policy).
-* **The Execution Loop**:
-  1. **Ingest & Provenance**: Inbound issues are parsed, normalized, content-hashed, and assigned trust tier `T1` or `T3` (`provenance/ledger.py`).
-  2. **Plan & Token**: Agent formulates an initial execution plan and mints a session token via ArmorIQ SDK (`session.start_plan()`).
-  3. **Step Proposal**: Model proposes a tool call.
-  4. **ArmorIQ Evaluation**: Agent requests real-time authorization via `session.check(tool_name, tool_args)`.
-  5. **Downstream Containment**: If ArmorIQ allows, Tripline evaluates Path Jail (`canonicalize_path`) and Egress Canary Scanner (`scan_egress_payload`).
-  6. **Witness Record**: Every execution or denial appends to an HMAC hash chain (`.tripline/witness/`), generating a signed incident receipt if blocked.
+Tripline implements a full-fledged governed agent architecture (`agent/` & `scripts/run_agent_v2.py`) operating under **MODE B**:
+> *"ArmorIQ authorizes each action before Tripline's MCP executes it; calls are not proxied through the platform."*  
+> (See [`docs/ARMORIQ_INTEGRATION_MODE.md`](file:///Users/themonishnawaz/tripline/docs/ARMORIQ_INTEGRATION_MODE.md))
+
+### Agent Crew & Scoped Delegation
+* **Orchestrator (`tripline-maintainer`)**: Owns the parent plan and coordinates triage execution. Plans are minted *before* untrusted issue text is ingested; `delete_branch` is unconditionally forbidden.
+* **Sub-Agent `reader`**: Scoped strictly to inspection (`list_issues`, `read_issue`, `read_file`, `list_dir`). Granted an ephemeral in-memory Ed25519 keypair at run start; cannot comment or mutate repository state.
+* **Sub-Agent `responder`**: Scoped strictly to triage findings (`comment_issue`, `label_issue`). Granted a disjoint ephemeral in-memory Ed25519 keypair; cannot read filesystem files.
+* **User Attribution**: Every proposed action carries explicit user attribution (`sandbox-maintainer@example.invalid`).
+* **Typed SSE Event Stream**: Emits real-time typed events (`agent_started`, `plan_minted`, `delegated`, `tool_proposed`, `action_executed`, `action_denied`, `action_held`, `receipt_emitted`) over `/api/agent/runs/{id}/events`.
+
+#### Running the Governed Agent
+```bash
+# Execute Phase 11 autonomous triage loop (5 issues, 3 multi-layer attacks)
+make agent
+
+# Inspect crew, delegated keys, and live/replay execution stream
+# Start backend and Next.js frontend:
+python server.py          # Port 8000
+# In a second terminal:
+cd tripline-frontend && npm run dev   # Port 3000
+# Visit http://localhost:3000 (Start Page) or http://localhost:3000/agent (Agent Portal)
+```
 
 #### Real Execution Transcript Excerpt (Secrets Redacted)
 ```json

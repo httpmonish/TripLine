@@ -118,7 +118,7 @@ def detect_provider() -> Tuple[str, str, str]:
     """
     gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if gemini_key:
-        return "gemini", gemini_key, os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+        return "gemini", gemini_key, os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
 
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     if anthropic_key:
@@ -333,15 +333,23 @@ class RealLLMClient:
             "generation_config": {"temperature": temperature},
         }
 
-        with httpx.Client(timeout=45.0) as client:
-            resp = client.post(
-                endpoint,
-                headers={"Content-Type": "application/json"},
-                json=payload,
-            )
-            if resp.status_code != 200:
-                raise RuntimeError(f"Gemini API error {resp.status_code}: {resp.text}")
-            raw_data = resp.json()
+        import time
+        raw_data = None
+        for attempt in range(4):
+            with httpx.Client(timeout=45.0) as client:
+                resp = client.post(
+                    endpoint,
+                    headers={"Content-Type": "application/json"},
+                    json=payload,
+                )
+                if resp.status_code == 200:
+                    raw_data = resp.json()
+                    break
+                elif resp.status_code in (429, 503) and attempt < 3:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+                else:
+                    raise RuntimeError(f"Gemini API error {resp.status_code}: {resp.text}")
 
         text_content = ""
         tool_calls = []
