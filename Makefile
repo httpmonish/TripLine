@@ -1,9 +1,12 @@
-.PHONY: brand phase10 phase11 test dashboard dashboard-build dashboard-legacy ui ui-coverage bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof audit tamper burst clean wow video
+.PHONY: agent brand phase10 phase11 test dashboard dashboard-build dashboard-legacy ui ui-coverage bench-small bench bench-report bench-test phase12 harden demo demo-check phase13 demo-prep verify explain pipeline test-armoriq proof audit tamper burst clean wow video
 
 VENV ?= .venv313
 PYTHON ?= $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,$(if $(wildcard .venv/bin/python),.venv/bin/python,python3))
 PYTEST ?= $(if $(wildcard $(VENV)/bin/pytest),$(VENV)/bin/pytest,$(if $(wildcard .venv/bin/pytest),.venv/bin/pytest,pytest))
 UVICORN ?= $(if $(wildcard $(VENV)/bin/uvicorn),$(VENV)/bin/uvicorn,$(if $(wildcard .venv/bin/uvicorn),.venv/bin/uvicorn,uvicorn))
+
+agent:
+	PYTHONPATH=. $(PYTHON) scripts/run_agent_v2.py --issues fixtures/phase3/issues.json --mode B
 
 test:
 	PYTHONPATH=. $(PYTEST) tests/ --ignore=tests/test_phase11_benchmark.py -v
