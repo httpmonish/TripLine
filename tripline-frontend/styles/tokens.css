@@ -1,64 +1,122 @@
 :root {
-  /* Dark Section Tokens */
-  --bg-dark: #0B0B0C;
-  --surface-dark: #141416;
-  --surface-dark-2: #1B1B1E;
-  --border-dark: #2A2A2E;
-  --text-on-dark: #F3F1EA;
-  --text-muted-on-dark: #9A9AA2;
-  --text-faint-on-dark: #6B6B73;
+  /* =========================================================================
+     TRIPLINE SILVER ENTERPRISE DESIGN TOKENS
+     Reference: Palantir Multimodal Data Plane & Warp Speed visual design
+     ========================================================================= */
 
-  /* Light Section Tokens (warm paper) */
-  --bg-light: #F1EEE6;
-  --surface-light: #FAF8F3;
-  --border-light: #D8D3C6;
-  --text-on-light: #131313;
-  --text-muted-on-light: #5C5951;
-  --text-faint-on-light: #8A867B;
+  /* Surfaces — Clean Silver / White / Graphite Canvas */
+  --bg-main: #F4F5F6;
+  --bg-surface: #FFFFFF;
+  --bg-surface-elevated: #EAEDF0;
+  --bg-surface-subtle: #F0F2F4;
+  --border-neutral: #CDD2D8;
+  --border-subtle: #DEE2E6;
+  --border-focus: #65BCE7;
 
-  /* Accent Tokens */
-  --accent: #FF4F1A;
-  --accent-hover: #E8430F;
-  --accent-soft-on-dark: rgba(255, 79, 26, 0.14);
-  --accent-soft-on-light: rgba(255, 79, 26, 0.10);
+  /* Typography — High-Contrast Charcoal & Graphite */
+  --text-primary: #20252B;
+  --text-secondary: #59636E;
+  --text-muted: #747F8D;
+  --text-faint: #9EA8B6;
 
-  /* Security State Tokens */
-  --state-allow: #2FBF71;
-  --state-deny: #E5484D;
-  --state-hold: #F5A524;
-  --state-evaluating: #4C8DFF;
-  --state-verified: #2FBF71;
-  --state-tamper: #E5484D;
-  --state-idle: #6B6B73;
+  /* Restrained Signal Accents (Electric Cyan / Restrained Violet) */
+  --accent: #20252B;
+  --accent-blue: #65BCE7;
+  --accent-violet: #9A8AE7;
+  --accent-hover: #2D3136;
+  --accent-soft: rgba(101, 188, 231, 0.08);
+  --accent-border: rgba(101, 188, 231, 0.25);
+  --accent-light: #EBF7FC;
+
+  /* Architecture Diagram Canvas (Cinematic Dark Graphite Wafer) */
+  --diagram-bg: #181B20;
+  --diagram-surface: #24272B;
+  --diagram-platform: #2D3136;
+  --diagram-linework: #70767D;
+  --diagram-grid: rgba(112, 118, 125, 0.15);
+  --diagram-active: #65BCE7;
+
+  /* Security State Tokens (Accessible Green, Red strictly for Denials/Failures) */
+  --state-allow: #10B981;
+  --state-allow-bg: #ECFDF5;
+  --state-allow-border: #A7F3D0;
+
+  --state-deny: #EF4444;
+  --state-deny-bg: #FEF2F2;
+  --state-deny-border: #FECACA;
+
+  --state-hold: #F59E0B;
+  --state-hold-bg: #FFFBEB;
+  --state-hold-border: #FDE68A;
+
+  --state-not-reached: #747F8D;
+  --state-not-reached-bg: #F1F3F5;
+  --state-not-reached-border: #E2E6EA;
+
+  /* Backward Compatibility Tokens for supporting views */
+  --bg-dark: #181B20;
+  --surface-dark: #24272B;
+  --surface-dark-2: #2D3136;
+  --border-dark: #3F444D;
+  --text-on-dark: #F4F5F6;
+  --text-muted-on-dark: #9EA8B6;
+  --text-faint-on-dark: #747F8D;
+
+  --bg-light: #F4F5F6;
+  --surface-light: #FFFFFF;
+  --border-light: #CDD2D8;
+  --text-on-light: #20252B;
+  --text-muted-on-light: #59636E;
+  --text-faint-on-light: #747F8D;
 
   /* Radii */
-  --radius-badge: 2px;
-  --radius-card: 4px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
   --radius-pill: 9999px;
 
-  /* Easing */
-  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
-  --duration-hover: 160ms;
-  --duration-reveal: 320ms;
-  --duration-state: 600ms;
-  --duration-draw: 900ms;
+  /* Transitions */
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 240ms;
 }
 
 /* Base Utility Classes */
-.bg-dark-section {
-  background-color: var(--bg-dark);
-  color: var(--text-on-dark);
+.bg-enterprise-main {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
 }
 
-.bg-light-section {
-  background-color: var(--bg-light);
-  color: var(--text-on-light);
+.bg-enterprise-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-neutral);
+}
+
+.bg-diagram-canvas {
+  background-color: var(--diagram-bg);
+  border: 1px solid #2D3136;
 }
 
 .focus-ring {
   outline: none;
 }
 .focus-ring:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
+}
+
+/* Scrollbar Styling for Enterprise Panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CDD2D8;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9EA8B6;
 }

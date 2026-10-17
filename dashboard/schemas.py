@@ -301,3 +301,38 @@ class PlatformChecklistResponse(BaseModel):
     platform_url: str
     agent_id: str
     items: List[PlatformChecklistItem]
+
+
+# ── REA Investigation Schemas ────────────────────────────────────────────────
+
+class REATargetItem(BaseModel):
+    id: str
+    description: str
+    path: str
+    preapproved: bool
+
+
+class REATargetsResponse(BaseModel):
+    targets: List[REATargetItem]
+
+
+class REAInvestigationSummary(BaseModel):
+    run_id: str
+    target_id: Optional[str] = None
+    timestamp: Optional[str] = None
+    operation: Optional[str] = None
+    auth_decision: Optional[str] = None
+    dispatch_status: Optional[str] = None
+    verification_status: Optional[str] = None
+    receipt_id: Optional[str] = None
+    has_report: bool = False
+    evidence_count: int = 0
+
+
+class REAInvestigationDetail(BaseModel):
+    run_id: str
+    target_id: Optional[str] = None
+    report: Optional[Dict[str, Any]] = None
+    receipt: Optional[Dict[str, Any]] = None
+    report_markdown: Optional[str] = None
+

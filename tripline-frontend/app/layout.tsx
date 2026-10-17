@@ -40,7 +40,7 @@ export default function RootLayout({
       lang="en"
       className={`${fontSans.variable} ${fontMono.variable} antialiased`}
     >
-      <body className="min-h-screen bg-[#0B0B0C] text-[#F3F1EA] font-sans flex flex-col selection:bg-[var(--accent)] selection:text-black">
+      <body className="min-h-screen bg-[#F4F5F6] text-[#20252B] font-sans flex flex-col selection:bg-[#65BCE7]/20 selection:text-[#20252B]">
         <Header />
         <main className="flex-1 w-full" id="main-content">
           {children}

@@ -59,6 +59,10 @@ from dashboard.schemas import (
     WitnessSummaryResponse,
     WitnessTamperResponse,
     WitnessVerifyResponse,
+    REATargetItem,
+    REATargetsResponse,
+    REAInvestigationSummary,
+    REAInvestigationDetail,
 )
 from dashboard.security import (
     get_process_csrf_token,
@@ -1408,7 +1412,7 @@ async def start_agent_run(request: Request):
         raise HTTPException(status_code=409, detail="A job is already running. Please wait for it.")
 
     # Launch agent_v2 job
-    rec = await job_manager.start_job("agent_v2", live=True)
+    rec = await job_manager.start_job("agent_v2", live=True, confirm_token="CONFIRMED_LIVE_EXECUTION")
     return sanitize_payload(rec.to_dict())
 
 
@@ -1548,4 +1552,135 @@ async def get_glossary():
         }
     ]
     return sanitize_payload({"terms": glossary_terms})
+
+
+# ── 11. REA (Reverse Engineer Anything) Investigation Endpoints ───────────────
+
+@api_router.get("/rea/targets", response_model=REATargetsResponse)
+async def get_rea_targets():
+    """Returns preapproved target list confined to controlled analysis root."""
+    from agent.rea_adapter import APPROVED_TARGET_REGISTRY, CONTROLLED_ANALYSIS_ROOT
+    targets: List[REATargetItem] = []
+    seen = set()
+    for tid, path in APPROVED_TARGET_REGISTRY.items():
+        if tid in seen:
+            continue
+        seen.add(tid)
+        rel_path = str(path.relative_to(REPO_ROOT)) if str(path).startswith(str(REPO_ROOT)) else str(path)
+        targets.append(
+            REATargetItem(
+                id=tid,
+                description="Preapproved synthetic Electron/JS application with IPC handlers and token verification logic for static reverse engineering",
+                path=rel_path,
+                preapproved=True,
+            )
+        )
+    return REATargetsResponse(targets=targets)
+
+
+@api_router.get("/rea/investigations", response_model=List[REAInvestigationSummary])
+async def list_rea_investigations():
+    """Lists completed REA investigation packages under investigations/."""
+    inv_dir = REPO_ROOT / "investigations"
+    summaries: List[REAInvestigationSummary] = []
+    if not inv_dir.exists():
+        return summaries
+
+    for d in sorted(inv_dir.glob("inv-*"), reverse=True):
+        if not d.is_dir():
+            continue
+        run_id = d.name
+        receipt_file = d / "receipt.json"
+        report_file = d / "report.json"
+
+        target_id = None
+        timestamp = None
+        operation = None
+        auth_decision = None
+        dispatch_status = None
+        verification_status = None
+        receipt_id = None
+        evidence_count = 0
+
+        if receipt_file.exists():
+            try:
+                rcpt_data = json.loads(receipt_file.read_text(encoding="utf-8"))
+                receipt_id = rcpt_data.get("receipt_id")
+                target_id = rcpt_data.get("target_id")
+                timestamp = rcpt_data.get("timestamp_utc")
+                operation = rcpt_data.get("operation")
+                auth_decision = rcpt_data.get("authorization_decision")
+                dispatch_status = rcpt_data.get("dispatch_status")
+                verification_status = rcpt_data.get("verification_status")
+                evidence_count = len(rcpt_data.get("evidence_refs", []))
+            except Exception:
+                pass
+
+        summaries.append(
+            REAInvestigationSummary(
+                run_id=run_id,
+                target_id=target_id,
+                timestamp=timestamp,
+                operation=operation,
+                auth_decision=auth_decision,
+                dispatch_status=dispatch_status,
+                verification_status=verification_status,
+                receipt_id=receipt_id,
+                has_report=report_file.exists(),
+                evidence_count=evidence_count,
+            )
+        )
+
+    return summaries
+
+
+@api_router.get("/rea/investigations/{run_id}", response_model=REAInvestigationDetail)
+async def get_rea_investigation(run_id: str):
+    """Returns detailed findings, markdown report, and receipt for a specific investigation."""
+    validate_identifier(run_id, "run_id")
+    target_dir = REPO_ROOT / "investigations" / run_id
+    if not target_dir.exists() or not target_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"Investigation '{run_id}' not found")
+
+    report_data = None
+    receipt_data = None
+    report_md = None
+
+    report_json_path = target_dir / "report.json"
+    if report_json_path.exists():
+        try:
+            report_data = json.loads(report_json_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    receipt_json_path = target_dir / "receipt.json"
+    if receipt_json_path.exists():
+        try:
+            receipt_data = json.loads(receipt_json_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    report_md_path = target_dir / "report.md"
+    if report_md_path.exists():
+        try:
+            # Safe read up to 64KB for viewer display
+            report_md = report_md_path.read_text(encoding="utf-8")[:65536]
+        except Exception:
+            pass
+
+    target_id = None
+    if receipt_data:
+        target_id = receipt_data.get("target_id")
+    elif report_data:
+        target_id = report_data.get("target_id")
+
+    return sanitize_payload(
+        REAInvestigationDetail(
+            run_id=run_id,
+            target_id=target_id,
+            report=report_data,
+            receipt=receipt_data,
+            report_markdown=report_md,
+        ).model_dump()
+    )
 

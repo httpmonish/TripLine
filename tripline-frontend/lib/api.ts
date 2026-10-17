@@ -61,6 +61,40 @@ export interface RunDetail {
   receipt?: any
 }
 
+export type ExecutionMode = 'LIVE' | 'PROOF_JOB' | 'RECORDED_REPLAY'
+export type AuthorizationVerdict = 'ALLOW' | 'DENY' | 'UNAVAILABLE' | 'ERROR' | 'NOT_REACHED'
+export type TripLineVerdict = 'ALLOW' | 'PATH_JAIL_DENIAL' | 'CANARY_HOLD' | 'NOT_REACHED'
+export type DispatchState = 'NOT_DISPATCHED' | 'DISPATCHED_TO_TOOL' | 'FAILED'
+export type EvidenceStatus = 'UNAVAILABLE' | 'UNVERIFIED' | 'VERIFIED' | 'TAMPER_DETECTED'
+
+export interface NormalizedExecutionState {
+  mode: ExecutionMode
+  jobId: string | null
+  runId: string | null
+  currentEvent: string | null
+  actionProposal: {
+    tool: string
+    args?: Record<string, any>
+    rawCall?: string
+  } | null
+  armorIQVerdict: AuthorizationVerdict
+  armorIQReason?: string
+  tripLineVerdict: TripLineVerdict
+  tripLineReason?: string
+  dispatchState: DispatchState
+  toolOutcome?: {
+    exitCode?: number
+    outputSnippet?: string
+    error?: string
+  }
+  receiptId: string | null
+  canonicalHash: string | null
+  evidenceStatus: EvidenceStatus
+  verificationReason?: string
+  finalState: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'HALTED' | 'FAILED'
+  errorReason?: string
+}
+
 export interface RunTranscript {
   run_id: string
   transcript: string | null
@@ -127,7 +161,7 @@ export interface AuditLinkEntry {
 }
 
 export interface AuditLinksResponse {
-  valid: bool
+  valid: boolean
   chain_length: number
   reason: string
   links: AuditLinkEntry[]
@@ -258,6 +292,108 @@ export interface PlatformChecklistResponse {
   items: PlatformChecklistItem[]
 }
 
+export interface SubAgentInfo {
+  name: string
+  role: string
+  allowed_tools: string[]
+  public_key_hex: string
+  authority: string
+}
+
+export interface OrchestratorInfo {
+  name: string
+  model: string
+  authority: string
+  system_prompt?: string
+}
+
+export interface AgentCrewManifest {
+  orchestrator: OrchestratorInfo
+  sub_agents: SubAgentInfo[]
+}
+
+export interface AgentRunManifest {
+  run_id: string
+  model: string
+  mode: string
+  user_email?: string
+  plan_hash?: string
+  merkle_root?: string
+  receipts?: any[]
+  issues?: any[]
+  events?: any[]
+  started_at?: string
+  finished_at?: string
+  status?: string
+  counts?: {
+    total_issues?: number
+    proposals_allowed?: number
+    proposals_denied?: number
+    denied_by_armoriq?: number
+    denied_by_jail?: number
+    held_by_egress?: number
+    executed?: number
+    [key: string]: any
+  }
+}
+
+export interface AgentRunEvent {
+  event_type: string
+  source: string
+  timestamp?: string
+  data?: Record<string, any>
+  [key: string]: any
+}
+
+export interface PlatformStatus {
+  key_present: boolean
+  sdk_version: string
+  integration_mode: string
+  mode_description: string
+  registered_agent_name: string
+  environment: string
+  live_enabled: boolean
+}
+
+export interface GlossaryTerm {
+  term: string
+  category: string
+  definition: string
+  source: string
+}
+
+export interface REATargetItem {
+  id: string
+  description: string
+  path: string
+  preapproved: boolean
+}
+
+export interface REATargetsResponse {
+  targets: REATargetItem[]
+}
+
+export interface REAInvestigationSummary {
+  run_id: string
+  target_id?: string | null
+  timestamp?: string | null
+  operation?: string | null
+  auth_decision?: string | null
+  dispatch_status?: string | null
+  verification_status?: string | null
+  receipt_id?: string | null
+  has_report: boolean
+  evidence_count: number
+}
+
+export interface REAInvestigationDetail {
+  run_id: string
+  target_id?: string | null
+  report?: Record<string, any> | null
+  receipt?: Record<string, any> | null
+  report_markdown?: string | null
+}
+
 let cachedCsrfToken: string | null = null
 
 async function getCsrfToken(): Promise<string> {
@@ -283,6 +419,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const token = await getCsrfToken()
     if (token) {
       headers.set('X-CSRF-Token', token)
+    }
+    // Set origin for security verification in browser context
+    if (typeof window !== 'undefined' && window.location.origin) {
+      headers.set('origin', window.location.origin)
     }
   }
 
@@ -339,4 +479,85 @@ export const api = {
   getClaims: () => request<ClaimsLedgerResponse>('/api/claims'),
   getPlatformChecklist: () => request<PlatformChecklistResponse>('/api/platform-checklist'),
   getSummary: () => request<Record<string, any>>('/api/summary'),
+
+  // Agent & Platform Governance Endpoints
+  getAgentCrew: () => request<AgentCrewManifest>('/api/agent/crew'),
+  getAgentRuns: () => request<AgentRunManifest[]>('/api/agent/runs'),
+  getAgentRun: (runId: string) => request<AgentRunManifest>(`/api/agent/runs/${encodeURIComponent(runId)}`),
+  startAgentRun: () => request<JobRecord>('/api/agent/runs', { method: 'POST' }),
+  stopAgentRun: (runId: string) =>
+    request<{ status: string; run_id: string; kill_switch: string }>(
+      `/api/agent/runs/${encodeURIComponent(runId)}/stop`,
+      { method: 'POST' }
+    ),
+  getPlatformStatus: () => request<PlatformStatus>('/api/platform/status'),
+  getGlossary: () => request<{ terms: GlossaryTerm[] }>('/api/glossary'),
+
+  // REA Reverse Engineering Endpoints
+  getReaTargets: () => request<REATargetsResponse>('/api/rea/targets'),
+  getReaInvestigations: () => request<REAInvestigationSummary[]>('/api/rea/investigations'),
+  getReaInvestigation: (runId: string) =>
+    request<REAInvestigationDetail>(`/api/rea/investigations/${encodeURIComponent(runId)}`),
+  startReaInvestigation: (target: string = 'synthetic-electron-app', tool: string = 'analyze_electron_app') =>
+    request<JobRecord>('/api/jobs', {
+      method: 'POST',
+      body: JSON.stringify({
+        kind: 'rea_investigate',
+        params: { target, tool },
+      }),
+    }),
 }
+
+/**
+ * Clean SSE subscription helper for Live Job logs
+ */
+export function subscribeToJobEvents(
+  jobId: string,
+  onEvent: (event: { line?: string; status?: string; job_id?: string; done?: boolean; exit_code?: number; error?: string }) => void,
+  onError?: (err: any) => void
+): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const sse = new EventSource(`/api/jobs/${encodeURIComponent(jobId)}/events`)
+  sse.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data)
+      onEvent(data)
+      if (data.done) {
+        sse.close()
+      }
+    } catch (err) {
+      if (onError) onError(err)
+    }
+  }
+  sse.onerror = (e) => {
+    if (onError) onError(e)
+    sse.close()
+  }
+  return () => sse.close()
+}
+
+/**
+ * Clean SSE subscription helper for Recorded Agent Run events
+ */
+export function subscribeToAgentRunEvents(
+  runId: string,
+  onEvent: (event: AgentRunEvent) => void,
+  onError?: (err: any) => void
+): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const sse = new EventSource(`/api/agent/runs/${encodeURIComponent(runId)}/events`)
+  sse.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data)
+      onEvent(data)
+    } catch (err) {
+      if (onError) onError(err)
+    }
+  }
+  sse.onerror = (e) => {
+    if (onError) onError(e)
+    sse.close()
+  }
+  return () => sse.close()
+}
+

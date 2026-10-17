@@ -53,7 +53,7 @@ async def custom_method_not_allowed(request: Request, exc):
 app.include_router(api_router)
 
 # 2. Root endpoint: Serves Next.js single-page application at /
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def serve_root(request: Request):
     # In test_honest_empty_state, legacy repo is monkeypatched to tmp_path
     import dashboard.routes as d_routes
@@ -67,26 +67,12 @@ async def serve_root(request: Request):
         return Response(content=index_html.read_text(encoding="utf-8"), media_type="text/html")
     return await legacy_index(request)
 
-# 3. Legacy router (for backward compatibility on /receipts, /attribution, /measured, /about)
-app.include_router(legacy_router)
-
-
-# 4. Next.js static asset chunk mounts
-next_static_dir = FRONTEND_OUT / "_next"
-if next_static_dir.exists():
-    app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
-
-# 5. Local static folder
-static_dir = Path(__file__).parent / "static"
-if static_dir.exists():
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
-# 6. Next.js exported pages router
+# 3. Next.js exported pages router (Takes precedence over legacy views for exported pages)
 import re
 from fastapi import HTTPException
 
-@app.get("/{slug}")
-async def serve_frontend_page(slug: str):
+@app.api_route("/{slug}", methods=["GET", "HEAD"])
+async def serve_frontend_page(slug: str, request: Request):
     if not re.match(r"^[a-zA-Z0-9_\-]+$", slug):
         raise HTTPException(status_code=404, detail="Not Found")
     html_candidate = FRONTEND_OUT / f"{slug}.html"
@@ -95,7 +81,33 @@ async def serve_frontend_page(slug: str):
     dir_candidate = FRONTEND_OUT / slug / "index.html"
     if dir_candidate.exists():
         return Response(content=dir_candidate.read_text(encoding="utf-8"), media_type="text/html")
+
+    # If no Next.js page matches, check legacy views (e.g. /boundary, /scoreboard, /about)
+    legacy_handlers = {
+        "boundary": "boundary_view",
+        "scoreboard": "scoreboard_view",
+        "about": "about_view",
+    }
+    if slug in legacy_handlers:
+        import dashboard.routes as d_routes
+        handler = getattr(d_routes, legacy_handlers[slug], None)
+        if handler:
+            return await handler(request)
+
     raise HTTPException(status_code=404, detail="Not Found")
+
+# 4. Legacy router (for backward compatibility on detail routes like /receipts/{id}, /runs/{id})
+app.include_router(legacy_router)
+
+# 5. Next.js static asset chunk mounts
+next_static_dir = FRONTEND_OUT / "_next"
+if next_static_dir.exists():
+    app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
+
+# 6. Local static folder
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # 7. Fallback static mount for icons, images, etc.
 if FRONTEND_OUT.exists():

@@ -25,8 +25,8 @@ export function Section({
   const isDark = tone === 'dark'
 
   const toneClasses = isDark
-    ? 'bg-[#0B0B0C] text-[#F3F1EA] border-[var(--border-dark)]'
-    : 'bg-[#F1EEE6] text-[#131313] border-[var(--border-light)]'
+    ? 'bg-[#181B20] text-[#F4F5F6] border-[#2D3136]'
+    : 'bg-[#F4F5F6] text-[#20252B] border-[#CDD2D8]'
 
   const pyClasses = noPadding
     ? 'py-0'

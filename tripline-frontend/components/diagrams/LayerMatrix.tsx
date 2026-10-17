@@ -90,16 +90,16 @@ export function LayerMatrix({ previewMode = false, className = '' }: LayerMatrix
 
   return (
     <div
-      className={`rounded-[4px] border border-[var(--border-dark)] bg-[#0C0C0E] p-6 text-[#F3F1EA] ${className}`}
+      className={`rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] p-6 text-[#20252B] shadow-sm ${className}`}
       data-testid="diagram-d3"
     >
       {/* Top Header & Attack Selector */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-[var(--border-dark)]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 mb-6 border-b border-[#CDD2D8]">
         <div>
-          <span className="font-mono text-xs text-[var(--text-muted-on-dark)] uppercase tracking-wider block mb-1">
+          <span className="font-mono text-xs text-[#59636E] uppercase tracking-wider block mb-1">
             // 5-LAYER CONTAINMENT MATRIX &amp; RECORDED ATTACKS
           </span>
-          <h3 className="font-sans text-xl font-bold text-white tracking-tight">
+          <h3 className="font-sans text-xl font-bold text-[#20252B] tracking-tight">
             Attack Interception &amp; Attribution Trace
           </h3>
         </div>
@@ -110,10 +110,10 @@ export function LayerMatrix({ previewMode = false, className = '' }: LayerMatrix
             <button
               key={atk.id}
               onClick={() => setSelectedAttackId(atk.id)}
-              className={`px-3 py-1.5 rounded-[2px] font-mono text-xs transition-colors cursor-pointer focus-ring ${
+              className={`px-3 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#65BCE7] ${
                 selectedAttackId === atk.id
-                  ? 'bg-[var(--accent)] text-[#0B0B0C] font-semibold'
-                  : 'bg-[#18181C] text-[var(--text-muted-on-dark)] hover:text-white border border-[var(--border-dark)]'
+                  ? 'bg-[#20252B] text-white font-semibold shadow-sm'
+                  : 'bg-[#EAEDF0] text-[#59636E] hover:text-[#20252B] hover:bg-[#CDD2D8]/50 border border-[#CDD2D8]'
               }`}
               type="button"
             >
@@ -124,19 +124,19 @@ export function LayerMatrix({ previewMode = false, className = '' }: LayerMatrix
       </div>
 
       {/* Target Action Banner */}
-      <div className="p-3 mb-6 rounded-[2px] bg-[#121215] border border-[var(--border-dark)] font-mono text-xs flex flex-wrap items-center justify-between gap-2">
+      <div className="p-3 mb-6 rounded-lg bg-[#EAEDF0] border border-[#CDD2D8] font-mono text-xs flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-[var(--text-faint-on-dark)]">AGENT ATTEMPT:</span>
-          <code className="text-white bg-black/40 px-2 py-0.5 rounded-[2px]">
+          <span className="text-[#59636E]">AGENT ATTEMPT:</span>
+          <code className="text-[#20252B] bg-[#FFFFFF] border border-[#CDD2D8] px-2 py-0.5 rounded font-semibold">
             {activeAttack.action}
           </code>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[var(--text-faint-on-dark)]">STOPPED BY:</span>
-          <span className="font-bold text-[var(--accent)]">{activeAttack.stoppedAt}</span>
+          <span className="text-[#59636E]">STOPPED BY:</span>
+          <span className="font-bold text-[#20252B] px-2 py-0.5 rounded bg-[#FFFFFF] border border-[#CDD2D8]">{activeAttack.stoppedAt}</span>
           <Link
             href={`/receipts?file=${activeAttack.receiptId}`}
-            className="text-xs text-emerald-400 hover:underline flex items-center gap-1"
+            className="text-xs text-emerald-700 hover:text-emerald-800 font-semibold hover:underline flex items-center gap-1"
           >
             <span>View Receipt</span>
             <ArrowRight className="w-3 h-3" />
@@ -153,21 +153,23 @@ export function LayerMatrix({ previewMode = false, className = '' }: LayerMatrix
           return (
             <div
               key={layer.id}
-              className={`p-4 rounded-[4px] border transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 ${
+              className={`p-4 rounded-xl border transition-colors flex flex-col md:flex-row md:items-center justify-between gap-3 ${
                 isStoppingLayer
-                  ? 'border-[var(--accent)] bg-[#171413]'
-                  : 'border-[var(--border-dark)] bg-[#101013]'
+                  ? 'border-red-300 bg-red-50/50 shadow-sm'
+                  : 'border-[#CDD2D8] bg-[#F4F5F6]'
               }`}
             >
               <div className="flex items-start md:items-center gap-3">
-                <span className="font-mono text-sm font-bold text-white px-2 py-0.5 rounded-[2px] bg-white/10 shrink-0">
+                <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded shrink-0 ${
+                  isStoppingLayer ? 'bg-red-200 text-red-900' : 'bg-[#EAEDF0] text-[#20252B] border border-[#CDD2D8]'
+                }`}>
                   {layer.id}
                 </span>
                 <div>
-                  <div className="font-mono text-xs font-semibold text-white">
+                  <div className="font-mono text-xs font-semibold text-[#20252B]">
                     {layer.name}
                   </div>
-                  <div className="text-xs text-[var(--text-muted-on-dark)] mt-0.5">
+                  <div className="text-xs text-[#59636E] mt-0.5">
                     {layer.mechanism}
                   </div>
                 </div>

@@ -80,6 +80,13 @@ JOB_KINDS: Dict[str, Dict[str, Any]] = {
         "side_effects": "Executes 5-issue queue through Agent v2 pipeline, generating receipts under results/phase11/",
         "cmd": [sys.executable, "scripts/run_agent_v2.py", "--mode", "B"],
     },
+    "rea_investigate": {
+        "live": False,
+        "cost_estimate": "$0.00 (offline deterministic)",
+        "timeout": 90,
+        "side_effects": "Executes controlled REA investigation against preapproved synthetic electron app",
+        "cmd": [sys.executable, "scripts/rea_investigator.py", "--mode", "offline"],
+    },
 }
 
 
@@ -199,6 +206,22 @@ class JobManager:
         # Support param customization if applicable
         if record.kind == "scenario" and "rung" in record.params:
             cmd = [sys.executable, "scripts/run_phase3_scenario.py", "--rung", str(record.params["rung"])]
+        elif record.kind == "rea_investigate":
+            target = record.params.get("target", "synthetic-electron-app")
+            tool = record.params.get("tool", "analyze_electron_app")
+            from agent.rea_adapter import APPROVED_TARGET_REGISTRY
+            if target not in APPROVED_TARGET_REGISTRY:
+                target = "synthetic-electron-app"
+            allowed_tools = ["analyze_electron_app", "inspect_analysis_view", "trace_application_feature"]
+            if tool not in allowed_tools:
+                tool = "analyze_electron_app"
+            cmd = [
+                sys.executable,
+                "scripts/rea_investigator.py",
+                "--target", str(target),
+                "--tool", str(tool),
+                "--mode", "offline",
+            ]
 
         # Environment whitelist
         env = {

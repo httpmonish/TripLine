@@ -1,8 +1,8 @@
 # Tripline UI ↔ API Two-Way Coverage Matrix
 
 **Phase 9 Automated Verification Matrix**  
-**FastAPI Routes**: 58  
-**UI Elements Bound**: 36  
+**FastAPI Routes**: 61  
+**UI Elements Bound**: 50  
 **Allowed Exceptions**: 24  
 
 ## 1. Route ↔ Page ↔ Element ↔ Test ID Mapping
@@ -11,10 +11,13 @@
 |---|---|---|---|
 | GET | `/api/agent/crew` | `anchor-agent-crew` | `page.tsx` |
 | GET | `/api/agent/runs` | `anchor-agent-runs` | `page.tsx` |
-| POST | `/api/agent/runs` | `btn-run-agent-live` | `page.tsx` |
-| POST | `/api/agent/runs/{id}/stop` | `btn-stop-agent-run` | `page.tsx` |
+| POST | `/api/agent/runs` | `anchor-agent-runs-post` | `page.tsx` |
+| POST | `/api/agent/runs` | `unlabeled` | `page.tsx` |
+| POST | `/api/agent/runs/{id}/stop` | `unlabeled` | `page.tsx` |
 | GET | `/api/agent/runs/{run_id}` | `anchor-agent-run-id` | `page.tsx` |
+| GET | `/api/agent/runs/{run_id}` | `unlabeled` | `page.tsx` |
 | GET | `/api/agent/runs/{run_id}/events` | `anchor-agent-run-events` | `page.tsx` |
+| POST | `/api/agent/runs/{run_id}/stop` | `anchor-agent-runs-stop` | `page.tsx` |
 | GET | `/api/attribution` | `anchor-attribution` | `page.tsx` |
 | GET | `/api/audit-links` | `btn-audit-links` | `page.tsx` |
 | GET | `/api/claims` | `anchor-video` | `page.tsx` |
@@ -25,15 +28,22 @@
 | GET | `/api/evidence/file` | `anchor-evidence-file` | `page.tsx` |
 | GET | `/api/glossary` | `anchor-glossary` | `page.tsx` |
 | GET | `/api/jail-burst` | `btn-refresh-burst` | `page.tsx` |
+| GET | `/api/jobs` | `btn-refresh-jobs` | `page.tsx` |
 | POST | `/api/jobs` | `btn-start-job` | `page.tsx` |
+| POST | `/api/jobs` | `unlabeled` | `page.tsx` |
+| POST | `/api/jobs` | `unlabeled` | `page.tsx` |
 | POST | `/api/jobs/{id}/cancel` | `btn-cancel-job` | `page.tsx` |
+| POST | `/api/jobs/{id}/cancel` | `unlabeled` | `page.tsx` |
 | GET | `/api/jobs/{job_id}` | `anchor-job-id` | `page.tsx` |
 | GET | `/api/jobs/{job_id}/events` | `anchor-job-events` | `page.tsx` |
 | GET | `/api/measured` | `anchor-measured` | `page.tsx` |
 | GET | `/api/platform-checklist` | `anchor-platform` | `page.tsx` |
 | GET | `/api/platform/status` | `anchor-platform-status` | `page.tsx` |
+| GET | `/api/rea/investigations` | `anchor-rea-investigations` | `page.tsx` |
+| GET | `/api/rea/investigations/{run_id}` | `anchor-rea-investigation-id` | `page.tsx` |
+| GET | `/api/rea/targets` | `anchor-rea-targets` | `page.tsx` |
 | GET | `/api/receipts` | `btn-refresh-receipts` | `page.tsx` |
-| GET | `/api/receipts` | `btn-tour-verify` | `page.tsx` |
+| GET | `/api/receipts` | `btn-refresh-receipts` | `page.tsx` |
 | GET | `/api/receipts/{identifier}` | `anchor-receipt-id` | `page.tsx` |
 | POST | `/api/receipts/{identifier}/tamper-check` | `btn-tamper-receipt` | `page.tsx` |
 | POST | `/api/receipts/{identifier}/verify` | `btn-verify-receipt` | `page.tsx` |
@@ -41,9 +51,13 @@
 | GET | `/api/runs/latest` | `btn-load-latest-run` | `page.tsx` |
 | GET | `/api/runs/{run_id}` | `btn-list-docs` | `page.tsx` |
 | GET | `/api/runs/{run_id}/transcript` | `btn-view-run-transcript` | `page.tsx` |
+| GET | `/api/summary` | `anchor-summary` | `page.tsx` |
 | GET | `/api/video` | `anchor-video` | `page.tsx` |
 | GET | `/api/witness` | `anchor-witness` | `page.tsx` |
+| GET | `/api/witness` | `btn-witness` | `page.tsx` |
 | POST | `/api/witness/tamper-check` | `btn-tamper-witness` | `page.tsx` |
+| POST | `/api/witness/tamper-check` | `btn-tamper-witness` | `page.tsx` |
+| POST | `/api/witness/verify` | `btn-verify-witness` | `page.tsx` |
 | POST | `/api/witness/verify` | `btn-verify-witness` | `page.tsx` |
 
 ## 2. Allowed Route Exceptions

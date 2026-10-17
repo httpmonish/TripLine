@@ -57,4 +57,4 @@ node_modules/
 
 # Local aliases / symlinks
 web
-
+*.tsbuildinfo

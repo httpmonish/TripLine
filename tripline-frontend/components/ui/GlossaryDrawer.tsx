@@ -117,11 +117,14 @@ const DEFAULT_TERMS: GlossaryTerm[] = [
 
 export function GlossaryDrawer({
   isOpen,
+  open,
   onClose,
 }: {
-  isOpen: boolean
+  isOpen?: boolean
+  open?: boolean
   onClose: () => void
 }) {
+  const visible = isOpen ?? open ?? false
   const [terms, setTerms] = useState<GlossaryTerm[]>(DEFAULT_TERMS)
   const [search, setSearch] = useState('')
 
@@ -136,7 +139,7 @@ export function GlossaryDrawer({
       .catch(() => {})
   }, [])
 
-  if (!isOpen) return null
+  if (!visible) return null
 
   const filtered = terms.filter(
     (t) =>
