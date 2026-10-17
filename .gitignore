@@ -60,3 +60,11 @@ node_modules/
 # Local aliases / symlinks
 web
 *.tsbuildinfo
+
+# Video generator intermediate artifacts
+video/frames_explainer/
+video/raw_recordings/
+video/audio_explainer/
+video/audio_walkthrough/
+video/cards_explainer/
+video/web_captures/

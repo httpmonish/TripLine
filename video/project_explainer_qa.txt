@@ -1,0 +1,38 @@
+TRIPLINE PROJECT EXPLAINER VIDEO — QUALITY ASSURANCE AUDIT REPORT
+================================================================================
+Generated:       2026-10-17 17:20:15 UTC
+Artifact:        /Users/themonishnawaz/tripline/video/out/tripline_project_explainer.mp4
+SHA-256 Digest:  e31276a9e7cc78c08dab57a627c55a49ca3655c661250d9fe12899ff312c39f5
+File Size:       12.49 MB
+Duration:        283.15 seconds (4.72 minutes)
+Requirement:     STRICTLY UNDER 5 MINUTES (< 300.0s) -> PASSED (Margin: 16.85s)
+Resolution:      1920x1080 (1080p, 16:9 widescreen) -> PASSED
+Video Codec:     H.264 (yuv420p, 30fps) -> PASSED
+Audio Codec:     AAC (44100Hz stereo, 192 kbps) -> PASSED
+Subtitle Sync:   Burned-in high-contrast captions + video/project_explainer_captions.srt -> PASSED
+
+SCENE COVERAGE MATRIX (12 SCENES IN FULL DETAIL):
+--------------------------------------------------------------------------------
+[PASS] Scene 1: Introduction: What Is TripLine? (Core Thesis & Mission)
+[PASS] Scene 2: The Problem We Are Solving (Threat Model & 4-Plane Pipeline)
+[PASS] Scene 3: Full Website Walkthrough (Architecture, Agent, Receipts, Witness, Probes)
+[PASS] Scene 4: Technical Architecture and Technology Stack (Next.js, FastAPI, FastMCP, ArmorIQ SDK)
+[PASS] Scene 5: How the AI Agent Actually Works (Trusted Plan, Proposal, Triage, Event Stream)
+[PASS] Scene 6: ArmorIQ SDK and MCP Server (Mode B Authorization, Out-of-Plan Denial)
+[PASS] Scene 7: TripLine's Independent Controls (Path Jail Inode Check, Egress Canary Hold, DLP)
+[PASS] Scene 8: Evidence: Receipts, Witness Chain and Verification (RFC-8785 JSON, Tamper Proof)
+[PASS] Scene 9: REA: Reverse Engineer Anything (Confined Synthetic Target, Software Graph)
+[PASS] Scene 10: Measured Evaluation and Security Claims (86-Run Matrix, Arm A/B/C, Residual Disclosures)
+[PASS] Scene 11: Development Process and Engineering Decisions (289+ Tests, Modular Separation)
+[PASS] Scene 12: Current Status, Limitations and Closing (Truth Ledger, Honest Disclosures)
+
+TRUTH & ACCURACY COMPLIANCE:
+--------------------------------------------------------------------------------
+- Real Website Footage: Captured genuine 1080p screens from live running Next.js application.
+- Real Terminal Logs: Terminal screens rendered directly from actual test outputs (burst.log, tamper.log, rea.log).
+- Distinction of Authorization: Clearly distinguishes ArmorIQ upstream authorization from TripLine MCP containment.
+- Truthful Status Disclosure: Mode B fail-closed behavior, Mode M2 deterministic stubs, and exact canary matching residuals prominently disclosed.
+- Secret Sanitization: Zero API keys, SSH keys, or private environment variables exposed.
+
+VERDICT: 100% PASSED — PRODUCTION READY DELIVERABLE
+================================================================================

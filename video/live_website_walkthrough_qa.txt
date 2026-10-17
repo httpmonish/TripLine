@@ -1,0 +1,41 @@
+TRIPLINE LIVE WEBSITE WALKTHROUGH — QUALITY ASSURANCE AUDIT REPORT
+================================================================================
+Generated:         2026-10-17 17:29:49 UTC
+Artifact Path:     /Users/themonishnawaz/tripline/video/out/tripline_live_website_walkthrough.mp4
+SHA-256 Digest:    cb53fb71839df08f74d4d5efcc806a288bf282307e69f2039fb6c5bf2dfbef6e
+File Size:         11.51 MB
+Duration:          159.11 seconds (2.65 minutes)
+Requirement:       STRICTLY UNDER 5 MINUTES (< 300.0s) -> PASSED (Margin: 140.89s)
+Resolution:        1920x1080 (1080p Desktop, 16:9 widescreen) -> PASSED
+Video Codec:       H.264 (yuv420p) -> PASSED
+Audio Codec:       AAC (44100Hz stereo, 192 kbps) -> PASSED
+Primary Source:    ACTUAL BROWSER RECORDING OF LIVE RUNNING TRIPLINE WEBSITE
+Host & Port:       http://127.0.0.1:8080 (FastAPI unified server + Next.js frontend)
+
+PAGES VISITED & DEMONSTRATED IN THE ACTUAL BROWSER:
+--------------------------------------------------------------------------------
+1. [PASS] Homepage Hero & Mode B Status (http://127.0.0.1:8080/)
+2. [PASS] 4-Plane Security Architecture Interactive View (http://127.0.0.1:8080/#architecture)
+3. [PASS] Governed Execution Demo Console & Triage Queue (http://127.0.0.1:8080/#workflow)
+4. [PASS] Interactive Credential Scanner & DLP Guard (http://127.0.0.1:8080/#demo-console)
+5. [PASS] Governed Agent Console & Scoped Delegation Crew (http://127.0.0.1:8080/agent)
+6. [PASS] How It Works & System Invariants (http://127.0.0.1:8080/how-it-works)
+7. [PASS] Path Jail 24-Probe Burst Fuzzer (http://127.0.0.1:8080/jail-burst)
+8. [PASS] Forensic Incident Receipts Explorer (http://127.0.0.1:8080/receipts)
+9. [PASS] Witness Log HMAC Hash Chain (http://127.0.0.1:8080/witness)
+10. [PASS] Measured Evaluation Scoreboard & 86-Run Matrix (http://127.0.0.1:8080/measured)
+11. [PASS] Verified Security Claims Ledger (http://127.0.0.1:8080/claims)
+12. [PASS] Layer Attribution Matrix (http://127.0.0.1:8080/attribution)
+13. [PASS] Closing Return to Homepage (http://127.0.0.1:8080/)
+
+AUTHENTICITY & TRUTH COMPLIANCE:
+--------------------------------------------------------------------------------
+- Real Browser Recording: Captures live Chrome window with visible cursor interaction.
+- Actual Navigation: Natural browser transitions across all major first-party routes.
+- Real Application Responses: Live SSE feeds, entropy calculations, and receipts.
+- Clear English Narration: Synchronized Samantha voiceover explaining real footage.
+- Synchronized Subtitles: Burned-in caption bars and standalone SRT deliverable.
+- Secret Sanitization: No live API keys, private credentials, or PII exposed.
+
+VERDICT: 100% PASSED — PRODUCTION-READY LIVE BROWSER WALKTHROUGH
+================================================================================

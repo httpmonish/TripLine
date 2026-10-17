@@ -96,6 +96,35 @@ def test_captions_and_dwell():
     print("    [+] Captions & dwell: PASS")
 
 
+def test_project_explainer():
+    print("[*] QA 5: Verifying TripLine Project Explainer (< 5 min deliverable)...")
+    explainer_video = VIDEO_DIR / "out" / "tripline_project_explainer.mp4"
+    assert explainer_video.exists(), f"Explainer video missing: {explainer_video}"
+    
+    probe = subprocess.run([str(FFMPEG), "-i", str(explainer_video)], capture_output=True, text=True)
+    out = probe.stderr
+    
+    m_dur = re.search(r"Duration:\s*(\d+):(\d+):(\d+\.\d+)", out)
+    assert m_dur, "Duration string not found in explainer video"
+    hrs, mins, secs = map(float, m_dur.groups())
+    total_sec = hrs * 3600 + mins * 60 + secs
+    print(f"    - Explainer Duration: {total_sec:.2f}s ({total_sec/60:.2f} min) (Strict limit: < 300.0s)")
+    assert total_sec < 300.0, f"Explainer video must be strictly under 5 min (< 300s), got {total_sec}s"
+    assert total_sec >= 240.0, f"Explainer video too short: {total_sec}s"
+
+    assert "Video: h264" in out, "Explainer video must be H.264"
+    assert "1920x1080" in out, "Explainer resolution must be 1920x1080"
+    assert "Audio: aac" in out, "Explainer audio must be AAC"
+
+    # Check companion deliverables
+    assert (VIDEO_DIR / "project_explainer_storyboard.json").exists(), "project_explainer_storyboard.json missing"
+    assert (VIDEO_DIR / "project_explainer_voiceover.txt").exists(), "project_explainer_voiceover.txt missing"
+    assert (VIDEO_DIR / "project_explainer_captions.srt").exists(), "project_explainer_captions.srt missing"
+    assert (VIDEO_DIR / "project_explainer_manifest.json").exists(), "project_explainer_manifest.json missing"
+    assert (VIDEO_DIR / "project_explainer_qa.txt").exists(), "project_explainer_qa.txt missing"
+    print("    [+] Explainer Video & Companion Assets: PASS")
+
+
 def main():
     print("==================================================")
     print("RUNNING DEMO VIDEO QA CHECKS (SECTION 5)")
@@ -104,6 +133,7 @@ def main():
     test_pii_and_secrets()
     test_truth_matching()
     test_captions_and_dwell()
+    test_project_explainer()
     print("==================================================")
     print("[+] ALL VIDEO QA CHECKS PASSED DETERMINISTICALLY.")
     print("==================================================")
@@ -111,3 +141,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

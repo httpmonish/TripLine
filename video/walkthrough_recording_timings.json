@@ -1,0 +1,84 @@
+{
+  "totalDuration": 159.112,
+  "rawVideoPath": "/Users/themonishnawaz/tripline/video/raw_recordings/page@7c545cd97ac5ad0c35164b868f6101fb.webm",
+  "beats": [
+    {
+      "beatId": "W01",
+      "title": "Homepage Hero & System Status",
+      "url": "http://127.0.0.1:8080/",
+      "timestamp": 0
+    },
+    {
+      "beatId": "W02",
+      "title": "4-Plane Security Architecture View",
+      "url": "http://127.0.0.1:8080/#architecture",
+      "timestamp": 16.885
+    },
+    {
+      "beatId": "W03",
+      "title": "Live Execution Console & Triage Queue",
+      "url": "http://127.0.0.1:8080/#workflow",
+      "timestamp": 31.55
+    },
+    {
+      "beatId": "W04",
+      "title": "Interactive Credential Scanner & DLP Guard",
+      "url": "http://127.0.0.1:8080/#demo-console",
+      "timestamp": 47.685
+    },
+    {
+      "beatId": "W05",
+      "title": "Governed Agent Console & Scoped Delegation",
+      "url": "http://127.0.0.1:8080/agent",
+      "timestamp": 58.483
+    },
+    {
+      "beatId": "W06",
+      "title": "How It Works & Technical Architecture Walkthrough",
+      "url": "http://127.0.0.1:8080/how-it-works",
+      "timestamp": 74.801
+    },
+    {
+      "beatId": "W07",
+      "title": "Path Jail 24-Probe Burst Fuzzer",
+      "url": "http://127.0.0.1:8080/jail-burst",
+      "timestamp": 87.265
+    },
+    {
+      "beatId": "W08",
+      "title": "Forensic Incident Receipts Explorer",
+      "url": "http://127.0.0.1:8080/receipts",
+      "timestamp": 99.716
+    },
+    {
+      "beatId": "W09",
+      "title": "Witness Log HMAC Hash Chain",
+      "url": "http://127.0.0.1:8080/witness",
+      "timestamp": 111.692
+    },
+    {
+      "beatId": "W10",
+      "title": "Empirical 86-Run Benchmark Matrix",
+      "url": "http://127.0.0.1:8080/measured",
+      "timestamp": 121.68
+    },
+    {
+      "beatId": "W11",
+      "title": "Verified Security Claims Ledger",
+      "url": "http://127.0.0.1:8080/claims",
+      "timestamp": 137.048
+    },
+    {
+      "beatId": "W12",
+      "title": "Three-Layer Defense Attribution",
+      "url": "http://127.0.0.1:8080/attribution",
+      "timestamp": 146.581
+    },
+    {
+      "beatId": "W13",
+      "title": "Platform Summary & Closing Walkthrough",
+      "url": "http://127.0.0.1:8080/",
+      "timestamp": 153.096
+    }
+  ]
+}
