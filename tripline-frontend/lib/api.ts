@@ -590,6 +590,32 @@ export const api = {
         params: { target, tool },
       }),
     }),
+
+  // Volunteer Application Portal Demonstration Endpoints (Phase 2)
+  getVolunteerPortal: () => request<VolunteerPortalResponse>('/api/volunteer/portal'),
+  getVolunteerApplicationDetail: (applicationId: string) =>
+    request<VolunteerApplicationDetail>(`/api/volunteer/applications/${encodeURIComponent(applicationId)}`),
+  getVolunteerStats: () => request<VolunteerStatsResponse>('/api/volunteer/stats'),
+  uploadVolunteerMedia: async (file: File): Promise<MediaPreviewResponse> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const token = await getCsrfToken()
+    const headers: Record<string, string> = {}
+    if (token) headers['X-CSRF-Token'] = token
+    if (typeof window !== 'undefined' && window.location.origin) {
+      headers['origin'] = window.location.origin
+    }
+    const res = await fetch('/api/volunteer/media-preview', {
+      method: 'POST',
+      headers,
+      body: formData,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: res.statusText }))
+      throw new Error(err.detail || 'Upload failed')
+    }
+    return res.json()
+  },
 }
 
 /**

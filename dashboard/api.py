@@ -63,6 +63,8 @@ from dashboard.schemas import (
     REATargetsResponse,
     REAInvestigationSummary,
     REAInvestigationDetail,
+    CredentialScanRequest,
+    CredentialScanResponse,
 )
 from dashboard.security import (
     get_process_csrf_token,
