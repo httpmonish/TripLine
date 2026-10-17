@@ -1,0 +1,64 @@
+1
+00:00:00,000 --> 00:00:26,080
+“Blocked isn't evidence. Every denied action gets a receipt.” — ArmorIQ decides. TripLine contains and proves.
+
+2
+00:00:26,080 --> 00:00:41,630
+Live Homepage: Mode B integration active, synchronous policy checking, and non-repudiation ledger.
+
+3
+00:00:41,630 --> 00:00:58,310
+Execution Sequence: Prompt -> AI Proposal -> ArmorIQ Authorization -> TripLine Containment -> Signed Evidence.
+
+4
+00:00:58,310 --> 00:01:13,420
+Layered Execution Boundaries: Inspecting invariants, trust boundaries, and real-time event flow.
+
+5
+00:01:13,420 --> 00:01:28,290
+Governed Agent Console: Scoped Ed25519 delegation crew, live SSE feed, and emergency kill-switch.
+
+6
+00:01:28,290 --> 00:01:43,480
+Jail Burst Test Matrix: 24 of 24 traversal probes trapped at in-MCP boundary; positive controls pass.
+
+7
+00:01:43,480 --> 00:02:00,500
+Forensic Ledger: Canonical JSON incident receipts, append-only hash chains, and verified claims audit.
+
+8
+00:02:00,500 --> 00:02:23,600
+Technology Stack: Next.js 14 + FastAPI + FastMCP on localhost:8000 + ArmorIQ SDK Mode B + HMAC-SHA256.
+
+9
+00:02:23,600 --> 00:02:41,770
+Lifecycle: Pre-Ingestion Plan Hash -> Structured Proposal -> Intent Check -> TripLine Containment -> Receipt.
+
+10
+00:02:41,770 --> 00:03:00,040
+Mode B Authorization: delete_branch denied upstream by ArmorIQ policy; 0 MCP tool calls dispatched.
+
+11
+00:03:00,040 --> 00:03:19,490
+In-MCP Path Jail: Open-then-verify fstat inode check rejects traversal; zero bytes read outside root.
+
+12
+00:03:19,490 --> 00:03:35,300
+Egress Gateway & DLP: Synthetic canary token trapped in outbound comment; held before dispatch.
+
+13
+00:03:35,300 --> 00:03:53,620
+Cryptographic Verification: 1-byte mutation flips verdict to TAMPER_DETECTED with canonical hash mismatch.
+
+14
+00:03:53,620 --> 00:04:09,070
+REA Subsystem: Electron AST analysis and feature tracing confined strictly within controlled analysis root.
+
+15
+00:04:09,070 --> 00:04:29,690
+Benchmark Results: Arm A: 0% | Arm B (ArmorIQ Alone): 37.5% | Arm C (ArmorIQ + TripLine): 100% Defense.
+
+16
+00:04:29,690 --> 00:04:43,150
+TripLine: Independent Containment & Forensic Incident Receipts for Autonomous AI Agents.
+

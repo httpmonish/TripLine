@@ -225,3 +225,37 @@ def test_empty_data_handling():
     res_witness = client.get("/api/witness/TRPL-TRACE-nonexistent")
     assert res_witness.status_code == 200
     assert res_witness.json()["chain_status"] == "valid"
+
+
+def test_api_rea_targets():
+    res = client.get("/api/rea/targets")
+    assert res.status_code == 200
+    data = res.json()
+    assert "targets" in data
+    assert len(data["targets"]) > 0
+    target_ids = [t["id"] for t in data["targets"]]
+    assert "synthetic-electron-app" in target_ids or "synthetic_electron_app" in target_ids
+
+
+def test_api_rea_investigations():
+    res = client.get("/api/rea/investigations")
+    assert res.status_code == 200
+    invs = res.json()
+    assert isinstance(invs, list)
+    if invs:
+        first = invs[0]
+        assert "run_id" in first
+        run_id = first["run_id"]
+        res_detail = client.get(f"/api/rea/investigations/{run_id}")
+        assert res_detail.status_code == 200
+        detail = res_detail.json()
+        assert detail["run_id"] == run_id
+
+    # 404 on nonexistent investigation
+    res_404 = client.get("/api/rea/investigations/inv-nonexistent-123456")
+    assert res_404.status_code == 404
+
+    # 400 on traversal
+    res_malicious = client.get("/api/rea/investigations/..%2F..%2Fetc%2Fpasswd")
+    assert res_malicious.status_code in (400, 404)
+

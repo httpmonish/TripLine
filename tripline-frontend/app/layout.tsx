@@ -11,7 +11,9 @@ export const metadata: Metadata = {
     'A governed-agent proof layer built for the ArmorIQ Flow State 2026 hackathon. A denial is a verdict, not a record. Tripline turns every denied or held agent action into a signed receipt anyone can verify offline.',
   icons: {
     icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
       { url: '/tripline-favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico' },
       { url: '/tripline-favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [
@@ -40,7 +42,7 @@ export default function RootLayout({
       lang="en"
       className={`${fontSans.variable} ${fontMono.variable} antialiased`}
     >
-      <body className="min-h-screen bg-[#0B0B0C] text-[#F3F1EA] font-sans flex flex-col selection:bg-[var(--accent)] selection:text-black">
+      <body className="min-h-screen bg-[#F4F5F6] text-[#20252B] font-sans flex flex-col selection:bg-[#65BCE7]/20 selection:text-[#20252B]">
         <Header />
         <main className="flex-1 w-full" id="main-content">
           {children}

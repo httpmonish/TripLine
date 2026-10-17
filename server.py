@@ -167,6 +167,30 @@ def run_tests(test_selector: str) -> str:
     """Run pytest with the given selector (e.g. 'test_issue_1'). Executed in sandbox with NO network."""
     return sandbox_mod.run_tests(test_selector)
 
+@mcp.tool()
+def analyze_electron_app(target_id: str) -> str:
+    """Analyze an approved synthetic JavaScript/Electron application via REA."""
+    import json
+    from agent.rea_adapter import analyze_electron_app_wrapper
+    res = analyze_electron_app_wrapper(target_id)
+    return json.dumps(res)
+
+@mcp.tool()
+def inspect_analysis_view(evidence_id: str, view_kind: str = "summary") -> str:
+    """Inspect retained analysis view from a previous REA analysis."""
+    import json
+    from agent.rea_adapter import inspect_analysis_view_wrapper
+    res = inspect_analysis_view_wrapper(evidence_id, view_kind=view_kind)
+    return json.dumps(res)
+
+@mcp.tool()
+def trace_application_feature(evidence_id: str, seed_value: str, seed_kind: str = "module", direction: str = "both") -> str:
+    """Trace a feature seed through the authenticated application graph."""
+    import json
+    from agent.rea_adapter import trace_application_feature_wrapper
+    res = trace_application_feature_wrapper(evidence_id, seed_value=seed_value, seed_kind=seed_kind, direction=direction)
+    return json.dumps(res)
+
 
 def _build_transport_security() -> TransportSecuritySettings | None:
     """

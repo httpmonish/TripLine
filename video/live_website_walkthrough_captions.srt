@@ -1,0 +1,52 @@
+1
+00:00:00,000 --> 00:00:16,885
+TripLine Homepage: Mode B integration active — Upstream ArmorIQ policy gate & local containment.
+
+2
+00:00:16,885 --> 00:00:31,550
+4-Plane Architecture: Plane 0 Agent Planning, Plane 1 ArmorIQ, Plane 2 In-MCP Jail, Plane 3 Witness.
+
+3
+00:00:31,550 --> 00:00:47,685
+Live Execution Console: Multi-layer security proof executing 3-attack triage queue under containment.
+
+4
+00:00:47,685 --> 00:00:58,483
+Credential Scanner & DLP: Shannon entropy analysis intercepts secrets before LLM prompt ingestion.
+
+5
+00:00:58,483 --> 00:01:14,801
+Governed Agent Console (/agent): Scoped delegation crew, ephemeral Ed25519 keys, and real-time SSE feed.
+
+6
+00:01:14,801 --> 00:01:27,265
+How It Works (/how-it-works): Provenance tagging, replan lock, and 60-second TTL decision proofs.
+
+7
+00:01:27,265 --> 00:01:39,716
+Path Jail Burst (/jail-burst): 24 of 24 traversal attacks trapped by open-then-verify fstat check (0 bytes read).
+
+8
+00:01:39,716 --> 00:01:51,692
+Forensic Receipts (/receipts): RFC-8785 canonical JSON, SHA-256 digest, and HMAC witness signature.
+
+9
+00:01:51,692 --> 00:02:01,680
+Witness Log (/witness): Append-only sequential HMAC hash-chain linking historical execution events.
+
+10
+00:02:01,680 --> 00:02:17,048
+Measured Evaluation (/measured): 86 runs — Arm A: 0% | Arm B (ArmorIQ): 37.5% | Arm C (TripLine): 100% Defense.
+
+11
+00:02:17,048 --> 00:02:26,581
+Claims Ledger (/claims): 22 verified system claims mapped to concrete source code and git commits.
+
+12
+00:02:26,581 --> 00:02:33,096
+Layer Attribution (/attribution): Precise threat neutralization mapping across all defensive boundaries.
+
+13
+00:02:33,096 --> 00:02:39,112
+TripLine: Governed AI Execution, Independent In-MCP Containment, and Cryptographic Non-Repudiation.
+

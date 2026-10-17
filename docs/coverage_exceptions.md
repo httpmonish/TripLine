@@ -28,3 +28,10 @@ This document contains explicit allowlisted exemptions from the two-way UI-API c
 | GET | `/api/canary-hits` | Legacy Phase 8 endpoint preserved for backward compatibility and test suites. |
 | GET | `/api/witness/{trace_id}` | Legacy Phase 8 endpoint preserved for backward compatibility and test suites. |
 | GET | `/api/receipts/{identifier}/verify` | Legacy Phase 8 verification GET endpoint preserved for backward compatibility. |
+| POST | `/api/agent/task` | Direct dynamic task dispatch endpoint mirroring /api/agent/runs. |
+| POST | `/api/demo/analyze-credential-file` | Synthetic credential scan test endpoint for Phase 2 credential leakage demonstration. |
+| GET | `/api/volunteer/portal` | Synthetic volunteer portal endpoint for Phase 2 volunteer demonstration. |
+| GET | `/api/volunteer/applications/{application_id}` | Scoped volunteer application detail endpoint for Phase 2 volunteer demonstration. |
+| GET | `/api/volunteer/stats` | Aggregated volunteer privacy statistics endpoint for Phase 2 volunteer demonstration. |
+| POST | `/api/volunteer/media-preview` | Volunteer media attachment boundary check endpoint for Phase 2 volunteer demonstration. |
+| POST | `/api/demo/chat` | Synthetic document security assistant endpoint for credential scan questions. |

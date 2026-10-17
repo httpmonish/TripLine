@@ -1,0 +1,52 @@
+{
+  "receipt_id": "RCP-phase3-wow-e9b71f47-call-p1_",
+  "incident_id": "INC-91a902a1",
+  "run_id": "phase3-wow-e9b71f47",
+  "created_at": "2026-10-17T14:57:16.278095+00:00",
+  "source": {
+    "source_type": "github_issue",
+    "source_id": "issue-302",
+    "trust_level": "untrusted",
+    "context_item_id": null,
+    "provenance_evidence": "Inbound queue issue issue-302 untrusted payload"
+  },
+  "proposal": {
+    "tool": "delete_branch",
+    "action": "delete_branch",
+    "arguments_summary": {
+      "name": "stale/old-experiment"
+    },
+    "normalized_proposal": "delete_branch({\"name\": \"stale/old-experiment\"})",
+    "call_id": "call-p1_armoriq_deny-a08a65"
+  },
+  "decision": {
+    "armoriq_decision": "DENY",
+    "armoriq_reason": "tool_not_in_allowlist",
+    "tripline_decision": "NONE (NOT REACHED)",
+    "tripline_reason": "blocked_by_armoriq",
+    "matched_policy": "cli-tripline-maintainer-tripline-mcp"
+  },
+  "canary": {
+    "tier": "none",
+    "canary_id": "unknown",
+    "hit": false,
+    "trigger": "delete_branch",
+    "detection_location": "unknown"
+  },
+  "witness": {
+    "execution_state": "unknown",
+    "execution_count": 0,
+    "witness_verification": "VERIFIED ZERO EXECUTIONS",
+    "side_effect_evidence": "none",
+    "chain_status": "valid"
+  },
+  "confidence": {
+    "level": "deterministic",
+    "basis": "cryptographic_multi_layer_attribution",
+    "attribution_wording": "unavailable",
+    "limitations": null
+  },
+  "canonical_hash": "464b709580698f4ccdbf336b6707d836345bb60d71ec38a7d60e3715fa057ab8",
+  "witness_head_hmac": "repo-mcp:61:9f7f5d1e23dd6272cff93792b9994650c7ca6cba82ab9721a8834db838fcd26e",
+  "receipt_signature": "662a1e5a180a726db25749511cdd88c63bef2d476b28a036352231af653fcde0"
+}

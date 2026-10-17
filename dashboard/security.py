@@ -1,5 +1,6 @@
 import re
 import secrets
+from pathlib import Path
 from typing import Any
 
 def redact_secret(text: str) -> str:
@@ -18,9 +19,20 @@ def redact_secret(text: str) -> str:
     
     return text
 
+_CSRF_FILE = Path(__file__).resolve().parent.parent / ".tripline_csrf_token"
 _PROCESS_CSRF_TOKEN = secrets.token_hex(32)
 
 def get_process_csrf_token() -> str:
+    global _PROCESS_CSRF_TOKEN
+    try:
+        if _CSRF_FILE.exists():
+            saved = _CSRF_FILE.read_text().strip()
+            if len(saved) == 64:
+                _PROCESS_CSRF_TOKEN = saved
+                return _PROCESS_CSRF_TOKEN
+        _CSRF_FILE.write_text(_PROCESS_CSRF_TOKEN)
+    except Exception:
+        pass
     return _PROCESS_CSRF_TOKEN
 
 def verify_csrf_and_origin(request) -> None:
@@ -30,7 +42,33 @@ def verify_csrf_and_origin(request) -> None:
     # Origin check (same-origin only)
     origin = request.headers.get("origin") or ""
     referer = request.headers.get("referer") or ""
-    allowed_hosts = ["127.0.0.1:8080", "localhost:8080", "127.0.0.1:3000", "localhost:3000"]
+    request_host = request.headers.get("host") or ""
+    
+    # Base allowed loopback hosts and ports
+    allowed_hosts = {
+        "127.0.0.1:8000", "localhost:8000",
+        "127.0.0.1:8080", "localhost:8080",
+        "127.0.0.1:3000", "localhost:3000",
+        "127.0.0.1:5173", "localhost:5173",
+        "0.0.0.0:8000", "0.0.0.0:8080",
+    }
+    
+    # Automatically allow whatever host the server is actually listening/serving on
+    if request_host:
+        allowed_hosts.add(request_host)
+        if request_host.startswith("localhost:"):
+            allowed_hosts.add(request_host.replace("localhost:", "127.0.0.1:"))
+        elif request_host.startswith("127.0.0.1:"):
+            allowed_hosts.add(request_host.replace("127.0.0.1:", "localhost:"))
+
+    # Add environment configured hosts
+    import os
+    env_hosts = os.environ.get("TRIPLINE_ALLOWED_HOSTS", "")
+    if env_hosts:
+        for h in env_hosts.split(","):
+            h = h.strip()
+            if h:
+                allowed_hosts.add(h)
     
     if origin:
         host = origin.split("://")[-1]
@@ -44,7 +82,8 @@ def verify_csrf_and_origin(request) -> None:
     # CSRF Token check (enforced on browser requests and whenever token is provided)
     token = request.headers.get("x-csrf-token")
     if origin or referer or token:
-        if not token or token != _PROCESS_CSRF_TOKEN:
+        valid_token = get_process_csrf_token()
+        if not token or (token != valid_token and token != _PROCESS_CSRF_TOKEN):
             raise HTTPException(status_code=403, detail="Invalid or missing CSRF token")
 
 

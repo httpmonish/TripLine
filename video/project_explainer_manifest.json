@@ -1,0 +1,169 @@
+{
+  "project": "TripLine",
+  "deliverable": "video/out/tripline_project_explainer.mp4",
+  "total_duration": 283.15,
+  "scenes_count": 12,
+  "beats_count": 16,
+  "source_inventory": [
+    {
+      "beat_id": "B01",
+      "scene": "Scene 1 \u2014 Introduction: What Is TripLine?",
+      "title": "TRIPLINE \u2014 FORENSIC INCIDENT RECEIPTS FOR AI AGENTS",
+      "source_type": "Illustrative graphic & Title card",
+      "source_file": "video/cards_explainer/B01.png",
+      "duration": 26.08,
+      "start_time": 0.0,
+      "end_time": 26.08
+    },
+    {
+      "beat_id": "B02",
+      "scene": "Scene 1 \u2014 Introduction: What Is TripLine?",
+      "title": "ENTERPRISE PLATFORM OVERVIEW & MODE B INTEGRATION",
+      "source_type": "Browser capture",
+      "source_file": "video/web_captures/page_home.png",
+      "duration": 15.55,
+      "start_time": 26.08,
+      "end_time": 41.63
+    },
+    {
+      "beat_id": "B03",
+      "scene": "Scene 2 \u2014 The Problem We Are Solving",
+      "title": "THE RISK OF RAW AI TOOL EXECUTION & UNTRUSTED INGESTION",
+      "source_type": "Illustrative motion graphic",
+      "source_file": "video/cards_explainer/B03.png",
+      "duration": 16.68,
+      "start_time": 41.63,
+      "end_time": 58.31
+    },
+    {
+      "beat_id": "B04",
+      "scene": "Scene 3 \u2014 Full Website Walkthrough",
+      "title": "WEBSITE TOUR: 4-PLANE ARCHITECTURE & HOW IT WORKS",
+      "source_type": "Browser capture",
+      "source_file": "video/web_captures/page_layers.png",
+      "duration": 15.11,
+      "start_time": 58.31,
+      "end_time": 73.42
+    },
+    {
+      "beat_id": "B05",
+      "scene": "Scene 3 \u2014 Full Website Walkthrough",
+      "title": "WEBSITE TOUR: GOVERNED AGENT CONSOLE & LIVE EVENT STREAM",
+      "source_type": "Browser capture",
+      "source_file": "video/web_captures/page_agent.png",
+      "duration": 14.87,
+      "start_time": 73.42,
+      "end_time": 88.29
+    },
+    {
+      "beat_id": "B06",
+      "scene": "Scene 3 \u2014 Full Website Walkthrough",
+      "title": "WEBSITE TOUR: PATH JAIL 24-PROBE BURST & SECURITY LAB",
+      "source_type": "Browser capture",
+      "source_file": "video/web_captures/page_jail-burst.png",
+      "duration": 15.19,
+      "start_time": 88.29,
+      "end_time": 103.48
+    },
+    {
+      "beat_id": "B07",
+      "scene": "Scene 3 \u2014 Full Website Walkthrough",
+      "title": "WEBSITE TOUR: FORENSIC RECEIPTS, WITNESS LOG & CLAIMS",
+      "source_type": "Browser capture",
+      "source_file": "video/web_captures/page_receipts.png",
+      "duration": 17.02,
+      "start_time": 103.48,
+      "end_time": 120.5
+    },
+    {
+      "beat_id": "B08",
+      "scene": "Scene 4 \u2014 Technical Architecture and Technology Stack",
+      "title": "PRODUCTION TECH STACK & SYSTEM BOUNDARIES",
+      "source_type": "System architecture diagram",
+      "source_file": "video/cards_explainer/B08.png",
+      "duration": 23.1,
+      "start_time": 120.5,
+      "end_time": 143.6
+    },
+    {
+      "beat_id": "B09",
+      "scene": "Scene 5 \u2014 How the AI Agent Actually Works",
+      "title": "AUTONOMOUS AGENT LIFECYCLE & PRE-INGESTION PLANNING",
+      "source_type": "Illustrative flow diagram",
+      "source_file": "video/cards_explainer/B09.png",
+      "duration": 18.17,
+      "start_time": 143.6,
+      "end_time": 161.77
+    },
+    {
+      "beat_id": "B10",
+      "scene": "Scene 6 \u2014 ArmorIQ SDK and MCP Server",
+      "title": "ARMORIQ MODE B SDK & FASTMCP TOOL DISPATCH",
+      "source_type": "Real backend execution log",
+      "source_file": "video/capture/B3_attack1.log",
+      "duration": 18.27,
+      "start_time": 161.77,
+      "end_time": 180.04
+    },
+    {
+      "beat_id": "B11",
+      "scene": "Scene 7 \u2014 TripLine's Independent Security Controls",
+      "title": "PLANE 2 IN-MCP PATH JAIL: OPEN-THEN-VERIFY INODE CHECKS",
+      "source_type": "Real terminal probe output",
+      "source_file": "video/capture/burst.log",
+      "duration": 19.45,
+      "start_time": 180.04,
+      "end_time": 199.49
+    },
+    {
+      "beat_id": "B12",
+      "scene": "Scene 7 \u2014 TripLine's Independent Security Controls",
+      "title": "PLANE 2 EGRESS CANARY GATEWAY & DLP SECRET SHIELD",
+      "source_type": "Real backend execution log",
+      "source_file": "video/capture/B4_attacks2_3.log",
+      "duration": 15.81,
+      "start_time": 199.49,
+      "end_time": 215.3
+    },
+    {
+      "beat_id": "B13",
+      "scene": "Scene 8 \u2014 Evidence: Receipts, Witness Chain and Verification",
+      "title": "NON-REPUDIATION: RFC-8785 CANONICAL JSON & TAMPER PROOF",
+      "source_type": "Real verifier output",
+      "source_file": "video/capture/tamper.log",
+      "duration": 18.32,
+      "start_time": 215.3,
+      "end_time": 233.62
+    },
+    {
+      "beat_id": "B14",
+      "scene": "Scene 9 \u2014 REA: Reverse Engineer Anything",
+      "title": "REA SUBSYSTEM: CONTROLLED REVERSE ENGINEERING OF ELECTRON APPS",
+      "source_type": "Real REA investigation log",
+      "source_file": "video/capture/rea.log",
+      "duration": 15.45,
+      "start_time": 233.62,
+      "end_time": 249.07
+    },
+    {
+      "beat_id": "B15",
+      "scene": "Scene 10 \u2014 Measured Evaluation and Security Claims",
+      "title": "EMPIRICAL EVALUATION: 86-RUN BENCHMARK & DISCLOSURES",
+      "source_type": "Browser capture",
+      "source_file": "video/web_captures/page_measured.png",
+      "duration": 20.62,
+      "start_time": 249.07,
+      "end_time": 269.69
+    },
+    {
+      "beat_id": "B16",
+      "scene": "Scene 11 & 12 \u2014 Development, Limitations & Closing",
+      "title": "COMPREHENSIVE AUDIT, TRUTH MATRIX & CLOSING",
+      "source_type": "Disclosure matrix & Closing card",
+      "source_file": "video/cards_explainer/B16.png",
+      "duration": 13.46,
+      "start_time": 269.69,
+      "end_time": 283.15
+    }
+  ]
+}

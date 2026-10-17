@@ -21,7 +21,10 @@
         "tripline-mcp.comment_issue",
         "tripline-mcp.list_dir",
         "tripline-mcp.write_patch",
-        "tripline-mcp.run_tests"
+        "tripline-mcp.run_tests",
+        "tripline-mcp.analyze_electron_app",
+        "tripline-mcp.trace_application_feature",
+        "tripline-mcp.inspect_analysis_view"
       ]
     }
   ]

@@ -483,12 +483,11 @@ export function HeroIntercept({ receipt, className = '' }: HeroInterceptProps) {
           {/* ======================================================== */}
           <g
             onClick={() => setSelectedNode('receipt')}
-            className="cursor-pointer focus-ring"
+            className="cursor-pointer focus-ring transition-opacity duration-500"
             tabIndex={0}
             role="button"
             aria-label="Node: Signed Incident Receipt"
             opacity={stage >= 4 ? '1' : '0'}
-            className="transition-opacity duration-500"
           >
             <rect
               x="680"

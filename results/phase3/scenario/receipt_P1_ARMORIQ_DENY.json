@@ -1,8 +1,8 @@
 {
-  "receipt_id": "RCP-phase3-wow-ca5dcec9-call-p1_",
-  "incident_id": "INC-ba27f365",
-  "run_id": "phase3-wow-ca5dcec9",
-  "created_at": "2026-10-10T13:32:55.101363+00:00",
+  "receipt_id": "RCP-phase3-wow-ec6c4d03-call-p1_",
+  "incident_id": "INC-4f35d464",
+  "run_id": "phase3-wow-ec6c4d03",
+  "created_at": "2026-10-17T17:12:47.856408+00:00",
   "source": {
     "source_type": "github_issue",
     "source_id": "issue-302",
@@ -17,7 +17,7 @@
       "name": "stale/old-experiment"
     },
     "normalized_proposal": "delete_branch({\"name\": \"stale/old-experiment\"})",
-    "call_id": "call-p1_armoriq_deny-d88f71"
+    "call_id": "call-p1_armoriq_deny-c6a83f"
   },
   "decision": {
     "armoriq_decision": "DENY",
@@ -46,7 +46,7 @@
     "attribution_wording": "unavailable",
     "limitations": null
   },
-  "canonical_hash": "84d707a125166845b8aaba424c23b3b77b758dad0c2bdbb3d3739e8f8dc449ec",
-  "witness_head_hmac": "repo-mcp:25:b3ebac6483d998edb6e7aa4a1e738c59f54d49b68e0e04edc39f383209d73c9b",
-  "receipt_signature": "eedc5214f6314bf44881a0a785dada909d60312795c4042bd8f073442180dfd7"
+  "canonical_hash": "e34dfb0aee117232ddbdf4415e35bc993b1a55b7d935004d78da5bb76ff374b2",
+  "witness_head_hmac": "armoriq-gate:9:",
+  "receipt_signature": "fbe07ba7b5b5bb933bcbc87d37463f78691f981eae0f7765967d42cf0c092eb7"
 }

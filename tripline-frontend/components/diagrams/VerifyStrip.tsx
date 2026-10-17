@@ -103,20 +103,20 @@ export function VerifyStrip({
       {(canonicalHash || computedHash) && (
         <div className="mt-4 pt-3 border-t border-[var(--border-dark)] space-y-1 text-[11px]">
           {canonicalHash && (
-            <div className="flex items-center justify-between text-[var(--text-muted-on-dark)]">
-              <span>DECLARED HASH:</span>
-              <code className="text-white select-all">{canonicalHash}</code>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[var(--text-muted-on-dark)]">
+              <span className="shrink-0 font-semibold">DECLARED HASH:</span>
+              <code className="text-white select-all break-all">{canonicalHash}</code>
             </div>
           )}
           {computedHash && (
-            <div className="flex items-center justify-between text-[var(--text-muted-on-dark)]">
-              <span>RECOMPUTED:</span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[var(--text-muted-on-dark)]">
+              <span className="shrink-0 font-semibold">RECOMPUTED:</span>
               <code
-                className={
+                className={`break-all ${
                   computedHash === canonicalHash
                     ? 'text-[var(--state-allow)]'
                     : 'text-[var(--state-deny)]'
-                }
+                }`}
               >
                 {computedHash}
               </code>

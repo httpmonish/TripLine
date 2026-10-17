@@ -59,6 +59,14 @@ from dashboard.schemas import (
     WitnessSummaryResponse,
     WitnessTamperResponse,
     WitnessVerifyResponse,
+    REATargetItem,
+    REATargetsResponse,
+    REAInvestigationSummary,
+    REAInvestigationDetail,
+    CredentialScanRequest,
+    CredentialScanResponse,
+    DocumentChatRequest,
+    DocumentChatResponse,
 )
 from dashboard.security import (
     get_process_csrf_token,
@@ -1391,8 +1399,19 @@ async def stream_agent_run_events(run_id: str):
 
 
 @api_router.post("/agent/runs")
+@api_router.post("/agent/task")
 async def start_agent_run(request: Request):
     verify_csrf_and_origin(request)
+
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    task = body.get("task")
+    mode = body.get("mode", "B")
+    model = body.get("model")
 
     # Check TRIPLINE_ENABLE_LIVE gate per Rule R11 / Rule R4
     live_enabled = os.environ.get("TRIPLINE_ENABLE_LIVE", "").strip().lower() in ("1", "true", "yes")
@@ -1402,14 +1421,46 @@ async def start_agent_run(request: Request):
             detail="Live agent execution is disabled. Set TRIPLINE_ENABLE_LIVE=1 in environment to enable live LLM runs."
         )
 
+    has_armoriq = bool(os.environ.get("ARMORIQ_API_KEY"))
+    if not has_armoriq:
+        raise HTTPException(
+            status_code=403,
+            detail="Missing ArmorIQ credentials. Export ARMORIQ_API_KEY to authorize agent actions."
+        )
+
+    # Check LLM provider configuration separately from ArmorIQ (Phase 1.3 requirement)
+    from agent.real_llm import detect_provider
+    provider, api_key, detected_model = detect_provider()
+    if provider == "none" or not api_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Missing LLM provider credentials. Export GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY for live agent reasoning."
+        )
+
     # Check single active job concurrency
     active = [j for j in job_manager.jobs.values() if j.status in ("pending", "running")]
     if active:
         raise HTTPException(status_code=409, detail="A job is already running. Please wait for it.")
 
-    # Launch agent_v2 job
-    rec = await job_manager.start_job("agent_v2", live=True)
+    # Launch agent_task (dynamic) or agent_v2 (queue)
+    if task and str(task).strip():
+        rec = await job_manager.start_job(
+            "agent_task",
+            params={"task": str(task).strip(), "mode": mode, "model": model or detected_model},
+            confirm_token="CONFIRMED_LIVE_EXECUTION",
+        )
+    else:
+        rec = await job_manager.start_job(
+            "agent_v2",
+            params={"mode": mode},
+            confirm_token="CONFIRMED_LIVE_EXECUTION",
+        )
     return sanitize_payload(rec.to_dict())
+
+
+@api_router.post("/agent/task")
+async def start_agent_task(request: Request):
+    return await start_agent_run(request)
 
 
 @api_router.post("/agent/runs/{run_id}/stop")
@@ -1418,7 +1469,21 @@ async def stop_agent_run(run_id: str, request: Request):
     validate_identifier(run_id, "run_id")
     from agent.safety import trigger_kill_switch
     trigger_kill_switch()
-    return sanitize_payload({"status": "stopped", "run_id": run_id, "kill_switch": "triggered"})
+
+    # Cancel active running subprocess job in job_manager
+    cancelled_job = False
+    active_job_id = None
+    if job_manager.running_job_id:
+        active_job_id = job_manager.running_job_id
+        cancelled_job = await job_manager.cancel_job(active_job_id)
+
+    return sanitize_payload({
+        "status": "stopped",
+        "run_id": run_id,
+        "kill_switch": "triggered",
+        "job_cancelled": cancelled_job,
+        "active_job_id": active_job_id,
+    })
 
 
 @api_router.get("/platform/status")
@@ -1430,7 +1495,50 @@ async def get_platform_status():
 
     live_enabled = os.environ.get("TRIPLINE_ENABLE_LIVE", "").strip().lower() in ("1", "true", "yes")
 
+    from agent.real_llm import detect_provider
+    provider, _, default_model = detect_provider()
+    llm_configured = provider != "none"
+
+    armoriq_status = "CONFIGURED" if key_present else "ABSENT"
+    p11_dir = REPO_ROOT / "results" / "phase11"
+    run_count = 0
+    latest_run_id = None
+    if p11_dir.exists():
+        manifests = sorted(p11_dir.glob("*/run_manifest.json"), reverse=True)
+        run_count = len(manifests)
+        if manifests:
+            armoriq_status = "EXERCISED"
+            try:
+                latest_data = json.loads(manifests[0].read_text(encoding="utf-8"))
+                latest_run_id = latest_data.get("run_id")
+            except Exception:
+                pass
+
+    active_jobs = [j for j in job_manager.jobs.values() if j.status in ("pending", "running")]
+    active_job_id = active_jobs[0].job_id if active_jobs else None
+
+    # Exact actionable explanation for missing dependencies
+    actionable_explanation = ""
+    if not live_enabled:
+        actionable_explanation = (
+            "Live dynamic agent execution is currently gated (TRIPLINE_ENABLE_LIVE is 0 or unset). "
+            "You can execute deterministic security proofs or inspect recorded demonstrations with zero API keys required."
+        )
+    elif not key_present:
+        actionable_explanation = (
+            "ArmorIQ API credentials are not configured. "
+            "Export ARMORIQ_API_KEY to enable live authorization. Deterministic sandbox proofs and recorded replays remain available."
+        )
+    elif not llm_configured:
+        actionable_explanation = (
+            "No LLM provider credentials configured (Gemini/Anthropic/OpenAI). "
+            "Export an API key to enable live reasoning. Deterministic sandbox proofs remain available."
+        )
+    else:
+        actionable_explanation = "All services and credentials are ready for live governed agent execution."
+
     return sanitize_payload({
+        "backend_available": True,
         "key_present": key_present,
         "sdk_version": "0.6.10",
         "integration_mode": "MODE_B",
@@ -1438,6 +1546,26 @@ async def get_platform_status():
         "registered_agent_name": "tripline-maintainer",
         "environment": "sandbox",
         "live_enabled": live_enabled,
+        "armoriq_status": armoriq_status,
+        "llm_provider": provider,
+        "llm_model": default_model,
+        "llm_configured": llm_configured,
+        "active_job_id": active_job_id,
+        "run_count": run_count,
+        "latest_run_id": latest_run_id,
+        "actionable_explanation": actionable_explanation,
+        "readiness": {
+            "backend": {"ready": True, "label": "Online (FastAPI /api)"},
+            "llm": {"ready": llm_configured, "provider": provider, "model": default_model},
+            "armoriq_credentials": {"ready": key_present, "status": armoriq_status},
+            "live_execution": {"ready": live_enabled and key_present and llm_configured, "enabled": live_enabled},
+            "authorization_service": {
+                "status": armoriq_status,
+                "label": "Exercised (past runs)" if armoriq_status == "EXERCISED" else ("Configured" if armoriq_status == "CONFIGURED" else "Absent"),
+            },
+            "sandbox_proofs": {"ready": True, "label": "Deterministic Offline Sandbox Ready"},
+            "recorded_replays": {"ready": run_count > 0, "count": run_count},
+        },
     })
 
 
@@ -1548,4 +1676,279 @@ async def get_glossary():
         }
     ]
     return sanitize_payload({"terms": glossary_terms})
+
+
+# ── 11. REA (Reverse Engineer Anything) Investigation Endpoints ───────────────
+
+@api_router.get("/rea/targets", response_model=REATargetsResponse)
+async def get_rea_targets():
+    """Returns preapproved target list confined to controlled analysis root."""
+    from agent.rea_adapter import APPROVED_TARGET_REGISTRY, CONTROLLED_ANALYSIS_ROOT
+    targets: List[REATargetItem] = []
+    seen = set()
+    for tid, path in APPROVED_TARGET_REGISTRY.items():
+        if tid in seen:
+            continue
+        seen.add(tid)
+        rel_path = str(path.relative_to(REPO_ROOT)) if str(path).startswith(str(REPO_ROOT)) else str(path)
+        targets.append(
+            REATargetItem(
+                id=tid,
+                description="Preapproved synthetic Electron/JS application with IPC handlers and token verification logic for static reverse engineering",
+                path=rel_path,
+                preapproved=True,
+            )
+        )
+    return REATargetsResponse(targets=targets)
+
+
+@api_router.get("/rea/investigations", response_model=List[REAInvestigationSummary])
+async def list_rea_investigations():
+    """Lists completed REA investigation packages under investigations/."""
+    inv_dir = REPO_ROOT / "investigations"
+    summaries: List[REAInvestigationSummary] = []
+    if not inv_dir.exists():
+        return summaries
+
+    for d in sorted(inv_dir.glob("inv-*"), reverse=True):
+        if not d.is_dir():
+            continue
+        run_id = d.name
+        receipt_file = d / "receipt.json"
+        report_file = d / "report.json"
+
+        target_id = None
+        timestamp = None
+        operation = None
+        auth_decision = None
+        dispatch_status = None
+        verification_status = None
+        receipt_id = None
+        evidence_count = 0
+
+        if receipt_file.exists():
+            try:
+                rcpt_data = json.loads(receipt_file.read_text(encoding="utf-8"))
+                receipt_id = rcpt_data.get("receipt_id")
+                target_id = rcpt_data.get("target_id")
+                timestamp = rcpt_data.get("timestamp_utc")
+                operation = rcpt_data.get("operation")
+                auth_decision = rcpt_data.get("authorization_decision")
+                dispatch_status = rcpt_data.get("dispatch_status")
+                verification_status = rcpt_data.get("verification_status")
+                evidence_count = len(rcpt_data.get("evidence_refs", []))
+            except Exception:
+                pass
+
+        summaries.append(
+            REAInvestigationSummary(
+                run_id=run_id,
+                target_id=target_id,
+                timestamp=timestamp,
+                operation=operation,
+                auth_decision=auth_decision,
+                dispatch_status=dispatch_status,
+                verification_status=verification_status,
+                receipt_id=receipt_id,
+                has_report=report_file.exists(),
+                evidence_count=evidence_count,
+            )
+        )
+
+    return summaries
+
+
+@api_router.get("/rea/investigations/{run_id}", response_model=REAInvestigationDetail)
+async def get_rea_investigation(run_id: str):
+    """Returns detailed findings, markdown report, and receipt for a specific investigation."""
+    validate_identifier(run_id, "run_id")
+    target_dir = REPO_ROOT / "investigations" / run_id
+    if not target_dir.exists() or not target_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"Investigation '{run_id}' not found")
+
+    report_data = None
+    receipt_data = None
+    report_md = None
+
+    report_json_path = target_dir / "report.json"
+    if report_json_path.exists():
+        try:
+            report_data = json.loads(report_json_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    receipt_json_path = target_dir / "receipt.json"
+    if receipt_json_path.exists():
+        try:
+            receipt_data = json.loads(receipt_json_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    report_md_path = target_dir / "report.md"
+    if report_md_path.exists():
+        try:
+            # Safe read up to 64KB for viewer display
+            report_md = report_md_path.read_text(encoding="utf-8")[:65536]
+        except Exception:
+            pass
+
+    target_id = None
+    if receipt_data:
+        target_id = receipt_data.get("target_id")
+    elif report_data:
+        target_id = report_data.get("target_id")
+
+    return sanitize_payload(
+        REAInvestigationDetail(
+            run_id=run_id,
+            target_id=target_id,
+            report=report_data,
+            receipt=receipt_data,
+            report_markdown=report_md,
+        ).model_dump()
+    )
+
+
+# ── 15. Volunteer Portal Demonstration Endpoints (Phase 2) ───────────────────
+
+@api_router.get("/volunteer/portal")
+async def get_volunteer_portal():
+    """Returns synthetic volunteer portal organization data, applications list, and classification."""
+    from agent.volunteer_portal import list_volunteer_applications, ORGANIZATION_METADATA
+    listing = list_volunteer_applications()
+    return sanitize_payload({
+        "organization": ORGANIZATION_METADATA,
+        "listing": listing,
+        "classification": ORGANIZATION_METADATA["data_classification"],
+        "security_policy": ORGANIZATION_METADATA["policy_scope"],
+    })
+
+
+@api_router.get("/volunteer/applications/{application_id}")
+async def get_volunteer_application_detail(application_id: str):
+    """Returns detail for a specific synthetic volunteer application."""
+    validate_identifier(application_id, "application_id")
+    from agent.volunteer_portal import read_volunteer_application
+    try:
+        detail = read_volunteer_application(application_id)
+        return sanitize_payload(detail)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@api_router.get("/volunteer/stats")
+async def get_volunteer_stats():
+    """Returns authoritative dispatch statistics proving whether restricted tools were executed."""
+    from agent.volunteer_portal import get_volunteer_execution_stats
+    return sanitize_payload(get_volunteer_execution_stats())
+
+
+@api_router.post("/volunteer/media-preview")
+async def upload_volunteer_media_preview(request: Request):
+    """
+    Honest media handler (Phase 2.2):
+    1. Validates file metadata and reasonable size bounds (max 50MB).
+    2. Computes verifiable SHA-256 content hash without external exfiltration.
+    3. Clearly labels media as local preview demonstration, not external AI video analysis.
+    """
+    verify_csrf_and_origin(request)
+    form = await request.form()
+    file_upload = form.get("file")
+
+    if not file_upload or not hasattr(file_upload, "read"):
+        raise HTTPException(status_code=400, detail="No file provided in 'file' form field")
+
+    filename = getattr(file_upload, "filename", "uploaded_media.mp4")
+    # Sanitize filename
+    safe_name = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", pathlib.Path(filename).name)
+    allowed_exts = (".mp4", ".webm", ".mov", ".png", ".jpg", ".jpeg", ".pdf")
+    ext = pathlib.Path(safe_name).suffix.lower()
+    if ext not in allowed_exts:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Allowed types: {', '.join(allowed_exts)}"
+        )
+
+    content = await file_upload.read()
+    size_bytes = len(content)
+    max_size = 50 * 1024 * 1024  # 50MB
+    if size_bytes > max_size:
+        raise HTTPException(status_code=413, detail=f"File exceeds 50MB limit ({size_bytes} bytes)")
+
+    # Compute content hash
+    content_hash = hashlib.sha256(content).hexdigest()
+
+    # Store in controlled workspace
+    upload_dir = REPO_ROOT / "results" / "media_uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    stored_path = upload_dir / f"{content_hash[:16]}_{safe_name}"
+    stored_path.write_bytes(content)
+
+    return sanitize_payload({
+        "status": "staged_locally",
+        "filename": safe_name,
+        "size_bytes": size_bytes,
+        "media_type": ext.lstrip("."),
+        "sha256": content_hash,
+        "local_storage_path": f"results/media_uploads/{stored_path.name}",
+        "privacy_notice": (
+            "Local sandbox preview only. File content is held server-side and has NOT been "
+            "transmitted to any external LLM provider or third party."
+        ),
+        "analysis_mode": "VISUALIZED_DEMONSTRATION (No third-party video scraping or automated profiling)",
+    })
+
+
+# ── Credential DLP & Secret Interception Scan ────────────────────────────────
+
+@api_router.post("/demo/analyze-credential-file", response_model=CredentialScanResponse)
+async def analyze_credential_file(req: CredentialScanRequest, request: Request):
+    """
+    ArmorIQ SDK Credential Inspection & TripLine Evidence Guard:
+    1. Evaluates target file buffer for secret credentials and high-entropy tokens.
+    2. Enforces ArmorIQ SDK policy: halts execution upstream (DENY) if unredacted credentials detected.
+    3. Guarantees zero MCP tool execution and zero tokens exposed to LLM.
+    4. Mints and signs an authentic RFC-8785 IncidentReceipt with HMAC witness key.
+    """
+    verify_csrf_and_origin(request)
+    from agent.credential_scanner import analyze_and_generate_receipt
+    
+    # Safe bounds check
+    if len(req.content) > 64 * 1024:
+        raise HTTPException(status_code=413, detail="File content exceeds 64KB safety limit")
+        
+    safe_filename = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", pathlib.Path(req.filename).name) or "uploaded_file.txt"
+    res = analyze_and_generate_receipt(safe_filename, req.content, action=req.action or "read_file")
+    return sanitize_payload(res)
+
+
+@api_router.post("/demo/chat", response_model=DocumentChatResponse)
+async def demo_document_chat(req: DocumentChatRequest, request: Request):
+    """
+    TripLine Security Intelligence Chatbot:
+    Answers user inquiries regarding document block status, ArmorIQ SDK decisions,
+    detected credentials, cryptographic receipt evidence, and LLM shielding guarantees.
+    """
+    verify_csrf_and_origin(request)
+    from agent.credential_scanner import answer_document_question
+    
+    # Safe bounds check
+    if len(req.message) > 4096:
+        raise HTTPException(status_code=413, detail="Message exceeds 4KB limit")
+    if req.document_content and len(req.document_content) > 64 * 1024:
+        raise HTTPException(status_code=413, detail="File content exceeds 64KB safety limit")
+        
+    safe_filename = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", pathlib.Path(req.document_name).name) or "document.txt"
+    ans = answer_document_question(
+        message=req.message,
+        document_name=safe_filename,
+        document_content=req.document_content,
+        scan_result=req.scan_result,
+        history=req.history,
+    )
+    return sanitize_payload(ans)
+
+
 

@@ -301,3 +301,84 @@ class PlatformChecklistResponse(BaseModel):
     platform_url: str
     agent_id: str
     items: List[PlatformChecklistItem]
+
+
+# ── REA Investigation Schemas ────────────────────────────────────────────────
+
+class REATargetItem(BaseModel):
+    id: str
+    description: str
+    path: str
+    preapproved: bool
+
+
+class REATargetsResponse(BaseModel):
+    targets: List[REATargetItem]
+
+
+class REAInvestigationSummary(BaseModel):
+    run_id: str
+    target_id: Optional[str] = None
+    timestamp: Optional[str] = None
+    operation: Optional[str] = None
+    auth_decision: Optional[str] = None
+    dispatch_status: Optional[str] = None
+    verification_status: Optional[str] = None
+    receipt_id: Optional[str] = None
+    has_report: bool = False
+    evidence_count: int = 0
+
+
+class REAInvestigationDetail(BaseModel):
+    run_id: str
+    target_id: Optional[str] = None
+    report: Optional[Dict[str, Any]] = None
+    receipt: Optional[Dict[str, Any]] = None
+    report_markdown: Optional[str] = None
+
+
+# ── Credential Scanner Schemas ───────────────────────────────────────────────
+
+class CredentialScanRequest(BaseModel):
+    filename: str = Field(..., description="Name of the file to inspect")
+    content: str = Field(..., description="Raw text content of the uploaded file")
+    action: Optional[str] = Field(default="read_file", description="MCP tool action proposed")
+
+
+class CredentialScanResponse(BaseModel):
+    receipt_id: str
+    incident_id: str
+    armoriq_decision: str
+    armoriq_reason: str
+    tripline_decision: str
+    tripline_reason: str
+    matched_policy: str
+    threats_detected: List[str]
+    entropy_score: float
+    blocked: bool
+    receipt: Dict[str, Any]
+    canonical_hash: str
+    receipt_signature: str
+    witness_head_hmac: str
+    simulation_steps: List[Dict[str, Any]]
+
+
+# ── Document Intelligence Chatbot Schemas ────────────────────────────────────
+
+class DocumentChatRequest(BaseModel):
+    message: str = Field(..., description="User query about the document or security analysis")
+    document_name: str = Field(..., description="Target file name")
+    document_content: Optional[str] = Field(default=None, description="Optional document buffer")
+    scan_result: Optional[Dict[str, Any]] = Field(default=None, description="Prior scan result or receipt")
+    history: Optional[List[Dict[str, str]]] = Field(default=[], description="Chat dialogue history")
+
+
+class DocumentChatResponse(BaseModel):
+    response: str = Field(..., description="Assistant response explaining block status and document details")
+    is_blocked: bool = Field(..., description="Whether the document is blocked by ArmorIQ SDK")
+    verdict: str = Field(..., description="ArmorIQ decision: DENY or ALLOW")
+    threats: List[str] = Field(default=[], description="List of detected secret/credential patterns")
+    receipt_id: Optional[str] = Field(default=None, description="TripLine signed evidence receipt ID")
+
+
+

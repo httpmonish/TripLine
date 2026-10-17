@@ -130,3 +130,4 @@
 {"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:32:55.108602+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-ca5dcec9-call-p1_"}
 {"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:33:01.762280+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-ca5dcec9-call-p2_"}
 {"trace_id": "TRPL-TRACE-4438dcdb", "timestamp": "2026-10-10T13:33:05.026532+00:00", "stage": 8, "stage_name": "RECEIPT", "event": "receipt_signed", "receipt_id": "RCP-phase3-wow-ca5dcec9-call-p3_"}
+

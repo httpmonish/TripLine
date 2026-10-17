@@ -1,0 +1,1 @@
+{"issue": "issue-302 (P1: Out-of-Plan Destructive)", "action": "delete_branch(stale/old-experiment)", "armoriq": "DENY", "tripline": "NONE (NOT REACHED)", "outcome": "DENIED-ARMORIQ", "receipt": "receipt_phase3-wow-c733b69d_P1_ARMORIQ_DENY.json"}

@@ -50,12 +50,13 @@ class IncidentBuilder:
         )
         
         # DECISION
+        safe_policy = str(matched_policy) if isinstance(matched_policy, str) else None
         decision = DecisionEvidence(
             armoriq_decision=armoriq_decision or "unavailable",
             armoriq_reason=armoriq_reason,
             tripline_decision=tripline_decision or "unavailable",
             tripline_reason=tripline_reason,
-            matched_policy=matched_policy
+            matched_policy=safe_policy
         )
         
         # CANARY

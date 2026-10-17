@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Section } from '@/components/ui/Section'
 import { HeroSection } from '@/components/narrative/HeroSection'
 import { GapComparison } from '@/components/narrative/GapComparison'
@@ -12,10 +12,40 @@ import { VerificationModules } from '@/components/narrative/VerificationModules'
 import { EvidenceIndex } from '@/components/narrative/EvidenceIndex'
 import { ClosingCTA } from '@/components/narrative/ClosingCTA'
 import { getSummaryStats, getReceipts } from '@/lib/data'
+import { api } from '@/lib/api'
 
 export default function OverviewPage() {
-  const stats = getSummaryStats()
-  const receipts = getReceipts()
+  const initialStats = getSummaryStats()
+  const initialReceipts = getReceipts()
+  const [stats, setStats] = useState(initialStats)
+  const [receipts, setReceipts] = useState<any[]>(initialReceipts)
+
+  useEffect(() => {
+    let mounted = true
+    Promise.allSettled([api.getSummary(), api.getReceipts()]).then(([sumRes, recRes]) => {
+      if (!mounted) return
+      if (sumRes.status === 'fulfilled' && sumRes.value) {
+        const s = sumRes.value
+        setStats(prev => ({
+          ...prev,
+          recorded_runs: s.total_runs ?? s.runs ?? prev.recorded_runs,
+          signed_receipts: s.total_receipts ?? s.receipts ?? prev.signed_receipts,
+          witness_records: s.witness_records ?? prev.witness_records,
+          jail_probes: s.probes_total ? `${s.probes_passed}/${s.probes_total}` : prev.jail_probes,
+          source: 'Live API /api/summary'
+        }))
+      }
+      if (recRes.status === 'fulfilled' && recRes.value && recRes.value.length > 0) {
+        const first = recRes.value[0]
+        api.getReceipt(first.receipt_id).then(full => {
+          if (!mounted) return
+          setReceipts(prev => [full, ...prev.slice(1)])
+        }).catch(() => {})
+      }
+    })
+    return () => { mounted = false }
+  }, [])
+
   const primaryReceipt = stats.primary_receipt || receipts[0]
 
   return (

@@ -9,15 +9,17 @@ A serious enterprise AI-agent security product website for Tripline, built for t
 - **Diagrams & Animation**: Inline SVG React components, zero heavy animation runtimes, strict `prefers-reduced-motion` compliance
 - **Data Integrity**: Typed build-time data generation from repository evidence (`scripts/sync-data.ts`)
 
-## Routes
-- `/` — Overview: Hero (D1), The Gap, Three Stages (D2), Interception Narrative, Layer Matrix (D3), Non-Repudiation (D5), Modules, Evidence Views, Closing CTA.
-- `/receipts` — Incident Receipts Registry: Ruled receipt list, ReceiptCard, D5 verify strip, offline and in-memory tamper simulation.
-- `/console` — Agent Execution Trace: Terminal timeline of Claude 3.5 Sonnet processing 5 issues.
+## Interactive Enterprise Routes
+- `/` — Enterprise Homepage: Interactive multi-layer architecture visualization, live platform readiness indicators, recent runs & receipts summary, cryptographic verification and tamper-check controls.
+- `/agent` — Agent Console: Real crew manifests with Ed25519 signing keys, run history selector, live run execution with CSRF/confirmation safeguards, SSE event streaming, REA static analysis inspection, and distinct ArmorIQ vs TripLine security decision cards.
+- `/receipts` — Security Receipts Registry: Signed Ed25519/HMAC receipts explorer with direct backend verification (`POST /api/receipts/{id}/verify`) and live single-byte tamper checks (`POST /api/receipts/{id}/tamper-check`).
+- `/witness` — Witness Ledger: Append-only HMAC-SHA256 hash-chain binding tool calls with interactive backend chain verification and tamper demonstration.
+- `/console` — Safe Operations & Technical Console: 8 allowlisted jobs (`jail_burst`, `verify_all`, `tamper_demo`, `rea_investigate`, `scenario`, `audit`, `armoriq_proof`, `tests`) with live subprocess terminal streaming and cancellation.
 - `/jail-burst` — Path Jail Burst Harness: 8 deterministic path-traversal encoding probes with 0 leaked bytes.
-- `/witness` — Witness Hash-Chain Ledger: Append-only HMAC hash-chain binding tool executions.
 - `/measured` — Measured Overhead & Protection: Empirical protection metrics and code growth stats.
 - `/claims` — Claims & Honest Limits: Rule 10 truth audit matrix and acknowledged residuals.
 - `/layers` (alias `/attribution`) — Layer Attribution: 5-layer containment matrix across recorded attacks.
+- `/overview` — Comprehensive narrative overview with dynamic API hydration.
 
 ## How to Build & Export
 ```bash

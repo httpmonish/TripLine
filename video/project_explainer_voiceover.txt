@@ -1,0 +1,48 @@
+[00:00:00,000 - 00:00:26,080] B01 (Scene 1 — Introduction: What Is TripLine?):
+AI agents are becoming capable of performing real actions. They can read files, use tools, and interact with services. That makes them useful, but it also means an unsafe action can have real consequences. TripLine is designed to make AI tool execution easier to govern, contain, and investigate. ArmorIQ handles upstream authorization; TripLine applies independent execution controls and records verifiable cryptographic receipts.
+
+[00:00:26,080 - 00:00:41,630] B02 (Scene 1 — Introduction: What Is TripLine?):
+TripLine is not a simple chatbot with a security theme. It is a defense-in-depth platform coupling upstream policy authorization with local execution containment. Operating in Mode B, the agent verifies policy against ArmorIQ before any protected tool executes.
+
+[00:00:41,630 - 00:00:58,310] B03 (Scene 2 — The Problem We Are Solving):
+When untrusted GitHub issues or user prompts enter an AI agent's context, prompt injection can trick the model into proposing destructive commands or path traversals. A model's suggestion does not grant permission. Protected operations must follow strict authorization and physical execution containment.
+
+[00:00:58,310 - 00:01:13,420] B04 (Scene 3 — Full Website Walkthrough):
+Visiting the 4-Plane Architecture page, operators can inspect the four defensive boundaries: Plane 0 for scoped agent planning, Plane 1 for ArmorIQ policy gates, Plane 2 for in-MCP containment, and Plane 3 for cryptographic witness receipts.
+
+[00:01:13,420 - 00:01:28,290] B05 (Scene 3 — Full Website Walkthrough):
+The Agent Console exposes the scoped agent crew: the tripline-maintainer orchestrator, the restricted reader, and the triage responder. Real-time execution events stream directly over Server-Sent Events, logging plans, tool proposals, and decisions.
+
+[00:01:28,290 - 00:01:43,480] B06 (Scene 3 — Full Website Walkthrough):
+The Path Jail Burst interface shows twenty-four adversarial directory traversal probes, including nested parent traversals, URI encoded attacks, and symlinks. Every traversal is trapped with zero bytes leaked, while valid sandbox reads execute successfully.
+
+[00:01:43,480 - 00:02:00,500] B07 (Scene 3 — Full Website Walkthrough):
+The Receipts explorer allows operators to inspect canonical JSON evidence records, complete with SHA-256 hashes and HMAC signatures. The Witness Log displays the sequential hash-chain, while the Claims Ledger tracks twenty-two verified system claims against repository commits.
+
+[00:02:00,500 - 00:02:23,600] B08 (Scene 4 — Technical Architecture and Technology Stack):
+The technical architecture is built on Next.js 14, React 18, and Tailwind CSS for the user interface; FastAPI and Starlette for the backend API; FastMCP for registered Model Context Protocol tools; the ArmorIQ Python SDK for policy enforcement; and native cryptography for HMAC receipts and Ed25519 key delegation.
+
+[00:02:23,600 - 00:02:41,770] B09 (Scene 5 — How the AI Agent Actually Works):
+When a task is submitted, the backend prepares a trusted plan and computes its SHA-256 hash before untrusted issue text is ingested. When the model proposes a tool action, the parameters are sanitized and submitted to ArmorIQ. Only authorized actions reach execution, and all outcomes are streamed and sealed.
+
+[00:02:41,770 - 00:03:00,040] B10 (Scene 6 — ArmorIQ SDK and MCP Server):
+Under Mode B integration, tool calls execute inside local FastMCP rather than through an external network proxy. ArmorIQ evaluates session intent before TripLine touches MCP. Here, an injected request to delete a branch is immediately denied by ArmorIQ policy with zero MCP calls dispatched.
+
+[00:03:00,040 - 00:03:19,490] B11 (Scene 7 — TripLine's Independent Security Controls):
+Even if an attacker bypasses prompt filters, TripLine's in-MCP Path Jail enforces operating system level containment. Using open-then-verify fstat inode verification, it prevents directory traversal, symlink swaps, and time-of-check to time-of-use attacks, ensuring private SSH keys remain completely protected.
+
+[00:03:19,490 - 00:03:35,300] B12 (Scene 7 — TripLine's Independent Security Controls):
+The Egress Gateway inspects all outbound payloads for synthetic canary tokens. When an exfiltration attempt occurs, the gateway places the action into quarantine hold before dispatch. Combined with high-entropy credential scanning, secrets are blocked before entering the LLM prompt.
+
+[00:03:35,300 - 00:03:53,620] B13 (Scene 8 — Evidence: Receipts, Witness Chain and Verification):
+Every denied or held action generates an RFC-8785 canonical JSON receipt signed with an HMAC witness key across ten covered fields. Offline verification requires no network access. Mutating even one byte in a stored receipt deterministically causes an immediate tamper detection failure.
+
+[00:03:53,620 - 00:04:09,070] B14 (Scene 9 — REA: Reverse Engineer Anything):
+TripLine integrates REA for controlled static reverse engineering. Operating against a confined synthetic Electron target, the subsystem performs AST parsing and feature tracing under ArmorIQ policy governance, generating sealed architectural evidence packages.
+
+[00:04:09,070 - 00:04:29,690] B15 (Scene 10 — Measured Evaluation and Security Claims):
+In our measured evaluation across eighty-six runs and twenty-seven scenarios, an undefended agent had a zero percent defense rate; ArmorIQ alone achieved thirty-seven point five percent; and the combined TripLine platform achieved one hundred percent containment. We disclose that deterministic stubs were used to isolate boundary enforcement from stochastic LLM refusal.
+
+[00:04:29,690 - 00:04:43,150] B16 (Scene 11 & 12 — Development, Limitations & Closing):
+TripLine unites governed AI tool use, independent execution controls, and forensic evidence. Over two hundred eighty-nine automated tests validate the implementation. ArmorIQ decides. TripLine contains and proves.
+

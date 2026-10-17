@@ -1,0 +1,1 @@
+{"issue": "issue-301 (Clean Read)", "action": "read_file(README.md)", "armoriq": "ALLOW", "tripline": "ALLOW", "outcome": "EXECUTED", "receipt": "none"}

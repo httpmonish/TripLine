@@ -1,0 +1,39 @@
+[00:00:00,000 - 00:00:16,885] Homepage & System Overview (http://127.0.0.1:8080/):
+Welcome to TripLine. TripLine adds multi-layer containment and cryptographic forensic receipts to autonomous AI agents. The core message is that blocked isn't evidence; every denied action gets a receipt. Here on our running local dashboard, we see Mode B integration active, where ArmorIQ authorizes tool calls upstream and TripLine contains execution locally.
+
+[00:00:16,885 - 00:00:31,550] 4-Plane Security Architecture (http://127.0.0.1:8080/#architecture):
+Scrolling into the Four-Plane Security Architecture, we see the layered defense boundaries. Plane 0 synthesizes a trusted plan hash. Plane 1 evaluates policy through ArmorIQ. Plane 2 contains execution inside FastMCP via the Path Jail and Egress Gateway. And Plane 3 seals all decisions into an append-only witness chain.
+
+[00:00:31,550 - 00:00:47,685] Governed Execution Console (http://127.0.0.1:8080/#workflow):
+In the live execution console, operators can launch supported security tasks. Selecting the Multi-Layer Security Proof executes a three-attack triage queue: an out-of-plan branch deletion is stopped by ArmorIQ; a path traversal is trapped by the Path Jail; and a canary exfiltration is quarantined by the Egress Gateway.
+
+[00:00:47,685 - 00:00:58,483] Interactive Credential Scanner (http://127.0.0.1:8080/#demo-console):
+Switching to the Credential Scanner tab reveals TripLine's secret shield. High-entropy credentials and private keys are flagged by Shannon entropy analysis, and ArmorIQ policy halts file ingest before any sensitive tokens reach the model prompt.
+
+[00:00:58,483 - 00:01:14,801] Governed Agent Console (http://127.0.0.1:8080/agent):
+Navigating to the Agent Console, we inspect the scoped crew: the maintainer orchestrator, restricted reader, and triage responder, each operating with ephemeral Ed25519 keypairs. The live Server-Sent Events stream renders typed execution events, from pre-ingestion plan hashing to tool proposals and decision receipts.
+
+[00:01:14,801 - 00:01:27,265] How It Works & System Invariants (http://127.0.0.1:8080/how-it-works):
+The How It Works page provides comprehensive technical documentation of system boundaries and trust invariants. It explains how untrusted issues are tagged with provenance, how the replan lock blocks prompt injection hijack, and how decision proofs are minted with a sixty-second validity window.
+
+[00:01:27,265 - 00:01:39,716] Path Jail 24-Probe Burst Fuzzer (http://127.0.0.1:8080/jail-burst):
+Visiting the Path Jail Burst interface, twenty-four adversarial directory traversal probes are evaluated against the in-MCP Path Jail, including parent traversals, URI encoded escapes, and symlinks. Every probe is trapped with zero bytes leaked, while legitimate in-sandbox reads execute normally.
+
+[00:01:39,716 - 00:01:51,692] Forensic Incident Receipts (http://127.0.0.1:8080/receipts):
+On the Receipts page, operators can inspect every emitted incident receipt. Each record contains an RFC-8785 canonical JSON payload, SHA-256 digest, and HMAC witness signature across ten covered fields, providing tamper-evident forensic non-repudiation.
+
+[00:01:51,692 - 00:02:01,680] Witness Log Hash Chain (http://127.0.0.1:8080/witness):
+Moving to the Witness page, we view the sequential HMAC hash-chain. Each execution event cryptographically links to the previous record. Any modification breaks the chain deterministically during verification.
+
+[00:02:01,680 - 00:02:17,048] Measured Benchmark Evaluation (http://127.0.0.1:8080/measured):
+The Measured Evaluation dashboard visualizes our eighty-six run benchmark across twenty-seven attack and benign scenarios. An undefended agent had a zero percent defense rate; ArmorIQ alone blocked destructive commands for thirty-seven point five percent; and the combined TripLine platform achieved one hundred percent containment.
+
+[00:02:17,048 - 00:02:26,581] Verified Claims Ledger (http://127.0.0.1:8080/claims):
+The Claims Ledger provides an immutable audit matrix verifying twenty-two formal system claims against concrete source files, git commits, and test outputs, ensuring complete transparency with zero fabricated claims.
+
+[00:02:26,581 - 00:02:33,096] Layer Defense Attribution (http://127.0.0.1:8080/attribution):
+The Layer Attribution view breaks down exactly which defensive layer stopped each threat, attributing decisions between ArmorIQ policy, Path Jail, and Egress Gateway.
+
+[00:02:33,096 - 00:02:39,112] Platform Summary & Closing (http://127.0.0.1:8080/):
+Returning to the homepage: TripLine delivers governed execution, containment, and verifiable proof. ArmorIQ decides. TripLine contains and proves.
+

@@ -124,8 +124,9 @@ def test_scenario_log_schema():
     logs = list(scenario_log)
     assert len(logs) > 0, "Scenario log file must exist"
     
-    # Read the latest scenario log
-    lines = [json.loads(l) for l in logs[0].read_text().splitlines() if l.strip()]
+    # Read the latest scenario log by mtime
+    latest_log = max(logs, key=lambda p: p.stat().st_mtime)
+    lines = [json.loads(l) for l in latest_log.read_text().splitlines() if l.strip()]
     assert len(lines) == 5, "Scenario log must contain exactly 5 issues"
     
     for row in lines:

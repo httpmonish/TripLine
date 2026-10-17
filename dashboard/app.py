@@ -53,7 +53,7 @@ async def custom_method_not_allowed(request: Request, exc):
 app.include_router(api_router)
 
 # 2. Root endpoint: Serves Next.js single-page application at /
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 async def serve_root(request: Request):
     # In test_honest_empty_state, legacy repo is monkeypatched to tmp_path
     import dashboard.routes as d_routes
@@ -67,35 +67,76 @@ async def serve_root(request: Request):
         return Response(content=index_html.read_text(encoding="utf-8"), media_type="text/html")
     return await legacy_index(request)
 
-# 3. Legacy router (for backward compatibility on /receipts, /attribution, /measured, /about)
-app.include_router(legacy_router)
-
-
-# 4. Next.js static asset chunk mounts
-next_static_dir = FRONTEND_OUT / "_next"
-if next_static_dir.exists():
-    app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
-
-# 5. Local static folder
-static_dir = Path(__file__).parent / "static"
-if static_dir.exists():
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
-# 6. Next.js exported pages router
+# 3. Next.js exported pages router and static root asset handler
 import re
 from fastapi import HTTPException
 
-@app.get("/{slug}")
-async def serve_frontend_page(slug: str):
-    if not re.match(r"^[a-zA-Z0-9_\-]+$", slug):
+STATIC_MIME_TYPES = {
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".ico": "image/x-icon",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".txt": "text/plain",
+    ".json": "application/json",
+    ".xml": "application/xml",
+    ".html": "text/html",
+}
+
+@app.api_route("/favicon.ico", methods=["GET", "HEAD"], include_in_schema=False)
+async def serve_favicon_ico(request: Request):
+    for candidate in ["favicon.ico", "favicon.svg", "tripline-favicon.svg"]:
+        p = FRONTEND_OUT / candidate
+        if p.is_file():
+            media = "image/x-icon" if candidate.endswith(".ico") else "image/svg+xml"
+            return Response(content=p.read_bytes(), media_type=media)
+    raise HTTPException(status_code=404, detail="Not Found")
+
+@app.api_route("/{slug}", methods=["GET", "HEAD"], include_in_schema=False)
+async def serve_frontend_page(slug: str, request: Request):
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+$", slug) or slug.startswith(".") or ".." in slug:
         raise HTTPException(status_code=404, detail="Not Found")
+
+    # Direct static file in FRONTEND_OUT (e.g. /favicon.svg, /tripline-favicon.svg, /tripline-favicon-32.png)
+    file_candidate = FRONTEND_OUT / slug
+    if file_candidate.is_file():
+        media_type = STATIC_MIME_TYPES.get(file_candidate.suffix.lower(), "application/octet-stream")
+        return Response(content=file_candidate.read_bytes(), media_type=media_type)
+
     html_candidate = FRONTEND_OUT / f"{slug}.html"
     if html_candidate.exists():
         return Response(content=html_candidate.read_text(encoding="utf-8"), media_type="text/html")
     dir_candidate = FRONTEND_OUT / slug / "index.html"
     if dir_candidate.exists():
         return Response(content=dir_candidate.read_text(encoding="utf-8"), media_type="text/html")
+
+    # If no Next.js page matches, check legacy views (e.g. /boundary, /scoreboard, /about)
+    legacy_handlers = {
+        "boundary": "boundary_view",
+        "scoreboard": "scoreboard_view",
+        "about": "about_view",
+    }
+    if slug in legacy_handlers:
+        import dashboard.routes as d_routes
+        handler = getattr(d_routes, legacy_handlers[slug], None)
+        if handler:
+            return await handler(request)
+
     raise HTTPException(status_code=404, detail="Not Found")
+
+# 4. Legacy router (for backward compatibility on detail routes like /receipts/{id}, /runs/{id})
+app.include_router(legacy_router)
+
+# 5. Next.js static asset chunk mounts
+next_static_dir = FRONTEND_OUT / "_next"
+if next_static_dir.exists():
+    app.mount("/_next", StaticFiles(directory=str(next_static_dir)), name="next_static")
+
+# 6. Local static folder
+static_dir = Path(__file__).parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # 7. Fallback static mount for icons, images, etc.
 if FRONTEND_OUT.exists():

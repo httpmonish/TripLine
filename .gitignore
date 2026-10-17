@@ -16,11 +16,15 @@ __pycache__/
 .armoriq/
 armoriq.yaml
 
-# Runtime logs
+# Runtime logs and flags
 *.log
 agent/logs/
+.tripline_kill_switch
+.tripline_csrf_token
 results/ui_jobs/
 results/phase11/
+results/rea_investigations/
+investigations/
 
 
 # Temporary and deleted files
@@ -35,7 +39,7 @@ cloudflared.tgz
 
 # DB / Runtime Artifacts
 .tripline/*
-!.tripline/witness_key.txt
+.tripline/witness_key.txt
 !.tripline/witness/
 !.tripline/witness/*
 # Unignore evidence artifacts in results/
@@ -55,4 +59,12 @@ node_modules/
 
 # Local aliases / symlinks
 web
+*.tsbuildinfo
 
+# Video generator intermediate artifacts
+video/frames_explainer/
+video/raw_recordings/
+video/audio_explainer/
+video/audio_walkthrough/
+video/cards_explainer/
+video/web_captures/
