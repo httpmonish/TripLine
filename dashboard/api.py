@@ -1397,6 +1397,7 @@ async def stream_agent_run_events(run_id: str):
 
 
 @api_router.post("/agent/runs")
+@api_router.post("/agent/task")
 async def start_agent_run(request: Request):
     verify_csrf_and_origin(request)
 

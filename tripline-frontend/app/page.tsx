@@ -712,6 +712,7 @@ export default function EnterpriseHomePage() {
             <button
               type="button"
               onClick={() => setDemoTab('workflows')}
+              data-local="tab-workflows"
               className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 demoTab === 'workflows'
                   ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'
@@ -725,6 +726,7 @@ export default function EnterpriseHomePage() {
             <button
               type="button"
               onClick={() => setDemoTab('credential_scan')}
+              data-local="tab-credential-scan"
               className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 demoTab === 'credential_scan'
                   ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'

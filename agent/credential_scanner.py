@@ -207,6 +207,7 @@ def analyze_and_generate_receipt(
         demo_dir = REPO_ROOT / "results" / "demo"
         demo_dir.mkdir(parents=True, exist_ok=True)
         (demo_dir / f"{receipt_id}.json").write_text(json.dumps(receipt_dict, indent=2), encoding="utf-8")
+        (demo_dir / f"receipt_{receipt_id}.json").write_text(json.dumps(receipt_dict, indent=2), encoding="utf-8")
     except Exception:
         pass
 
