@@ -408,6 +408,59 @@ export interface REAInvestigationDetail {
   report_markdown?: string | null
 }
 
+export interface VolunteerApplicationSummary {
+  application_id: string
+  name: string
+  role_interest: string
+  status: string
+  applied_date: string
+  hours_per_week: number
+  background_check: string
+  skills: string[]
+}
+
+export interface VolunteerApplicationDetail extends VolunteerApplicationSummary {
+  notes?: string
+  attachment_reference?: string
+}
+
+export interface VolunteerPortalResponse {
+  organization: {
+    org_id: string
+    name: string
+    portal_version: string
+    data_classification: string
+    policy_scope: string
+    total_applications: number
+  }
+  listing: {
+    organization: string
+    total_records: number
+    applications: VolunteerApplicationSummary[]
+    classification: string
+  }
+  classification: string
+  security_policy: string
+}
+
+export interface VolunteerStatsResponse {
+  dispatch_counts: Record<string, number>
+  total_dispatches: number
+  export_dispatched: boolean
+  trace: Array<{ tool: string; timestamp: string; dispatched: boolean }>
+}
+
+export interface MediaPreviewResponse {
+  status: string
+  filename: string
+  size_bytes: number
+  media_type: string
+  sha256: string
+  local_storage_path: string
+  privacy_notice: string
+  analysis_mode: string
+}
+
 let cachedCsrfToken: string | null = null
 
 async function getCsrfToken(): Promise<string> {

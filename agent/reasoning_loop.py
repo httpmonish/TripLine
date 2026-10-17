@@ -183,6 +183,22 @@ ALLOWED_TOOLS = {
         "required": ["evidence_id", "seed_value"],
         "types": {"evidence_id": str, "seed_value": str, "seed_kind": str, "direction": str},
     },
+    "list_volunteer_applications": {
+        "required": [],
+        "types": {},
+    },
+    "read_volunteer_application": {
+        "required": ["application_id"],
+        "types": {"application_id": str, "attachment_path": str},
+    },
+    "summarize_applications": {
+        "required": [],
+        "types": {"group_by": str},
+    },
+    "export_volunteer_contacts": {
+        "required": ["destination"],
+        "types": {"destination": str, "fields": list},
+    },
 }
 
 

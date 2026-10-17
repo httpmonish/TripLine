@@ -1423,6 +1423,15 @@ async def start_agent_run(request: Request):
             detail="Missing ArmorIQ credentials. Export ARMORIQ_API_KEY to authorize agent actions."
         )
 
+    # Check LLM provider configuration separately from ArmorIQ (Phase 1.3 requirement)
+    from agent.real_llm import detect_provider
+    provider, api_key, detected_model = detect_provider()
+    if provider == "none" or not api_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Missing LLM provider credentials. Export GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY for live agent reasoning."
+        )
+
     # Check single active job concurrency
     active = [j for j in job_manager.jobs.values() if j.status in ("pending", "running")]
     if active:
@@ -1432,7 +1441,7 @@ async def start_agent_run(request: Request):
     if task and str(task).strip():
         rec = await job_manager.start_job(
             "agent_task",
-            params={"task": str(task).strip(), "mode": mode, "model": model},
+            params={"task": str(task).strip(), "mode": mode, "model": model or detected_model},
             confirm_token="CONFIRMED_LIVE_EXECUTION",
         )
     else:
@@ -1455,7 +1464,21 @@ async def stop_agent_run(run_id: str, request: Request):
     validate_identifier(run_id, "run_id")
     from agent.safety import trigger_kill_switch
     trigger_kill_switch()
-    return sanitize_payload({"status": "stopped", "run_id": run_id, "kill_switch": "triggered"})
+
+    # Cancel active running subprocess job in job_manager
+    cancelled_job = False
+    active_job_id = None
+    if job_manager.running_job_id:
+        active_job_id = job_manager.running_job_id
+        cancelled_job = await job_manager.cancel_job(active_job_id)
+
+    return sanitize_payload({
+        "status": "stopped",
+        "run_id": run_id,
+        "kill_switch": "triggered",
+        "job_cancelled": cancelled_job,
+        "active_job_id": active_job_id,
+    })
 
 
 @api_router.get("/platform/status")
@@ -1779,4 +1802,97 @@ async def get_rea_investigation(run_id: str):
             report_markdown=report_md,
         ).model_dump()
     )
+
+
+# ── 15. Volunteer Portal Demonstration Endpoints (Phase 2) ───────────────────
+
+@api_router.get("/volunteer/portal")
+async def get_volunteer_portal():
+    """Returns synthetic volunteer portal organization data, applications list, and classification."""
+    from agent.volunteer_portal import list_volunteer_applications, ORGANIZATION_METADATA
+    listing = list_volunteer_applications()
+    return sanitize_payload({
+        "organization": ORGANIZATION_METADATA,
+        "listing": listing,
+        "classification": ORGANIZATION_METADATA["data_classification"],
+        "security_policy": ORGANIZATION_METADATA["policy_scope"],
+    })
+
+
+@api_router.get("/volunteer/applications/{application_id}")
+async def get_volunteer_application_detail(application_id: str):
+    """Returns detail for a specific synthetic volunteer application."""
+    validate_identifier(application_id, "application_id")
+    from agent.volunteer_portal import read_volunteer_application
+    try:
+        detail = read_volunteer_application(application_id)
+        return sanitize_payload(detail)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@api_router.get("/volunteer/stats")
+async def get_volunteer_stats():
+    """Returns authoritative dispatch statistics proving whether restricted tools were executed."""
+    from agent.volunteer_portal import get_volunteer_execution_stats
+    return sanitize_payload(get_volunteer_execution_stats())
+
+
+@api_router.post("/volunteer/media-preview")
+async def upload_volunteer_media_preview(request: Request):
+    """
+    Honest media handler (Phase 2.2):
+    1. Validates file metadata and reasonable size bounds (max 50MB).
+    2. Computes verifiable SHA-256 content hash without external exfiltration.
+    3. Clearly labels media as local preview demonstration, not external AI video analysis.
+    """
+    verify_csrf_and_origin(request)
+    form = await request.form()
+    file_upload = form.get("file")
+
+    if not file_upload or not hasattr(file_upload, "read"):
+        raise HTTPException(status_code=400, detail="No file provided in 'file' form field")
+
+    filename = getattr(file_upload, "filename", "uploaded_media.mp4")
+    # Sanitize filename
+    safe_name = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", pathlib.Path(filename).name)
+    allowed_exts = (".mp4", ".webm", ".mov", ".png", ".jpg", ".jpeg", ".pdf")
+    ext = pathlib.Path(safe_name).suffix.lower()
+    if ext not in allowed_exts:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Allowed types: {', '.join(allowed_exts)}"
+        )
+
+    content = await file_upload.read()
+    size_bytes = len(content)
+    max_size = 50 * 1024 * 1024  # 50MB
+    if size_bytes > max_size:
+        raise HTTPException(status_code=413, detail=f"File exceeds 50MB limit ({size_bytes} bytes)")
+
+    # Compute content hash
+    content_hash = hashlib.sha256(content).hexdigest()
+
+    # Store in controlled workspace
+    upload_dir = REPO_ROOT / "results" / "media_uploads"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    stored_path = upload_dir / f"{content_hash[:16]}_{safe_name}"
+    stored_path.write_bytes(content)
+
+    return sanitize_payload({
+        "status": "staged_locally",
+        "filename": safe_name,
+        "size_bytes": size_bytes,
+        "media_type": ext.lstrip("."),
+        "sha256": content_hash,
+        "local_storage_path": f"results/media_uploads/{stored_path.name}",
+        "privacy_notice": (
+            "Local sandbox preview only. File content is held server-side and has NOT been "
+            "transmitted to any external LLM provider or third party."
+        ),
+        "analysis_mode": "VISUALIZED_DEMONSTRATION (No third-party video scraping or automated profiling)",
+    })
+
 

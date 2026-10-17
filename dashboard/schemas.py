@@ -336,3 +336,30 @@ class REAInvestigationDetail(BaseModel):
     receipt: Optional[Dict[str, Any]] = None
     report_markdown: Optional[str] = None
 
+
+# ── Credential Scanner Schemas ───────────────────────────────────────────────
+
+class CredentialScanRequest(BaseModel):
+    filename: str = Field(..., description="Name of the file to inspect")
+    content: str = Field(..., description="Raw text content of the uploaded file")
+    action: Optional[str] = Field(default="read_file", description="MCP tool action proposed")
+
+
+class CredentialScanResponse(BaseModel):
+    receipt_id: str
+    incident_id: str
+    armoriq_decision: str
+    armoriq_reason: str
+    tripline_decision: str
+    tripline_reason: str
+    matched_policy: str
+    threats_detected: List[str]
+    entropy_score: float
+    blocked: bool
+    receipt: Dict[str, Any]
+    canonical_hash: str
+    receipt_signature: str
+    witness_head_hmac: str
+    simulation_steps: List[Dict[str, Any]]
+
+

@@ -13,7 +13,7 @@ import hashlib
 import json
 from typing import Any, Dict, List, Optional
 
-# Standard authorized tools for repository issue triage
+# Standard authorized tools for repository issue triage and volunteer administration
 TRUSTED_TRIAGE_ACTIONS = [
     "list_issues",
     "read_issue",
@@ -21,6 +21,9 @@ TRUSTED_TRIAGE_ACTIONS = [
     "comment_issue",
     "label_issue",
     "analyze_electron_app",
+    "list_volunteer_applications",
+    "read_volunteer_application",
+    "summarize_applications",
 ]
 
 # Actions explicitly banned from triage plans
@@ -29,6 +32,7 @@ FORBIDDEN_ACTIONS = {
     "drop_database",
     "exfiltrate_secret",
     "write_file",
+    "export_volunteer_contacts",
 }
 
 

@@ -1,0 +1,2 @@
+{"mcp": "armoriq-gate", "seq": 1, "ts_wall": 1792253487.537558, "prev_hmac": "", "payload_hash": "ff1ee39089e4e85f1ca875c85fbcdbb4f3898b76ab430cbf8472a8d3c886a4a8", "receipt_id": "RCP-ARMORIQ-CREDENTIAL-BLOCKED-01590d8d", "decision": "DENY"}
+{"mcp": "armoriq-gate", "seq": 2, "ts_wall": 1792253490.457061, "prev_hmac": "", "payload_hash": "a2b1bc1f32209e6a95d90002634b54c34941614e4b300155b19ba805c4bfe0a1", "receipt_id": "RCP-ARMORIQ-CREDENTIAL-BLOCKED-5142996a", "decision": "DENY"}

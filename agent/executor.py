@@ -511,11 +511,53 @@ class ToolExecutor:
                     bytes_summary="0 bytes executed (Evidence confinement block)",
                 )
 
+        if tool_name == "read_volunteer_application":
+            att_path = tool_args.get("attachment_path")
+            if att_path:
+                try:
+                    resolved_path = canonicalize_path(str(att_path), self.sandbox_dir)
+                    if not str(resolved_path).startswith(str(self.sandbox_dir)):
+                        raise PathJailException("PATH_OUTSIDE_ROOT")
+                except PathJailException as pje:
+                    receipt_path, receipt_id = self._generate_receipt(
+                        call_id=call_id,
+                        issue_id=issue_id,
+                        tool_name=tool_name,
+                        tool_args=tool_args,
+                        armoriq_decision="ALLOW",
+                        armoriq_reason=auth_dec.reason or "Tool permitted in policy",
+                        tripline_decision="DENY",
+                        tripline_reason=f"Path jail violation: {pje.reason}",
+                        matched_policy=auth_dec.matched_policy,
+                        canary_token=canary_token,
+                        decision_source="TRIPLINE_JAIL",
+                    )
+                    return ExecutionResult(
+                        tool=tool_name,
+                        tool_args=tool_args,
+                        outcome="DENIED-JAIL",
+                        armoriq_decision="ALLOW",
+                        armoriq_reason=auth_dec.reason or "Tool permitted in policy",
+                        matched_policy=auth_dec.matched_policy,
+                        tripline_decision="DENY",
+                        tripline_reason=f"Path jail violation: {pje.reason}",
+                        decision_source="TRIPLINE_JAIL",
+                        receipt_id=receipt_id,
+                        receipt_path=str(receipt_path),
+                        output={"error": f"Permission denied: attachment path resolves outside repository sandbox ({pje.reason})"},
+                        bytes_summary="0 bytes executed (Jail block)",
+                    )
+
         # -------------------------------------------------------------
         # LAYER 3: Tripline Egress Canary Gateway Check (Only reached if ArmorIQ allowed)
         # -------------------------------------------------------------
-        if tool_name in ("comment_issue", "label_issue"):
-            outbound_text = tool_args.get("text", "") or tool_args.get("label", "")
+        if tool_name in ("comment_issue", "label_issue", "export_volunteer_contacts"):
+            outbound_text = (
+                tool_args.get("text", "")
+                or tool_args.get("label", "")
+                or tool_args.get("destination", "")
+                or str(tool_args.get("fields", ""))
+            )
             hit = scan_egress_payload(outbound_text, self.run_id, tool_name)
             # Check for direct canary token string match if canary token provided
             if canary_token and canary_token in outbound_text:
