@@ -142,19 +142,17 @@ PYTHONPATH=. .venv313/bin/python scripts/rea_investigator.py \
 
 ---
 
-## 6. Complete Test Suite Summary
-
 1. **Full Regression Suite** (`PYTHONPATH=. .venv313/bin/pytest tests/ --ignore=tests/test_phase11_benchmark.py -q`):
-   - **283 passed**, **22 skipped** in 52.18s (Exit code: 0)
-   - (The 22 skipped tests require the live `--mcp` / `armoriq` marker environment).
+   - **289 passed**, **22 skipped**, **0 failed** in 57.11s (Exit code: 0)
+   - (The 22 skipped tests require the live `--mcp` / `armoriq` marker environment with live gateway).
 
-2. **Live ArmorIQ Integration Suite** (`.venv313/bin/pytest -m armoriq -q`):
-   - **21 passed**, **0 failed** in 91.16s (Exit code: 0)
-   - Connected live to `https://api.armoriq.ai/iap/sdk/enforce`.
+2. **REA Integration & Security Suite** (`PYTHONPATH=. .venv313/bin/pytest tests/test_rea_integration.py -v`):
+   - **29 passed**, **0 failed** in 4.97s (Exit code: 0)
+   - Covers adapter, target traversal, symlink escapes, untrusted content tagging, ArmorIQ gates, key rotation, fail-closed signing, confused deputy prevention, 1-to-1 dispatch, and HMAC tampering.
 
-3. **REA Integration & Security Suite** (`PYTHONPATH=. .venv313/bin/pytest tests/test_rea_integration.py -v`):
-   - **24 passed**, **0 failed** in 5.17s (Exit code: 0)
-   - Covers adapter, target traversal, symlink escapes, untrusted content tagging, ArmorIQ gates, and HMAC tampering.
-
-4. **Test Hygiene Suite** (`.venv313/bin/pytest tests/test_test_hygiene.py -v`):
+3. **Test Hygiene Suite** (`.venv313/bin/pytest tests/test_test_hygiene.py -v`):
    - **3 passed**, **0 failed** in 0.16s (Exit code: 0).
+
+4. **Security Hotfix Audit & Report**:
+   - Refer to `docs/rea_integration/FINAL_HOTFIX_REPORT.md` for complete details on key rotation, history cleanup, and ArmorIQ lifecycle enforcement.
+
