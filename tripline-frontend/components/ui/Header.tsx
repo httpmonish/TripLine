@@ -25,6 +25,7 @@ export const ENTERPRISE_PRIMARY_LINKS = [
   { href: '/#product', label: 'Product' },
   { href: '/#architecture', label: 'Architecture' },
   { href: '/how-it-works', label: 'How It Works' },
+  { href: '/agent', label: 'Agent' },
   { href: '/#workflow', label: 'Execution Demo' },
   { href: '/receipts', label: 'Evidence' },
 ]
@@ -195,16 +196,27 @@ export function Header() {
         {mobileOpen && (
           <div className="lg:hidden border-t border-[#CDD2D8] bg-[#FFFFFF] px-4 py-4 space-y-3 shadow-lg">
             <div className="space-y-1">
-              {ENTERPRISE_PRIMARY_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="block px-3 py-2 rounded-md text-sm text-[#59636E] hover:text-[#20252B] hover:bg-[#EAEDF0]"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {ENTERPRISE_PRIMARY_LINKS.map((link) => {
+                const isActive =
+                  pathname === link.href ||
+                  (link.href !== '/' && !link.href.startsWith('/#') && pathname.startsWith(link.href))
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                      isActive
+                        ? 'bg-[#EAEDF0] text-[#0284C7] font-semibold border border-[#CDD2D8]/80'
+                        : 'text-[#59636E] hover:text-[#20252B] hover:bg-[#EAEDF0]'
+                    }`}
+                    data-local={`mobile-nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              })}
             </div>
 
             <div className="pt-2 border-t border-[#CDD2D8]">
