@@ -38,6 +38,7 @@ import {
   Eye,
   Square,
   HelpCircle,
+  Upload,
 } from 'lucide-react'
 import {
   api,
@@ -53,8 +54,9 @@ import {
   ReceiptVerifyResponse,
 } from '../../lib/api'
 import { SecurityDecisionCard } from '../../components/security/SecurityDecisionCard'
+import { CredentialScanDemo } from '../../components/demo/CredentialScanDemo'
 
-export type ExplorationMode = 'replay' | 'security_proof' | 'live_agent'
+export type ExplorationMode = 'replay' | 'security_proof' | 'credential_scan' | 'live_agent'
 export type ScenarioId = 'clean_read' | 'armoriq_deny' | 'path_traversal' | 'canary_egress' | 'all'
 
 interface ExampleScenarioConfig {

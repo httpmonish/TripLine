@@ -583,7 +583,11 @@ class DynamicReasoningLoop:
                     tripline_decision=exec_res.tripline_decision,
                     decision_source=exec_res.decision_source,
                     output=exec_res.output,
-                    error=exec_res.tripline_reason or exec_res.armoriq_reason if exec_res.outcome != "EXECUTED" else None,
+                    error=(
+                        (exec_res.armoriq_reason or exec_res.tripline_reason)
+                        if exec_res.outcome == "DENIED-ARMORIQ"
+                        else (exec_res.tripline_reason or exec_res.armoriq_reason)
+                    ) if exec_res.outcome != "EXECUTED" else None,
                     receipt_id=exec_res.receipt_id,
                     bytes_summary=exec_res.bytes_summary,
                     provenance_match=c1_match,

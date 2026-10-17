@@ -16,9 +16,10 @@ __pycache__/
 .armoriq/
 armoriq.yaml
 
-# Runtime logs
+# Runtime logs and flags
 *.log
 agent/logs/
+.tripline_kill_switch
 results/ui_jobs/
 results/phase11/
 results/rea_investigations/

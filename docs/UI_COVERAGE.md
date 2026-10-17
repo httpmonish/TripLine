@@ -1,9 +1,9 @@
 # Tripline UI ↔ API Two-Way Coverage Matrix
 
 **Phase 9 Automated Verification Matrix**  
-**FastAPI Routes**: 61  
+**FastAPI Routes**: 66  
 **UI Elements Bound**: 51  
-**Allowed Exceptions**: 25  
+**Allowed Exceptions**: 30  
 
 ## 1. Route ↔ Page ↔ Element ↔ Test ID Mapping
 
@@ -72,6 +72,7 @@
 | `/api/canary-hits` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/csrf-token` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/demo-data` | Documented protocol / background route in `docs/coverage_exceptions.md` |
+| `/api/demo/analyze-credential-file` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/events` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/health` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/limitations` | Documented protocol / background route in `docs/coverage_exceptions.md` |
@@ -82,6 +83,10 @@
 | `/api/status` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/summary` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/video/captions` | Documented protocol / background route in `docs/coverage_exceptions.md` |
+| `/api/volunteer/applications/{application_id}` | Documented protocol / background route in `docs/coverage_exceptions.md` |
+| `/api/volunteer/media-preview` | Documented protocol / background route in `docs/coverage_exceptions.md` |
+| `/api/volunteer/portal` | Documented protocol / background route in `docs/coverage_exceptions.md` |
+| `/api/volunteer/stats` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/witness/{trace_id}` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/attribution` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/boundary` | Documented protocol / background route in `docs/coverage_exceptions.md` |

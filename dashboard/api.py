@@ -1898,3 +1898,27 @@ async def upload_volunteer_media_preview(request: Request):
     })
 
 
+# ── Credential DLP & Secret Interception Scan ────────────────────────────────
+
+@api_router.post("/demo/analyze-credential-file", response_model=CredentialScanResponse)
+async def analyze_credential_file(req: CredentialScanRequest, request: Request):
+    """
+    ArmorIQ SDK Credential Inspection & TripLine Evidence Guard:
+    1. Evaluates target file buffer for secret credentials and high-entropy tokens.
+    2. Enforces ArmorIQ SDK policy: halts execution upstream (DENY) if unredacted credentials detected.
+    3. Guarantees zero MCP tool execution and zero tokens exposed to LLM.
+    4. Mints and signs an authentic RFC-8785 IncidentReceipt with HMAC witness key.
+    """
+    verify_csrf_and_origin(request)
+    from agent.credential_scanner import analyze_and_generate_receipt
+    
+    # Safe bounds check
+    if len(req.content) > 64 * 1024:
+        raise HTTPException(status_code=413, detail="File content exceeds 64KB safety limit")
+        
+    safe_filename = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", pathlib.Path(req.filename).name) or "uploaded_file.txt"
+    res = analyze_and_generate_receipt(safe_filename, req.content, action=req.action or "read_file")
+    return sanitize_payload(res)
+
+
+

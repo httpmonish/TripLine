@@ -29,10 +29,12 @@ import {
   Copy,
   Check,
   Trash2,
+  Upload,
 } from 'lucide-react'
 import { HeroSecurityVisual } from '../components/diagrams/HeroSecurityVisual'
 import { SecurityArchitectureFlow } from '../components/diagrams/SecurityArchitectureFlow'
 import { FourPlaneArchitecture } from '../components/diagrams/FourPlaneArchitecture'
+import { CredentialScanDemo } from '../components/demo/CredentialScanDemo'
 import { TripLineLogo } from '../components/brand/TripLineLogo'
 import {
   api,
@@ -124,6 +126,7 @@ const TASK_COMMANDS: Record<DemoTaskOption, string> = {
 
 export default function EnterpriseHomePage() {
   // State
+  const [demoTab, setDemoTab] = useState<'workflows' | 'credential_scan'>('workflows')
   const [selectedTask, setSelectedTask] = useState<DemoTaskOption>('scenario')
   const [platformStatus, setPlatformStatus] = useState<PlatformStatus | null>(null)
   const [envInfo, setEnvInfo] = useState<EnvInfo | null>(null)
@@ -704,8 +707,44 @@ export default function EnterpriseHomePage() {
             </div>
           </div>
 
-          {/* Task Selector Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Demonstration Mode Switcher: Preconfigured Workflows vs Upload Sensitive File */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setDemoTab('workflows')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                demoTab === 'workflows'
+                  ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'
+                  : 'bg-[#FFFFFF] text-[#59636E] border border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#EAEDF0]'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>Governed Workflow Suites (4 Tasks)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setDemoTab('credential_scan')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                demoTab === 'credential_scan'
+                  ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'
+                  : 'bg-[#FFFFFF] text-[#59636E] border border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#EAEDF0]'
+              }`}
+            >
+              <Upload className="w-4 h-4 text-amber-500" />
+              <span>Upload Sensitive File (ArmorIQ SDK Credential Guard)</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 font-sans">
+                NEW
+              </span>
+            </button>
+          </div>
+
+          {demoTab === 'credential_scan' ? (
+            <CredentialScanDemo />
+          ) : (
+            <>
+              {/* Task Selector Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {DEMO_TASKS.map((task) => {
               const isSelected = selectedTask === task.id
               return (
@@ -1115,6 +1154,8 @@ export default function EnterpriseHomePage() {
               </div>
             </div>
           </div>
+            </>
+          )}
         </div>
       </section>
 

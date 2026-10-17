@@ -690,16 +690,18 @@ class ToolExecutor:
             "attribution_wording": attribution_wording,
         }
 
+        safe_matched_policy = str(matched_policy) if isinstance(matched_policy, str) else None
+
         receipt = self.receipt_builder.build_receipt(
             run_id=self.run_id,
             call_id=call_id,
             source_data=source_data,
             proposal_data=proposal_data,
             armoriq_decision=armoriq_decision,
-            armoriq_reason=armoriq_reason,
+            armoriq_reason=str(armoriq_reason) if armoriq_reason is not None else None,
             tripline_decision=tripline_decision,
-            tripline_reason=tripline_reason,
-            matched_policy=matched_policy,
+            tripline_reason=str(tripline_reason) if tripline_reason is not None else None,
+            matched_policy=safe_matched_policy,
             canary_data=canary_data,
             witness_data=witness_data,
             confidence_data=confidence_data,
