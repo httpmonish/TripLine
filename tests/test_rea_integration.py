@@ -551,3 +551,108 @@ def test_armoriq_denial_strictly_prevents_dispatch(tmp_path):
     mock_mcp.dispatch.assert_not_called()
     assert res.receipt_path is not None
 
+
+# -----------------------------------------------------------------------------
+# 11. Security Hotfix: Key Custody, Rotation & Confused-Deputy Tests
+# -----------------------------------------------------------------------------
+def test_receipt_signing_fails_closed_when_key_missing(monkeypatch):
+    """Live receipt signing strictly fails closed when TRIPLINE_RECEIPT_SECRET_KEY is absent."""
+    from agent.security_receipts import create_security_receipt, ReceiptConfigurationError
+
+    monkeypatch.delenv("TRIPLINE_RECEIPT_SECRET_KEY", raising=False)
+
+    with pytest.raises(ReceiptConfigurationError, match="Missing required live signing secret"):
+        create_security_receipt(
+            run_id="test-missing-key",
+            operation="analyze_electron_app",
+            tool_args={"target_id": "synthetic-electron-app"},
+            verification_status="LIVE_VERIFIED",
+        )
+
+
+def test_receipt_signing_rejects_weak_or_short_keys(monkeypatch):
+    """Receipt signing rejects keys shorter than 32 bytes."""
+    from agent.security_receipts import create_security_receipt, ReceiptConfigurationError
+
+    monkeypatch.setenv("TRIPLINE_RECEIPT_SECRET_KEY", "too_short_key_123")
+
+    with pytest.raises(ReceiptConfigurationError, match="too short"):
+        create_security_receipt(
+            run_id="test-short-key",
+            operation="analyze_electron_app",
+            tool_args={"target_id": "synthetic-electron-app"},
+            verification_status="LIVE_VERIFIED",
+        )
+
+
+def test_receipt_rotation_and_tamper_isolation(monkeypatch):
+    """Receipt signed with one key fails verification with a rotated key."""
+    from agent.security_receipts import create_security_receipt
+
+    key_a = b"initial_secret_key_thirty_two_bytes_01"
+    key_b = b"rotated_secret_key_thirty_two_bytes_02"
+
+    receipt = create_security_receipt(
+        run_id="test-rotation",
+        operation="analyze_electron_app",
+        tool_args={"target_id": "synthetic-electron-app"},
+        verification_status="LIVE_VERIFIED",
+        signing_key=key_a,
+    )
+
+    assert receipt.verify_signature(secret_key=key_a) is True
+    # Verification with rotated key must fail
+    assert receipt.verify_signature(secret_key=key_b) is False
+
+
+def test_confused_deputy_dispatch_mismatch_prevented(tmp_path):
+    """
+    Authorizing an unrelated tool (e.g. hello_tool) strictly prevents dispatching
+    analyze_electron_app, blocking confused-deputy attacks.
+    """
+    from scripts.rea_investigator import run_investigation
+
+    res = run_investigation(
+        target_id="synthetic-electron-app",
+        tool_name="hello_tool",
+        mode="offline",
+        output_dir=tmp_path / "investigations",
+    )
+
+    assert res["status"] == "blocked"
+    assert "not an investigation operation" in res["reason"]
+    assert res["receipt"]["dispatch_attempted"] is False
+    assert res["receipt"]["failure_stage"] == "DISPATCH_VALIDATION"
+
+
+def test_independent_authorization_for_trace_and_inspection(tmp_path):
+    """
+    Ensures trace and inspection operations can be evaluated independently
+    with their own dedicated tool-name authorizations.
+    """
+    from scripts.rea_investigator import run_investigation
+
+    res_trace = run_investigation(
+        target_id="synthetic-electron-app",
+        tool_name="trace_application_feature",
+        evidence_id="ev_synthetic_electron_app_analysis",
+        seed_value="main.js",
+        mode="offline",
+        output_dir=tmp_path / "inv_trace",
+    )
+    assert res_trace["status"] == "success"
+    assert res_trace["receipt"]["operation"] == "trace_application_feature"
+    assert res_trace["receipt"]["dispatch_attempted"] is True
+
+    res_inspect = run_investigation(
+        target_id="synthetic-electron-app",
+        tool_name="inspect_analysis_view",
+        evidence_id="ev_synthetic_electron_app_analysis",
+        mode="offline",
+        output_dir=tmp_path / "inv_inspect",
+    )
+    assert res_inspect["status"] == "success"
+    assert res_inspect["receipt"]["operation"] == "inspect_analysis_view"
+    assert res_inspect["receipt"]["dispatch_attempted"] is True
+
+

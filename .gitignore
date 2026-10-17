@@ -37,7 +37,7 @@ cloudflared.tgz
 
 # DB / Runtime Artifacts
 .tripline/*
-!.tripline/witness_key.txt
+.tripline/witness_key.txt
 !.tripline/witness/
 !.tripline/witness/*
 # Unignore evidence artifacts in results/

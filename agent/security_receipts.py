@@ -9,6 +9,13 @@ investigation step. Strictly distinguishes:
 4. MCP tool dispatch attempt
 5. Tool execution outcome
 6. ArmorIQ post-execution audit report
+
+Key Management & Security:
+- Live receipt signing requires a dedicated, cryptographically strong secret configured via
+  the TRIPLINE_RECEIPT_SECRET_KEY environment variable (minimum 32 bytes).
+- Live signing NEVER falls back to committed files, witness keys, or hardcoded strings.
+- In live mode (LIVE_VERIFIED), missing or weak keys raise ReceiptConfigurationError and fail closed.
+- Offline tests use explicit test keys via TEST_SIMULATED mode or parameter injection.
 """
 
 from __future__ import annotations
@@ -18,33 +25,63 @@ import datetime
 import hashlib
 import hmac
 import json
+import os
 import pathlib
 from typing import Any, Dict, List, Optional
 
 from agent.safety import redact_secrets
 
-import os
 
-def get_receipt_hmac_key() -> bytes:
-    """
-    Retrieves the HMAC secret key.
-    Resolution order:
-      1. Environment variable TRIPLINE_RECEIPT_SECRET_KEY
-      2. .tripline/witness_key.txt (matches the repository witness signing standard)
-      3. Secure default fixed key for deterministic offline testing
-    """
-    env_key = os.environ.get("TRIPLINE_RECEIPT_SECRET_KEY", "")
-    if env_key:
-        return env_key.encode("utf-8")
-    key_path = pathlib.Path(__file__).resolve().parent.parent / ".tripline" / "witness_key.txt"
-    if key_path.exists():
+class ReceiptConfigurationError(RuntimeError):
+    """Raised when the receipt signing secret is missing, insecure, or invalid."""
+    pass
+
+
+# Deterministic test-only key used exclusively when verification_status == "TEST_SIMULATED"
+# and no live key is configured.
+TEST_SIMULATED_HMAC_KEY = b"tripline_test_deterministic_hmac_secret_key_32_bytes_min!"
+
+
+_DOTENV_LOADED = False
+
+def _ensure_dotenv_loaded() -> None:
+    global _DOTENV_LOADED
+    if not _DOTENV_LOADED:
+        _DOTENV_LOADED = True
         try:
-            return key_path.read_bytes().strip()
-        except Exception:
+            from dotenv import load_dotenv
+            repo_root = pathlib.Path(__file__).resolve().parent.parent
+            load_dotenv(repo_root / ".env")
+        except ImportError:
             pass
-    return b"tripline_receipt_secret_key_fixed"
 
-RECEIPT_HMAC_KEY = get_receipt_hmac_key()
+_ensure_dotenv_loaded()
+
+
+def get_live_receipt_hmac_key(required: bool = True) -> bytes:
+    """
+    Retrieves and validates the live receipt HMAC secret key from TRIPLINE_RECEIPT_SECRET_KEY.
+    Strictly enforces:
+      1. Key MUST come from TRIPLINE_RECEIPT_SECRET_KEY environment variable.
+      2. Key MUST be at least 32 characters/bytes in length.
+      3. No fallback to committed files or fixed production strings.
+    """
+    key_str = os.environ.get("TRIPLINE_RECEIPT_SECRET_KEY", "").strip()
+    if not key_str:
+        if required:
+            raise ReceiptConfigurationError(
+                "Missing required live signing secret: TRIPLINE_RECEIPT_SECRET_KEY is not set. "
+                "Live mode strictly fails closed to prevent unverified receipt generation."
+            )
+        return b""
+
+    key_bytes = key_str.encode("utf-8")
+    if len(key_bytes) < 32:
+        raise ReceiptConfigurationError(
+            f"Configured TRIPLINE_RECEIPT_SECRET_KEY is too short ({len(key_bytes)} bytes). "
+            "Minimum required length is 32 bytes for cryptographic authenticity."
+        )
+    return key_bytes
 
 
 @dataclasses.dataclass
@@ -92,11 +129,30 @@ class REASecurityReceipt:
         }
         return json.dumps(data, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
-    def sign(self, secret_key: bytes = RECEIPT_HMAC_KEY) -> None:
-        self.hmac_sha256 = hmac.new(secret_key, self.canonical_bytes(), hashlib.sha256).hexdigest()
+    def _resolve_key(self, explicit_key: Optional[bytes] = None) -> bytes:
+        if explicit_key is not None:
+            if len(explicit_key) < 32:
+                raise ReceiptConfigurationError(
+                    f"Provided secret_key is too short ({len(explicit_key)} bytes). Minimum 32 bytes required."
+                )
+            return explicit_key
 
-    def verify_signature(self, secret_key: bytes = RECEIPT_HMAC_KEY) -> bool:
-        expected = hmac.new(secret_key, self.canonical_bytes(), hashlib.sha256).hexdigest()
+        if self.verification_status == "TEST_SIMULATED":
+            live_key = get_live_receipt_hmac_key(required=False)
+            return live_key if (live_key and len(live_key) >= 32) else TEST_SIMULATED_HMAC_KEY
+
+        # For LIVE_VERIFIED or any production status, fail closed if key is missing or weak
+        return get_live_receipt_hmac_key(required=True)
+
+    def sign(self, secret_key: Optional[bytes] = None) -> None:
+        key = self._resolve_key(secret_key)
+        self.hmac_sha256 = hmac.new(key, self.canonical_bytes(), hashlib.sha256).hexdigest()
+
+    def verify_signature(self, secret_key: Optional[bytes] = None) -> bool:
+        if not self.hmac_sha256:
+            return False
+        key = self._resolve_key(secret_key)
+        expected = hmac.new(key, self.canonical_bytes(), hashlib.sha256).hexdigest()
         return hmac.compare_digest(self.hmac_sha256, expected)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -139,9 +195,12 @@ def create_security_receipt(
     error_code: Optional[str] = None,
     failure_stage: str = "NONE",
     verification_status: str = "LIVE_VERIFIED",
+    signing_key: Optional[bytes] = None,
 ) -> REASecurityReceipt:
     """
     Constructs and cryptographically signs a REASecurityReceipt.
+    In live mode (LIVE_VERIFIED), strictly requires a valid TRIPLINE_RECEIPT_SECRET_KEY
+    or explicit signing_key (>=32 bytes), failing closed with ReceiptConfigurationError.
     """
     clean_args = redact_secrets(tool_args)
     ts = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -167,5 +226,5 @@ def create_security_receipt(
         failure_stage=failure_stage,
         verification_status=verification_status,
     )
-    receipt.sign()
+    receipt.sign(secret_key=signing_key)
     return receipt
