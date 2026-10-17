@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import {
   ShieldAlert,
@@ -22,8 +22,13 @@ import {
   Eye,
   RotateCcw,
   RefreshCw,
+  Bot,
+  MessageSquare,
+  Send,
+  Trash2,
+  HelpCircle,
 } from 'lucide-react'
-import { api, CredentialScanResult, ReceiptVerifyResponse, ReceiptTamperResponse } from '../../lib/api'
+import { api, CredentialScanResult, DocumentChatResult, ReceiptVerifyResponse, ReceiptTamperResponse } from '../../lib/api'
 
 interface SamplePreset {
   id: string
@@ -33,6 +38,25 @@ interface SamplePreset {
   tag: string
   content: string
 }
+
+interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  text: string
+  timestamp: string
+  isBlocked?: boolean
+  verdict?: string
+  threats?: string[]
+}
+
+const SUGGESTED_PROMPTS = [
+  { label: '🛡️ Is there a block on this document?', query: 'Is there a block on this document?' },
+  { label: '🔍 Why was it blocked?', query: 'Why was this document blocked by ArmorIQ?' },
+  { label: '🔑 What credentials were detected?', query: 'What secret credentials were detected in this document?' },
+  { label: '🤖 Did the AI agent read this file?', query: 'Did the LLM or AI agent read this file?' },
+  { label: '📜 Show cryptographic receipt proof', query: 'Show me the cryptographic receipt and evidence proof.' },
+  { label: '📊 Explain Shannon entropy score', query: 'What does the Shannon entropy score mean for this document?' },
+]
 
 const SAMPLE_PRESETS: SamplePreset[] = [
   {
@@ -101,7 +125,25 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
   const [verifyStatus, setVerifyStatus] = useState<'IDLE' | 'VERIFYING' | 'VERIFIED' | 'TAMPER_DETECTED'>('IDLE')
   const [verifyMessage, setVerifyMessage] = useState<string>('')
 
+  // ── AI Security Assistant Chatbot State ────────────────────────────────────
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => [
+    {
+      id: 'welcome',
+      role: 'assistant',
+      text: `### 🛡️ Welcome to TripLine Security Intelligence Chatbot\n\nI am your forensic security assistant. You can ask me anything about **\`${SAMPLE_PRESETS[0].filename}\`**, including:\n- Whether there is a **security block** on this file\n- **Why ArmorIQ SDK blocked execution** and prevented reading\n- What specific **credentials or secret tokens** were detected\n- How **TripLine sealed verifiable cryptographic evidence**\n\nRun the simulation above or click any suggested question below!`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    },
+  ])
+  const [chatInput, setChatInput] = useState<string>('')
+  const [isChatting, setIsChatting] = useState<boolean>(false)
+  const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight
+    }
+  }, [chatMessages, isChatting])
 
   const handleSelectPreset = (preset: SamplePreset) => {
     setSelectedPresetId(preset.id)
@@ -111,6 +153,14 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
     setTerminalLines([])
     setVerifyStatus('IDLE')
     setVerifyMessage('')
+    setChatMessages([
+      {
+        id: `welcome-${preset.id}`,
+        role: 'assistant',
+        text: `### 🛡️ Selected: \`${preset.filename}\`\n\nLoaded preset: **${preset.name}** (${preset.tag}).\n\nClick **"Simulate ArmorIQ Credential Inspection"** above, or ask me directly whether this file contains credentials and if ArmorIQ will block it!`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ])
   }
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,8 +177,81 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
       setTerminalLines([])
       setVerifyStatus('IDLE')
       setVerifyMessage('')
+      setChatMessages([
+        {
+          id: `welcome-upload-${Date.now()}`,
+          role: 'assistant',
+          text: `### 📄 Uploaded Custom File: \`${file.name}\`\n\nReceived **${file.name}** (${content.length} bytes).\n\nClick **"Simulate ArmorIQ Credential Inspection"** to run token entropy and credential analysis, or ask me whether this file is safe or blocked.`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ])
     }
     reader.readAsText(file)
+  }
+
+  const handleSendMessage = async (msgText?: string) => {
+    const query = (msgText !== undefined ? msgText : chatInput).trim()
+    if (!query || isChatting) return
+
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      text: query,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+
+    setChatMessages((prev) => [...prev, userMsg])
+    if (msgText === undefined) {
+      setChatInput('')
+    }
+    setIsChatting(true)
+
+    try {
+      const history = chatMessages.slice(-6).map((m) => ({
+        role: m.role,
+        content: m.text,
+      }))
+
+      const ans = await api.chatAboutDocument(
+        query,
+        selectedFile.name,
+        selectedFile.content,
+        scanResult || undefined,
+        history
+      )
+
+      const botMsg: ChatMessage = {
+        id: `bot-${Date.now()}`,
+        role: 'assistant',
+        text: ans.response,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isBlocked: ans.is_blocked,
+        verdict: ans.verdict,
+        threats: ans.threats,
+      }
+      setChatMessages((prev) => [...prev, botMsg])
+    } catch (err: any) {
+      const errorMsg: ChatMessage = {
+        id: `bot-err-${Date.now()}`,
+        role: 'assistant',
+        text: `⚠️ **Unable to complete analysis:** ${err.message || 'Network error'}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }
+      setChatMessages((prev) => [...prev, errorMsg])
+    } finally {
+      setIsChatting(false)
+    }
+  }
+
+  const handleClearChat = () => {
+    setChatMessages([
+      {
+        id: `welcome-cleared-${Date.now()}`,
+        role: 'assistant',
+        text: `### 🛡️ Chat Session Cleared\n\nAsk me anything about **\`${selectedFile.name}\`**, its block status, credentials detected, or TripLine cryptographic proof.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ])
   }
 
   const handleLaunchScan = async () => {
@@ -186,6 +309,20 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
       if (onScanComplete) {
         onScanComplete(res)
       }
+
+      // Automatically inform the chatbot of scan completion
+      const scanNotice: ChatMessage = {
+        id: `scan-${Date.now()}`,
+        role: 'assistant',
+        text: res.blocked
+          ? `### 🚫 Audit Complete: Document Blocked\n\n**File:** \`${selectedFile.name}\`\n**ArmorIQ Verdict:** \`DENY\` (HALTED UPSTREAM)\n**Threats:** ${res.threats_detected.join(', ') || 'High entropy secret material'}\n**TripLine Invariant:** \`0 tokens exposed to LLM\`\n**Signed Receipt:** \`${res.receipt_id}\`\n\nYou can ask me questions about why this document was blocked or how TripLine provides cryptographic proof.`
+          : `### ✅ Audit Complete: Document Permitted\n\n**File:** \`${selectedFile.name}\`\n**ArmorIQ Verdict:** \`ALLOW\`\n**Threats:** None detected\n**Status:** Safe for in-plan sandbox operations.\n\nAsk me anything about this file's security posture.`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isBlocked: res.blocked,
+        verdict: res.armoriq_decision,
+        threats: res.threats_detected,
+      }
+      setChatMessages((prev) => [...prev, scanNotice])
     } catch (err: any) {
       setTerminalLines((prev) => [
         ...prev,
@@ -665,6 +802,248 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
           )}
         </div>
       )}
+
+      {/* ── Section 4: Interactive AI Document Security Intelligence Chatbot ── */}
+      <div className="bg-white dark:bg-[#161B22] rounded-2xl border border-[#D0D7DE] dark:border-[#30363D] p-5 shadow-sm space-y-4">
+        {/* Chatbot Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E1E4E8] dark:border-[#21262D] pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-sky-500 to-teal-400 flex items-center justify-center text-white shadow-sm">
+              <Bot className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-[#0D1117] dark:text-[#F0F6FC] flex items-center gap-2">
+                  TripLine AI Document Security Assistant
+                </h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0284C7]/10 text-[#0284C7] border border-[#0284C7]/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-pulse"></span>
+                  Active In-MCP
+                </span>
+              </div>
+              <p className="text-xs text-[#59636E] dark:text-[#8B949E]">
+                Ask questions about document block status, ArmorIQ policy decisions, detected secrets, and cryptographic receipts.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Target File Badge */}
+            <div className="px-2.5 py-1 rounded-md text-xs font-mono bg-[#F6F8FA] dark:bg-[#0D1117] border border-[#D0D7DE] dark:border-[#30363D] text-[#59636E] dark:text-[#8B949E] flex items-center gap-1.5">
+              <FileCode className="w-3.5 h-3.5 text-[#0284C7]" />
+              <span className="font-semibold text-[#0D1117] dark:text-[#F0F6FC]">{selectedFile.name}</span>
+            </div>
+
+            {/* Block Verdict Badge */}
+            {scanResult ? (
+              <span
+                className={`px-2.5 py-1 rounded-md text-xs font-mono font-bold flex items-center gap-1 border ${
+                  scanResult.blocked
+                    ? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-800'
+                    : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                }`}
+              >
+                {scanResult.blocked ? <ShieldAlert className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                {scanResult.blocked ? 'BLOCKED (DENIED)' : 'PERMITTED (ALLOW)'}
+              </span>
+            ) : (
+              <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
+                <HelpCircle className="w-3.5 h-3.5" />
+                Awaiting Scan
+              </span>
+            )}
+
+            {/* Clear Chat Button */}
+            <button
+              type="button"
+              onClick={handleClearChat}
+              title="Clear chat history"
+              className="p-1.5 rounded-lg text-[#59636E] dark:text-[#8B949E] hover:text-[#0D1117] dark:hover:text-[#F0F6FC] hover:bg-[#F6F8FA] dark:hover:bg-[#21262D] transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Suggested Prompt Chips */}
+        <div>
+          <div className="flex items-center gap-1.5 mb-2 text-[11px] font-semibold text-[#59636E] dark:text-[#8B949E]">
+            <Sparkles className="w-3.5 h-3.5 text-[#0284C7]" />
+            <span>Suggested Questions:</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {SUGGESTED_PROMPTS.map((prompt, idx) => (
+              <button
+                key={idx}
+                type="button"
+                data-local={`btn-prompt-suggestion-${idx}`}
+                disabled={isChatting}
+                onClick={() => handleSendMessage(prompt.query)}
+                className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#F6F8FA] dark:bg-[#0D1117] hover:bg-sky-50 dark:hover:bg-sky-950/30 text-[#24292F] dark:text-[#C9D1D9] hover:text-[#0284C7] dark:hover:text-[#38BDF8] border border-[#D0D7DE] dark:border-[#30363D] hover:border-[#0284C7]/50 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {prompt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Chat History Viewport */}
+        <div
+          ref={chatScrollRef}
+          className="bg-[#F6F8FA]/60 dark:bg-[#0D1117]/60 rounded-xl border border-[#D0D7DE] dark:border-[#30363D] p-4 max-h-[360px] min-h-[220px] overflow-y-auto space-y-3.5 font-sans"
+        >
+          {chatMessages.map((msg) => {
+            const isUser = msg.role === 'user'
+            return (
+              <div
+                key={msg.id}
+                className={`flex items-start gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+              >
+                {/* Avatar */}
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
+                    isUser
+                      ? 'bg-gradient-to-r from-sky-600 to-blue-700 text-white'
+                      : 'bg-[#1E293B] text-sky-400 border border-sky-500/30'
+                  }`}
+                >
+                  {isUser ? 'U' : <Bot className="w-4 h-4" />}
+                </div>
+
+                {/* Message Bubble */}
+                <div
+                  className={`max-w-[85%] rounded-2xl p-3.5 shadow-xs ${
+                    isUser
+                      ? 'bg-gradient-to-r from-sky-600 to-blue-700 text-white rounded-tr-none'
+                      : 'bg-white dark:bg-[#161B22] text-[#24292F] dark:text-[#C9D1D9] border border-[#D0D7DE] dark:border-[#30363D] rounded-tl-none'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3 mb-1 text-[10px] opacity-75">
+                    <span className="font-semibold">{isUser ? 'You' : 'TripLine Security Bot'}</span>
+                    <span>{msg.timestamp}</span>
+                  </div>
+
+                  {isUser ? (
+                    <p className="text-xs leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                  ) : (
+                    renderMarkdown(msg.text)
+                  )}
+                </div>
+              </div>
+            )
+          })}
+
+          {/* Typing Indicator */}
+          {isChatting && (
+            <div className="flex items-start gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[#1E293B] text-sky-400 border border-sky-500/30 flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4" />
+              </div>
+              <div className="bg-white dark:bg-[#161B22] border border-[#D0D7DE] dark:border-[#30363D] rounded-2xl rounded-tl-none p-3 shadow-xs">
+                <div className="flex items-center gap-2 text-xs text-[#59636E] dark:text-[#8B949E]">
+                  <span className="inline-flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-bounce"></span>
+                  </span>
+                  <span>ArmorIQ SDK evaluating security invariants...</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleSendMessage()
+          }}
+          className="flex items-center gap-2"
+        >
+          <div className="relative flex-1">
+            <input
+              type="text"
+              data-local="input-demo-chat"
+              value={chatInput}
+              disabled={isChatting}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder={`Ask about ${selectedFile.name} (e.g. "Is this document blocked?", "Why was it blocked?")...`}
+              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-[#0D1117] border border-[#D0D7DE] dark:border-[#30363D] text-[#24292F] dark:text-[#C9D1D9] placeholder-[#8B949E] focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:border-transparent transition-all disabled:opacity-60"
+            />
+          </div>
+          <button
+            type="submit"
+            data-api="POST /api/demo/chat"
+            data-testid="btn-demo-chat-send"
+            disabled={!chatInput.trim() || isChatting}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-semibold shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Ask Bot</span>
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
+
+/**
+ * Lightweight deterministic markdown-to-JSX renderer
+ */
+function renderMarkdown(text: string) {
+  const lines = text.split('\n')
+  return (
+    <div className="space-y-1.5 text-xs leading-relaxed">
+      {lines.map((line, idx) => {
+        if (line.startsWith('### ')) {
+          return (
+            <h4 key={idx} className="font-bold text-sm text-[#0D1117] dark:text-[#F0F6FC] mt-2 mb-1 flex items-center gap-1.5">
+              {formatInline(line.replace('### ', ''))}
+            </h4>
+          )
+        }
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          return (
+            <div key={idx} className="flex items-start gap-1.5 ml-2">
+              <span className="text-[#0284C7] dark:text-[#38BDF8] font-bold">•</span>
+              <span>{formatInline(line.slice(2))}</span>
+            </div>
+          )
+        }
+        if (/^\d+\.\s/.test(line)) {
+          const num = line.match(/^(\d+)\.\s/)?.[1]
+          const rest = line.replace(/^\d+\.\s/, '')
+          return (
+            <div key={idx} className="flex items-start gap-1.5 ml-2">
+              <span className="text-[#0284C7] dark:text-[#38BDF8] font-bold text-[11px] min-w-[14px]">{num}.</span>
+              <span>{formatInline(rest)}</span>
+            </div>
+          )
+        }
+        if (line.trim() === '') {
+          return <div key={idx} className="h-1" />
+        }
+        return <p key={idx}>{formatInline(line)}</p>
+      })}
+    </div>
+  )
+}
+
+function formatInline(str: string) {
+  const parts = str.split(/(`[^`]+`|\*\*[^*]+\*\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code key={i} className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-[#0F172A]/10 dark:bg-[#1E293B] text-[#0369A1] dark:text-[#38BDF8] border border-[#0284C7]/20">
+          {part.slice(1, -1)}
+        </code>
+      )
+    }
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="font-semibold text-[#0F172A] dark:text-white">{part.slice(2, -2)}</strong>
+    }
+    return part
+  })
+}
+

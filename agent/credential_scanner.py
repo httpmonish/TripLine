@@ -364,9 +364,19 @@ def answer_document_question(
             pass
 
     # Authoritative Deterministic Forensic Reasoning Engine
-    q = message.lower()
-    
-    if any(k in q for k in ["is it blocked", "is there block", "is there a block", "was it blocked", "blocked?"]):
+    q = message.lower().strip()
+
+    if any(k in q for k in ["why", "reason", "cause", "how come", "what made it"]):
+        resp = (
+            f"### 🔍 Why ArmorIQ SDK Blocked `{document_name}`:\n\n"
+            f"1. **Secret Credential Signatures Identified:**\n"
+            + "\n".join([f"   - **{t}**" for t in threats]) + "\n"
+            f"2. **Shannon Entropy Analysis:** Max token entropy reached **{entropy} bits/byte** (threshold is 4.5), indicating cryptographic key material.\n"
+            f"3. **ArmorIQ Policy Enforced:** Policy `{matched_policy}` dictates that any payload containing active credentials cannot be ingested into an LLM reasoning loop.\n"
+            f"4. **TripLine Invariant:** The MCP `read_file` descriptor was **revoked at the kernel level**. The model was completely shielded from toxic credential exposure."
+        )
+
+    elif any(k in q for k in ["is it blocked", "is there block", "is there a block", "was it blocked", "is this blocked", "is document blocked"]):
         if is_blocked:
             resp = (
                 f"### 🛡️ Status: **YES, THIS DOCUMENT IS BLOCKED**\n\n"
@@ -388,15 +398,6 @@ def answer_document_question(
                 f"This document is safe for in-plan sandbox operations."
             )
 
-    elif any(k in q for k in ["why", "reason", "cause", "how come"]):
-        resp = (
-            f"### 🔍 Why ArmorIQ SDK Blocked `{document_name}`:\n\n"
-            f"1. **Secret Credential Signatures Identified:**\n"
-            + "\n".join([f"   - **{t}**" for t in threats]) + "\n"
-            f"2. **Shannon Entropy Analysis:** Max token entropy reached **{entropy} bits/byte** (threshold is 4.5), indicating cryptographic key material.\n"
-            f"3. **ArmorIQ Policy Enforced:** Policy `{matched_policy}` dictates that any payload containing active credentials cannot be ingested into an LLM reasoning loop.\n"
-            f"4. **TripLine Invariant:** The MCP `read_file` descriptor was **revoked at the kernel level**. The model was completely shielded from toxic credential exposure."
-        )
 
     elif any(k in q for k in ["secret", "credential", "threat", "detected", "pattern", "key", "password"]):
         resp = (

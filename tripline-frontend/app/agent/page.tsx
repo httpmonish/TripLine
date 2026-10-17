@@ -336,7 +336,6 @@ export default function AgentPage() {
 
   // ── 1. Initial Load ──
   useEffect(() => {
-    // Platform status
     api.getPlatformStatus()
       .then((ps) => {
         setPlatformStatus(ps)
@@ -346,14 +345,12 @@ export default function AgentPage() {
       })
       .catch((err) => console.error('Error fetching platform status:', err))
 
-    // Crew manifest
     setCrewLoading(true)
     api.getAgentCrew()
       .then((data) => setCrew(data))
       .catch((err) => console.error('Error fetching crew:', err))
       .finally(() => setCrewLoading(false))
 
-    // Runs history
     setRunsLoading(true)
     api.getAgentRuns()
       .then((data) => {
@@ -365,7 +362,6 @@ export default function AgentPage() {
       .catch((err) => console.error('Error fetching runs:', err))
       .finally(() => setRunsLoading(false))
 
-    // REA targets
     api.getReaTargets()
       .then((res) => {
         if (res && res.targets && res.targets.length > 0) {
@@ -452,10 +448,8 @@ export default function AgentPage() {
       let job: JobRecord
 
       if (explorationMode === 'security_proof') {
-        // Mode 2: Run a deterministic sandbox security proof
         job = await api.startSecurityProof(selectedScenario)
       } else if (explorationMode === 'live_agent') {
-        // Mode 3: Run the AI agent through real LLM reasoning loop
         if (!platformStatus?.live_enabled) {
           throw new Error(
             'Live agent execution is disabled on this server. Set TRIPLINE_ENABLE_LIVE=1 in environment to enable live LLM runs. Deterministic sandbox proofs and recorded replays remain available with zero API keys required.'
@@ -472,7 +466,6 @@ export default function AgentPage() {
           model: selectedModel,
         })
       } else {
-        // Mode 1: Replay - no launch needed
         setLaunching(false)
         setActiveStage(7)
         return
@@ -482,7 +475,6 @@ export default function AgentPage() {
       setStreamMode('job')
       setActiveTab('lifecycle')
 
-      // Subscribe to real live job events
       subscribeToJobEvents(
         job.job_id,
         (ev) => {
@@ -613,37 +605,36 @@ export default function AgentPage() {
     'RCP-phase3-wow-ca5dcec9-call-p1_'
 
   return (
-    <div className="w-full flex flex-col text-[#20252B] bg-[#F4F5F6] min-h-screen py-8 px-4 sm:px-6">
-      <div className="max-w-[1360px] mx-auto w-full space-y-6">
+    <div className="w-full flex flex-col text-[#20252B] bg-[#F4F5F6] min-h-screen py-6 px-4 sm:px-6">
+      <div className="max-w-[1360px] mx-auto w-full space-y-5">
 
-        {/* ── 1. PAGE HEADER: SIMPLE USER EXPERIENCE & PROMINENT MODE ── */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFFFF] border border-[#CDD2D8] shadow-sm space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-[#EAEDF0]">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="flex items-center gap-2 text-xs font-mono text-[#0284C7] uppercase tracking-widest font-semibold">
+        {/* ── 1. PAGE HEADER: CLEAN ENTERPRISE HIERARCHY ── */}
+        <div className="p-5 sm:p-6 rounded-xl bg-[#FFFFFF] border border-[#CDD2D8] shadow-sm space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#EAEDF0]">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-mono text-[#0284C7] uppercase tracking-wider font-bold flex items-center gap-1.5">
                   <Bot className="w-4 h-4 text-[#0284C7]" />
-                  <span>// GOVERNED AI AGENT CONSOLE</span>
-                </div>
-                {/* Standard Mode Label Badge */}
+                  GOVERNED AGENT CONSOLE
+                </span>
                 <span className="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold bg-[#0D0F18] text-[#F97316] border border-[#F97316]/40 tracking-wider">
                   {getComputedModeLabel()}
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-[#20252B] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#20252B] tracking-tight">
                 Meet your governed AI agent
               </h1>
-              <p className="text-sm sm:text-base text-[#59636E] max-w-3xl leading-relaxed font-sans">
-                “Give the agent a task. Watch it propose actions, check authorization, apply security controls, and explain what happened.”
+              <p className="text-xs sm:text-sm text-[#59636E] max-w-2xl leading-relaxed">
+                Give the agent a task. Watch it propose actions, check authorization, apply security controls, and explain what happened.
               </p>
             </div>
 
-            {/* Quick Kill Switch / Safety Halt */}
+            {/* Emergency Kill Switch */}
             <div className="flex items-center gap-3 shrink-0">
               <button
                 data-api="POST /api/agent/runs/{id}/stop"
                 onClick={handleStopRun}
-                className="px-4 py-2 rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+                className="px-3.5 py-2 rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-mono font-semibold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                 data-testid="btn-stop-agent-run"
                 title="Immediate safety kill switch: halts active agent loops server-side"
               >
@@ -654,29 +645,29 @@ export default function AgentPage() {
           </div>
 
           {/* ── 2. AGENT READINESS TELEMETRY STRIP (6 Indicators) ── */}
-          <div className="space-y-2 pt-1">
+          <div className="space-y-2 pt-0.5">
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-[#747F8D] uppercase font-semibold flex items-center gap-1.5">
+              <span className="text-[#747F8D] uppercase font-semibold flex items-center gap-1.5 text-[11px]">
                 <Activity className="w-3.5 h-3.5 text-[#0284C7]" />
                 Live Readiness & Dependency Telemetry (Authoritative Backend State)
               </span>
-              <span className="text-[11px] text-[#747F8D]">Zero Fabricated Results • Secrets Scrubbed</span>
+              <span className="text-[10px] text-[#747F8D]">Zero Fabricated Results • Secrets Scrubbed</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 font-mono text-xs">
-              {/* 1. Website/Backend */}
-              <div className="p-3 rounded-xl bg-[#FAFBFC] border border-[#CDD2D8]">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 font-mono text-xs">
+              {/* 1. Backend */}
+              <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#CDD2D8] flex flex-col justify-between min-h-[58px]">
                 <span className="text-[10px] text-[#747F8D] uppercase block">1. Backend API</span>
-                <span className="font-bold text-emerald-600 block mt-0.5 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                <span className="font-bold text-emerald-600 block flex items-center gap-1 text-[11px] truncate">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
                   Online (:8080)
                 </span>
               </div>
 
               {/* 2. LLM Provider */}
-              <div className="p-3 rounded-xl bg-[#FAFBFC] border border-[#CDD2D8]">
+              <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#CDD2D8] flex flex-col justify-between min-h-[58px]">
                 <span className="text-[10px] text-[#747F8D] uppercase block">2. LLM Provider</span>
-                <span className={`font-bold block mt-0.5 truncate ${platformStatus?.llm_configured ? 'text-[#20252B]' : 'text-amber-600'}`}>
+                <span className={`font-bold block text-[11px] truncate ${platformStatus?.llm_configured ? 'text-[#20252B]' : 'text-amber-600'}`}>
                   {platformStatus?.llm_configured
                     ? `${platformStatus.llm_provider} (${platformStatus.llm_model || 'flash'})`
                     : 'Provider Missing'}
@@ -684,25 +675,25 @@ export default function AgentPage() {
               </div>
 
               {/* 3. ArmorIQ Credentials */}
-              <div className="p-3 rounded-xl bg-[#FAFBFC] border border-[#CDD2D8]">
+              <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#CDD2D8] flex flex-col justify-between min-h-[58px]">
                 <span className="text-[10px] text-[#747F8D] uppercase block">3. ArmorIQ Key</span>
-                <span className={`font-bold block mt-0.5 truncate ${platformStatus?.key_present ? 'text-[#0284C7]' : 'text-[#EF4444]'}`}>
+                <span className={`font-bold block text-[11px] truncate ${platformStatus?.key_present ? 'text-[#0284C7]' : 'text-[#EF4444]'}`}>
                   {platformStatus?.key_present ? 'Configured (ak_l...)' : 'Absent (Missing)'}
                 </span>
               </div>
 
               {/* 4. Live Execution Gate */}
-              <div className="p-3 rounded-xl bg-[#FAFBFC] border border-[#CDD2D8]">
+              <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#CDD2D8] flex flex-col justify-between min-h-[58px]">
                 <span className="text-[10px] text-[#747F8D] uppercase block">4. Live Gate</span>
-                <span className={`font-bold block mt-0.5 ${platformStatus?.live_enabled ? 'text-emerald-600' : 'text-[#59636E]'}`}>
+                <span className={`font-bold block text-[11px] ${platformStatus?.live_enabled ? 'text-emerald-600' : 'text-[#59636E]'}`}>
                   {platformStatus?.live_enabled ? 'LIVE=1 (Enabled)' : 'LIVE=0 (Gated)'}
                 </span>
               </div>
 
               {/* 5. Authorization Service Mode B */}
-              <div className="p-3 rounded-xl bg-[#FAFBFC] border border-[#CDD2D8]">
+              <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#CDD2D8] flex flex-col justify-between min-h-[58px]">
                 <span className="text-[10px] text-[#747F8D] uppercase block">5. Mode B Auth</span>
-                <span className={`font-bold block mt-0.5 truncate ${
+                <span className={`font-bold block text-[11px] truncate ${
                   platformStatus?.armoriq_status === 'EXERCISED'
                     ? 'text-emerald-600'
                     : platformStatus?.key_present
@@ -717,10 +708,10 @@ export default function AgentPage() {
                 </span>
               </div>
 
-              {/* 6. Run History & Active Job */}
-              <div className="p-3 rounded-xl bg-[#FAFBFC] border border-[#CDD2D8]">
+              {/* 6. Active State */}
+              <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#CDD2D8] flex flex-col justify-between min-h-[58px]">
                 <span className="text-[10px] text-[#747F8D] uppercase block">6. Active State</span>
-                <span className={`font-bold block mt-0.5 truncate ${
+                <span className={`font-bold block text-[11px] truncate ${
                   activeJob && activeJob.status === 'running'
                     ? 'text-[#0284C7] animate-pulse'
                     : 'text-[#59636E]'
@@ -734,18 +725,18 @@ export default function AgentPage() {
 
             {/* Actionable Dependency Notice Banner */}
             {platformStatus?.actionable_explanation && (
-              <div className="p-3 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-xs font-mono text-[#166534] flex items-center gap-2">
-                <Info className="w-4 h-4 shrink-0 text-[#16A34A]" />
-                <span className="leading-snug">{platformStatus.actionable_explanation}</span>
+              <div className="p-2.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-xs font-mono text-[#166534] flex items-center gap-2">
+                <Info className="w-3.5 h-3.5 shrink-0 text-[#16A34A]" />
+                <span className="leading-snug text-[11px]">{platformStatus.actionable_explanation}</span>
               </div>
             )}
           </div>
         </div>
 
         {/* ── 3. FOUR CLEARLY DISTINGUISHED EXPLORATION MODES ── */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#20252B] flex items-center gap-2">
+            <h2 className="text-sm font-bold text-[#20252B] flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#0284C7]" />
               <span>Choose Your Exploration Mode</span>
             </h2>
@@ -754,23 +745,23 @@ export default function AgentPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Mode 1: Watch a recorded demonstration */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Mode 1: Replay */}
             <div
               onClick={() => {
                 setExplorationMode('replay')
                 setActiveStage(7)
                 setLaunchError(null)
               }}
-              className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
                 explorationMode === 'replay'
-                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-md ring-2 ring-[#0284C7]/20'
+                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-sm ring-2 ring-[#0284C7]/20'
                   : 'border-[#CDD2D8] bg-[#FFFFFF] hover:border-[#747F8D] hover:bg-[#FAFBFC]'
               }`}
               role="button"
               tabIndex={0}
             >
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#F4F5F6] text-[#59636E] border border-[#CDD2D8]">
                     MODE 1: INSPECTION
@@ -781,34 +772,34 @@ export default function AgentPage() {
                     <span className="w-2 h-2 rounded-full bg-[#CDD2D8]" />
                   )}
                 </div>
-                <h3 className="text-base font-bold text-[#20252B]">
+                <h3 className="text-sm font-bold text-[#20252B]">
                   Watch a recorded demo
                 </h3>
                 <p className="text-xs text-[#59636E] leading-relaxed">
-                  Inspect an existing scenario without launching a new agent. Review the authoritative transcript, plan tokens, and signed HMAC receipts generated by previous runs.
+                  Inspect an existing scenario without launching a new agent. Review the authoritative transcript and signed HMAC receipts.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#EAEDF0] text-[11px] font-mono text-[#0284C7] font-semibold flex items-center gap-1">
-                <span>Inspect recorded run artifacts</span>
+              <div className="pt-2 border-t border-[#EAEDF0] text-[11px] font-mono text-[#0284C7] font-semibold flex items-center gap-1">
+                <span>Inspect recorded run</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
             </div>
 
-            {/* Mode 2: Run a security proof (RECOMMENDED) */}
+            {/* Mode 2: Security Proof */}
             <div
               onClick={() => {
                 setExplorationMode('security_proof')
                 setLaunchError(null)
               }}
-              className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
                 explorationMode === 'security_proof'
-                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-md ring-2 ring-[#0284C7]/20'
+                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-sm ring-2 ring-[#0284C7]/20'
                   : 'border-[#CDD2D8] bg-[#FFFFFF] hover:border-[#747F8D] hover:bg-[#FAFBFC]'
               }`}
               role="button"
               tabIndex={0}
             >
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                     MODE 2: SECURITY PROOF
@@ -819,34 +810,34 @@ export default function AgentPage() {
                     <span className="w-2 h-2 rounded-full bg-[#CDD2D8]" />
                   )}
                 </div>
-                <h3 className="text-base font-bold text-[#20252B]">
+                <h3 className="text-sm font-bold text-[#20252B]">
                   Run a security proof
                 </h3>
                 <p className="text-xs text-[#59636E] leading-relaxed">
-                  Execute a deterministic sandbox scenario demonstrating out-of-plan ArmorIQ denial, path-jail trap, or egress hold. 100% reproducible with zero API key dependencies.
+                  Execute a deterministic sandbox scenario demonstrating out-of-plan ArmorIQ denial, path-jail trap, or egress hold. Zero API key needed.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#EAEDF0] text-[11px] font-mono text-emerald-700 font-semibold flex items-center gap-1">
-                <span>Runs in isolated throwaway sandbox</span>
+              <div className="pt-2 border-t border-[#EAEDF0] text-[11px] font-mono text-emerald-700 font-semibold flex items-center gap-1">
+                <span>Isolated sandbox proof</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
             </div>
 
-            {/* Mode 3: Upload Sensitive File / Credential DLP */}
+            {/* Mode 3: Sensitive File DLP */}
             <div
               onClick={() => {
                 setExplorationMode('credential_scan')
                 setLaunchError(null)
               }}
-              className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
                 explorationMode === 'credential_scan'
-                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-md ring-2 ring-[#0284C7]/20'
+                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-sm ring-2 ring-[#0284C7]/20'
                   : 'border-[#CDD2D8] bg-[#FFFFFF] hover:border-[#747F8D] hover:bg-[#FAFBFC]'
               }`}
               role="button"
               tabIndex={0}
             >
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200">
                     MODE 3: CREDENTIAL DLP GUARD
@@ -857,34 +848,34 @@ export default function AgentPage() {
                     <span className="w-2 h-2 rounded-full bg-[#CDD2D8]" />
                   )}
                 </div>
-                <h3 className="text-base font-bold text-[#20252B]">
+                <h3 className="text-sm font-bold text-[#20252B]">
                   Upload Sensitive File
                 </h3>
                 <p className="text-xs text-[#59636E] leading-relaxed">
-                  Upload a file containing credentials or secrets. The ArmorIQ SDK inspects entropy and signatures, blocks read tool access upstream, and seals a signed TripLine evidence receipt.
+                  Upload a file containing credentials. ArmorIQ inspects entropy and signatures, blocks read tool upstream, and seals a receipt.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#EAEDF0] text-[11px] font-mono text-amber-700 font-semibold flex items-center gap-1">
+              <div className="pt-2 border-t border-[#EAEDF0] text-[11px] font-mono text-amber-700 font-semibold flex items-center gap-1">
                 <span>Zero model leak proof</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
             </div>
 
-            {/* Mode 4: Run the AI agent */}
+            {/* Mode 4: Live Agent */}
             <div
               onClick={() => {
                 setExplorationMode('live_agent')
                 setLaunchError(null)
               }}
-              className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+              className={`p-4 rounded-xl border transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
                 explorationMode === 'live_agent'
-                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-md ring-2 ring-[#0284C7]/20'
+                  ? 'border-[#0284C7] bg-[#FFFFFF] shadow-sm ring-2 ring-[#0284C7]/20'
                   : 'border-[#CDD2D8] bg-[#FFFFFF] hover:border-[#747F8D] hover:bg-[#FAFBFC]'
               }`}
               role="button"
               tabIndex={0}
             >
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
                     platformStatus?.live_enabled
@@ -899,15 +890,15 @@ export default function AgentPage() {
                     <span className="w-2 h-2 rounded-full bg-[#CDD2D8]" />
                   )}
                 </div>
-                <h3 className="text-base font-bold text-[#20252B]">
+                <h3 className="text-sm font-bold text-[#20252B]">
                   Run the AI agent
                 </h3>
                 <p className="text-xs text-[#59636E] leading-relaxed">
-                  Submit a task to the actual LLM-driven reasoning loop and observe its real tool proposals, decisions, executions, and results. Connects live Gemini reasoning with ArmorIQ policy governance.
+                  Submit a task to the actual LLM-driven reasoning loop and observe its real tool proposals, decisions, executions, and results.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#EAEDF0] text-[11px] font-mono text-[#59636E] flex items-center justify-between">
-                <span>Requires TRIPLINE_ENABLE_LIVE=1</span>
+              <div className="pt-2 border-t border-[#EAEDF0] text-[11px] font-mono text-[#59636E] flex items-center justify-between">
+                <span>Requires LIVE=1</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
             </div>
@@ -918,15 +909,13 @@ export default function AgentPage() {
         {explorationMode === 'credential_scan' ? (
           <CredentialScanDemo />
         ) : (
-          <div className="p-6 rounded-2xl bg-[#FFFFFF] border border-[#CDD2D8] shadow-sm space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#EAEDF0]">
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-[#0284C7] font-semibold uppercase tracking-wider block">
-                    // INTERACTIVE DEMONSTRATION ENVIRONMENT
-                  </span>
-                </div>
-                <h3 className="text-lg font-bold text-[#20252B]">
+          <div className="p-5 sm:p-6 rounded-xl bg-[#FFFFFF] border border-[#CDD2D8] shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3.5 border-b border-[#EAEDF0]">
+              <div className="space-y-0.5">
+                <span className="text-xs font-mono text-[#0284C7] font-semibold uppercase tracking-wider block">
+                  // INTERACTIVE DEMONSTRATION ENVIRONMENT
+                </span>
+                <h3 className="text-base font-bold text-[#20252B]">
                   {viewMode === 'volunteer_portal'
                     ? 'Volunteer Portal Candidate Demonstration'
                     : 'Security Proof & Scenario Catalog'}
@@ -939,9 +928,9 @@ export default function AgentPage() {
                   <button
                     data-local="btn-view-volunteer-portal"
                     onClick={() => setViewMode('volunteer_portal')}
-                    className={`px-3 py-1.5 rounded-md font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-md font-semibold transition-all cursor-pointer ${
                       viewMode === 'volunteer_portal'
-                        ? 'bg-white text-[#20252B] shadow-sm'
+                        ? 'bg-white text-[#20252B] shadow-2xs'
                         : 'text-[#59636E] hover:text-[#20252B]'
                     }`}
                   >
@@ -950,9 +939,9 @@ export default function AgentPage() {
                   <button
                     data-local="btn-view-catalog"
                     onClick={() => setViewMode('catalog')}
-                    className={`px-3 py-1.5 rounded-md font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-md font-semibold transition-all cursor-pointer ${
                       viewMode === 'catalog'
-                        ? 'bg-white text-[#20252B] shadow-sm'
+                        ? 'bg-white text-[#20252B] shadow-2xs'
                         : 'text-[#59636E] hover:text-[#20252B]'
                     }`}
                   >
@@ -966,9 +955,9 @@ export default function AgentPage() {
                     data-testid="btn-start-agent-run"
                     onClick={handleLaunchExecution}
                     disabled={launching}
-                    className="px-6 py-2 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-mono font-bold flex items-center gap-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-mono font-bold flex items-center gap-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#0284C7]/40 cursor-pointer disabled:opacity-50"
                   >
-                    <Play className="w-4 h-4 fill-white text-white" />
+                    <Play className="w-3.5 h-3.5 fill-white text-white" />
                     <span>
                       {launching
                         ? 'Executing...'
@@ -1010,10 +999,10 @@ export default function AgentPage() {
 
             {/* Error Banner */}
             {launchError && (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs font-mono text-red-800 flex items-start justify-between gap-3 shadow-sm">
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs font-mono text-red-800 flex items-start justify-between gap-3 shadow-2xs">
                 <div className="flex items-start gap-2.5">
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <p className="font-bold">Live Execution Gated or Failed</p>
                     <p className="leading-relaxed">{launchError}</p>
                   </div>
@@ -1030,18 +1019,18 @@ export default function AgentPage() {
 
             {/* Sub-view: Either Volunteer Portal OR Scenario Catalog */}
             {viewMode === 'volunteer_portal' ? (
-              <div className="pt-2">
+              <div className="pt-1">
                 <VolunteerPortalView
                   onSelectPrompt={handleVolunteerPromptSelect}
                   currentTask={taskPrompt}
                 />
               </div>
             ) : (
-              <div className="space-y-2 pt-2">
+              <div className="space-y-2 pt-1">
                 <label className="block text-xs font-mono text-[#59636E] uppercase font-semibold">
                   Select One of Nine Safely Scoped Scenarios:
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                   {EXAMPLE_SCENARIOS.filter((s) => s.id !== 'all').map((sc) => {
                     const isSelected = selectedScenario === sc.id
                     return (
@@ -1049,9 +1038,9 @@ export default function AgentPage() {
                         key={sc.id}
                         data-local={`select-example-${sc.id}`}
                         onClick={() => handleSelectScenario(sc)}
-                        className={`p-3.5 rounded-xl border text-left transition-all ${
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                           isSelected
-                            ? 'border-[#0284C7] bg-[#F0F9FF] shadow-sm ring-1 ring-[#0284C7]'
+                            ? 'border-[#0284C7] bg-[#F0F9FF] shadow-xs ring-1 ring-[#0284C7]'
                             : 'border-[#CDD2D8] bg-[#FAFBFC] hover:bg-[#FFFFFF] hover:border-[#747F8D]'
                         }`}
                       >
@@ -1076,7 +1065,7 @@ export default function AgentPage() {
                         <span className="font-bold text-xs text-[#20252B] block leading-snug">
                           {sc.title}
                         </span>
-                        <span className="text-[11px] text-[#59636E] block mt-1 leading-relaxed">
+                        <span className="text-[11px] text-[#59636E] block mt-1 leading-snug">
                           {sc.description}
                         </span>
                       </button>
@@ -1141,14 +1130,14 @@ export default function AgentPage() {
         />
 
         {/* ── 6. EVIDENCE INSPECTOR & 7-STAGE PIPELINE CARDS ── */}
-        <section className="p-6 sm:p-8 rounded-2xl bg-[#FFFFFF] border border-[#CDD2D8] shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[#EAEDF0]">
+        <section className="p-5 sm:p-6 rounded-xl bg-[#FFFFFF] border border-[#CDD2D8] shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3.5 border-b border-[#EAEDF0]">
             <div>
               <div className="flex items-center gap-2 text-xs font-mono text-[#0284C7] font-semibold uppercase">
                 <Layers className="w-4 h-4 text-[#0284C7]" />
                 <span>// AUTHORITATIVE 7-STAGE EVIDENCE INSPECTOR</span>
               </div>
-              <h2 className="text-xl font-bold text-[#20252B] mt-1">
+              <h2 className="text-lg font-bold text-[#20252B] mt-0.5">
                 Forensic Defense-in-Depth Verification Details
               </h2>
             </div>
@@ -1162,10 +1151,10 @@ export default function AgentPage() {
           </div>
 
           {/* 7-Stage Detailed Timeline Cards */}
-          <div className="space-y-4 pt-2">
+          <div className="space-y-3 pt-1">
 
             {/* Stage 1: User Task */}
-            <div className={`p-4.5 rounded-xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               activeStage >= 1 ? 'border-[#CDD2D8] bg-[#FFFFFF]' : 'border-gray-200 bg-gray-50 opacity-60'
             }`}>
               <div className="flex items-start justify-between gap-4">
@@ -1177,7 +1166,7 @@ export default function AgentPage() {
                   <p className="text-xs text-[#59636E]">
                     The instruction given to the agent and the specific runtime environment that ingested it.
                   </p>
-                  <div className="mt-2 p-3 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0] text-xs font-mono">
+                  <div className="mt-2 p-2.5 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0] text-xs font-mono">
                     <span className="text-[#747F8D] block text-[10px] uppercase">Ingested Instruction:</span>
                     <span className="text-[#20252B] font-semibold">{taskPrompt}</span>
                   </div>
@@ -1193,7 +1182,7 @@ export default function AgentPage() {
             </div>
 
             {/* Stage 2: AI Reasoning & Proposed Action */}
-            <div className={`p-4.5 rounded-xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               activeStage >= 2 ? 'border-[#CDD2D8] bg-[#FFFFFF]' : 'border-gray-200 bg-gray-50 opacity-60'
             }`}>
               <div className="flex items-start justify-between gap-4">
@@ -1203,16 +1192,16 @@ export default function AgentPage() {
                     <h4 className="text-sm font-bold text-[#20252B] font-mono">Stage 2 — AI Reasoning & Proposed Action</h4>
                   </div>
                   <p className="text-xs text-[#59636E]">
-                    The model parses the instruction and emits a structured tool proposal. A model-generated proposal is an unexecuted intent, NOT an executed tool.
+                    The model parses the instruction and emits a structured tool proposal. A model proposal is an unexecuted intent, NOT an executed tool.
                   </p>
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
-                    <div className="p-3 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0]">
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs font-mono">
+                    <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0]">
                       <span className="text-[#747F8D] text-[10px] uppercase block">Configured Provider & Model</span>
                       <span className="text-[#20252B] font-bold mt-0.5 block">
                         {platformStatus?.llm_provider || 'gemini'} ({platformStatus?.llm_model || 'gemini-3.8-flash'})
                       </span>
                     </div>
-                    <div className="p-3 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0]">
+                    <div className="p-2.5 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0]">
                       <span className="text-[#747F8D] text-[10px] uppercase block">Proposed Tool & Sanitized Arguments</span>
                       <code className="text-[#0284C7] font-bold mt-0.5 block truncate">
                         {activeScenarioConfig.tool}({JSON.stringify(activeScenarioConfig.args)})
@@ -1227,7 +1216,7 @@ export default function AgentPage() {
             </div>
 
             {/* Stage 3: Trusted Plan & Intent Token */}
-            <div className={`p-4.5 rounded-xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               activeStage >= 3 ? 'border-[#CDD2D8] bg-[#FFFFFF]' : 'border-gray-200 bg-gray-50 opacity-60'
             }`}>
               <div className="flex items-start justify-between gap-4">
@@ -1239,7 +1228,7 @@ export default function AgentPage() {
                   <p className="text-xs text-[#59636E]">
                     The orchestrator synthesizes the plan from trusted task goals BEFORE untrusted issue or volunteer data is read. Pre-ingestion plan synthesis locks the tool vocabulary and prevents prompt injection from expanding agent capabilities.
                   </p>
-                  <div className="mt-2 p-3 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0] text-xs font-mono space-y-1">
+                  <div className="mt-2 p-2.5 rounded-lg bg-[#FAFBFC] border border-[#EAEDF0] text-xs font-mono space-y-1">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[#747F8D]">
                       <span>Approved Capability Scope:</span>
                       <span className="text-[#20252B] font-semibold">read_file, list_issues, read_issue, comment_issue, summarize_applications, list_volunteer_applications</span>
@@ -1257,7 +1246,7 @@ export default function AgentPage() {
             </div>
 
             {/* Stage 4: ArmorIQ Authorization */}
-            <div className={`p-4.5 rounded-xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               activeStage >= 4 ? 'border-[#CDD2D8] bg-[#FFFFFF]' : 'border-gray-200 bg-gray-50 opacity-60'
             }`}>
               <div className="flex items-start justify-between gap-4">
@@ -1269,7 +1258,7 @@ export default function AgentPage() {
                   <p className="text-xs text-[#59636E]">
                     ArmorIQ Intent Authorization Proxy evaluates the proposed tool call against the active session plan.
                   </p>
-                  <div className="mt-2 p-3.5 rounded-lg border text-xs font-mono space-y-2 bg-[#FAFBFC] border-[#EAEDF0]">
+                  <div className="mt-2 p-3 rounded-lg border text-xs font-mono space-y-2 bg-[#FAFBFC] border-[#EAEDF0]">
                     <div className="flex items-center justify-between">
                       <span className="text-[#747F8D]">ArmorIQ Decision:</span>
                       <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
@@ -1293,7 +1282,7 @@ export default function AgentPage() {
             </div>
 
             {/* Stage 5: TripLine Containment Checks */}
-            <div className={`p-4.5 rounded-xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               activeStage >= 5 ? 'border-[#CDD2D8] bg-[#FFFFFF]' : 'border-gray-200 bg-gray-50 opacity-60'
             }`}>
               <div className="flex items-start justify-between gap-4">
@@ -1305,7 +1294,7 @@ export default function AgentPage() {
                   <p className="text-xs text-[#59636E]">
                     TripLine enforces independent containment controls: In-MCP Path Jail (detects directory traversal escaping workspace) and Egress Gateway (detects canary token leakage).
                   </p>
-                  <div className="mt-2 p-3.5 rounded-lg border text-xs font-mono space-y-2 bg-[#FAFBFC] border-[#EAEDF0]">
+                  <div className="mt-2 p-3 rounded-lg border text-xs font-mono space-y-2 bg-[#FAFBFC] border-[#EAEDF0]">
                     {activeScenarioConfig.id === 'armoriq_deny' || activeScenarioConfig.id === 'volunteer_export' ? (
                       <div className="text-[#747F8D] italic">
                         Not Reached — Upstream ArmorIQ policy denial halted the operation before entering containment checks.
@@ -1353,7 +1342,7 @@ export default function AgentPage() {
             </div>
 
             {/* Stage 6: Dispatch & Tool Execution */}
-            <div className={`p-4.5 rounded-xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               activeStage >= 6 ? 'border-[#CDD2D8] bg-[#FFFFFF]' : 'border-gray-200 bg-gray-50 opacity-60'
             }`}>
               <div className="flex items-start justify-between gap-4">
@@ -1365,7 +1354,7 @@ export default function AgentPage() {
                   <p className="text-xs text-[#59636E]">
                     Protected tool dispatch occurs ONLY if authorization and containment checks pass. An operation is never marked executed merely because a job started.
                   </p>
-                  <div className="mt-2 p-3.5 rounded-lg border text-xs font-mono bg-[#FAFBFC] border-[#EAEDF0]">
+                  <div className="mt-2 p-3 rounded-lg border text-xs font-mono bg-[#FAFBFC] border-[#EAEDF0]">
                     <div className="flex items-center justify-between">
                       <span className="text-[#747F8D]">Dispatch Status:</span>
                       <span className={`px-2 py-0.5 rounded font-bold ${
@@ -1387,7 +1376,7 @@ export default function AgentPage() {
             </div>
 
             {/* Stage 7: Evidence, Receipt & Cryptographic Verification */}
-            <div className={`p-4.5 rounded-xl border transition-all ${
+            <div className={`p-4 rounded-xl border transition-all ${
               activeStage >= 7 ? 'border-[#CDD2D8] bg-[#FFFFFF]' : 'border-gray-200 bg-gray-50 opacity-60'
             }`}>
               <div className="flex items-start justify-between gap-4">
@@ -1400,7 +1389,7 @@ export default function AgentPage() {
                     Every decision produces an immutable, signed HMAC-SHA256 receipt sealed into the append-only witness ledger. A denial receipt proves the action was halted, not that it executed.
                   </p>
 
-                  <div className="mt-2 p-3.5 rounded-lg border text-xs font-mono bg-[#FAFBFC] border-[#EAEDF0] space-y-2.5">
+                  <div className="mt-2 p-3 rounded-lg border text-xs font-mono bg-[#FAFBFC] border-[#EAEDF0] space-y-2.5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="space-y-0.5">
                         <span className="text-[#747F8D] text-[10px] uppercase block">Receipt Identifier:</span>
@@ -1419,7 +1408,7 @@ export default function AgentPage() {
                           data-local="verify-receipt-button"
                           onClick={() => handleVerifyReceipt(effectiveReceiptId)}
                           disabled={Boolean(verifyingReceiptId)}
-                          className="px-3 py-1.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-[11px] font-semibold flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-[11px] font-semibold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
                         >
                           <CheckCircle className="w-3 h-3" />
                           <span>{verifyingReceiptId ? 'Verifying...' : 'Verify Cryptographic Signature'}</span>
@@ -1450,13 +1439,16 @@ export default function AgentPage() {
 
         {/* ── 7. NAVIGATION TABS (Decisions / Event Stream / Crew / REA) ── */}
         <section className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#CDD2D8]">
-            <div className="flex items-center gap-2 font-mono text-xs overflow-x-auto">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#CDD2D8]">
+            {/* Tab navigation pills */}
+            <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
               <button
                 data-local="tab-lifecycle"
                 onClick={() => setActiveTab('lifecycle')}
-                className={`px-3.5 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer ${
-                  activeTab === 'lifecycle' ? 'bg-[#0284C7] text-white shadow-sm' : 'text-[#59636E] hover:bg-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer border ${
+                  activeTab === 'lifecycle'
+                    ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#59636E] border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#FAFBFC]'
                 }`}
               >
                 Timeline Summary
@@ -1464,8 +1456,10 @@ export default function AgentPage() {
               <button
                 data-local="tab-decisions"
                 onClick={() => setActiveTab('decisions')}
-                className={`px-3.5 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer ${
-                  activeTab === 'decisions' ? 'bg-[#0284C7] text-white shadow-sm' : 'text-[#59636E] hover:bg-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer border ${
+                  activeTab === 'decisions'
+                    ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#59636E] border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#FAFBFC]'
                 }`}
               >
                 Policy Decisions ({currentDecisions.length || 4})
@@ -1473,8 +1467,10 @@ export default function AgentPage() {
               <button
                 data-local="tab-events"
                 onClick={() => setActiveTab('events')}
-                className={`px-3.5 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer ${
-                  activeTab === 'events' ? 'bg-[#0284C7] text-white shadow-sm' : 'text-[#59636E] hover:bg-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer border ${
+                  activeTab === 'events'
+                    ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#59636E] border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#FAFBFC]'
                 }`}
               >
                 Live Event Stream {streamMode === 'job' ? '(Live Process)' : `(${runEvents.length})`}
@@ -1482,8 +1478,10 @@ export default function AgentPage() {
               <button
                 data-local="tab-crew"
                 onClick={() => setActiveTab('crew')}
-                className={`px-3.5 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer ${
-                  activeTab === 'crew' ? 'bg-[#0284C7] text-white shadow-sm' : 'text-[#59636E] hover:bg-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer border ${
+                  activeTab === 'crew'
+                    ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#59636E] border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#FAFBFC]'
                 }`}
               >
                 Crew & Key Attribution
@@ -1491,8 +1489,10 @@ export default function AgentPage() {
               <button
                 data-local="tab-rea"
                 onClick={() => setActiveTab('rea')}
-                className={`px-3.5 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer ${
-                  activeTab === 'rea' ? 'bg-[#0284C7] text-white shadow-sm' : 'text-[#59636E] hover:bg-white'
+                className={`px-3 py-1.5 rounded-lg transition-colors font-semibold cursor-pointer border ${
+                  activeTab === 'rea'
+                    ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#59636E] border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#FAFBFC]'
                 }`}
               >
                 REA Reverse Engineering
@@ -1501,8 +1501,8 @@ export default function AgentPage() {
 
             {/* Run Selector Dropdown */}
             {runs.length > 0 && (
-              <div className="flex items-center gap-2 font-mono text-xs">
-                <span className="text-[#747F8D]">Select Run:</span>
+              <div className="flex items-center gap-2 font-mono text-xs shrink-0">
+                <span className="text-[#747F8D] whitespace-nowrap">Select Run:</span>
                 <select
                   data-api="GET /api/agent/runs/{run_id}"
                   value={selectedRun?.run_id || ''}
@@ -1514,7 +1514,7 @@ export default function AgentPage() {
                       setActiveStage(7)
                     }
                   }}
-                  className="bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B] px-3 py-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0284C7] shadow-sm"
+                  className="bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B] px-3 py-1.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#0284C7] shadow-2xs max-w-[280px] truncate"
                 >
                   {runs.map((r) => (
                     <option key={r.run_id} value={r.run_id}>
@@ -1529,7 +1529,7 @@ export default function AgentPage() {
           {/* TAB: POLICY DECISIONS */}
           {activeTab === 'decisions' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#CDD2D8] text-xs font-mono text-[#59636E] shadow-sm">
+              <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#CDD2D8] text-xs font-mono text-[#59636E] shadow-2xs">
                 Authoritative breakdown of proposed operations from <strong>{selectedRun?.run_id || 'active proof'}</strong>, distinguishing upstream ArmorIQ authorization from TripLine containment boundaries.
               </div>
 
@@ -1617,7 +1617,7 @@ export default function AgentPage() {
 
           {/* TAB: EVENT STREAM / TERMINAL */}
           {activeTab === 'events' && (
-            <div className="p-6 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] flex flex-col space-y-4 shadow-sm">
+            <div className="p-5 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] flex flex-col space-y-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#EAEDF0] text-xs font-mono">
                 <div className="flex items-center gap-2 text-[#0284C7] font-semibold">
                   <Terminal className="w-4 h-4" />
@@ -1679,10 +1679,10 @@ export default function AgentPage() {
                 Scoped delegation manifest binding sub-agents to specific public keys and disjoint tool vocabularies.
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Orchestrator */}
                 <div className="p-5 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] flex flex-col justify-between space-y-4 shadow-sm">
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-[#0284C7]/15 text-[#0284C7] font-bold">
                       ORCHESTRATOR
                     </span>
@@ -1702,7 +1702,7 @@ export default function AgentPage() {
                 {/* Sub-Agents */}
                 {crew?.sub_agents?.map((sub, idx) => (
                   <div key={idx} className="p-5 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] flex flex-col justify-between space-y-4 shadow-sm">
-                    <div className="space-y-2.5">
+                    <div className="space-y-2">
                       <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase border border-emerald-200">
                         SUB-AGENT: {sub.role}
                       </span>
@@ -1747,8 +1747,8 @@ export default function AgentPage() {
 
           {/* TAB: REA REVERSE ENGINEERING ANALYSIS */}
           {activeTab === 'rea' && (
-            <div className="p-6 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] space-y-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EAEDF0]">
+            <div className="p-5 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] space-y-5 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#EAEDF0]">
                 <div>
                   <h3 className="text-base font-bold text-[#20252B] font-mono">
                     REA Reverse Engineering Static Analysis Integration
@@ -1761,7 +1761,7 @@ export default function AgentPage() {
                   data-api="POST /api/jobs"
                   onClick={handleRunRea}
                   disabled={reaRunning}
-                  className="px-4 py-2 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-mono font-semibold flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-mono font-semibold flex items-center gap-1.5 shadow-2xs transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   <Search className="w-3.5 h-3.5" />
                   <span>{reaRunning ? 'Analyzing...' : 'Execute Analysis'}</span>

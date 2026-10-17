@@ -1,9 +1,9 @@
 # Tripline UI ↔ API Two-Way Coverage Matrix
 
 **Phase 9 Automated Verification Matrix**  
-**FastAPI Routes**: 66  
+**FastAPI Routes**: 67  
 **UI Elements Bound**: 51  
-**Allowed Exceptions**: 30  
+**Allowed Exceptions**: 31  
 
 ## 1. Route ↔ Page ↔ Element ↔ Test ID Mapping
 
@@ -73,6 +73,7 @@
 | `/api/csrf-token` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/demo-data` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/demo/analyze-credential-file` | Documented protocol / background route in `docs/coverage_exceptions.md` |
+| `/api/demo/chat` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/events` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/health` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/limitations` | Documented protocol / background route in `docs/coverage_exceptions.md` |

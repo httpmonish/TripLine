@@ -65,6 +65,8 @@ from dashboard.schemas import (
     REAInvestigationDetail,
     CredentialScanRequest,
     CredentialScanResponse,
+    DocumentChatRequest,
+    DocumentChatResponse,
 )
 from dashboard.security import (
     get_process_csrf_token,
@@ -1920,6 +1922,33 @@ async def analyze_credential_file(req: CredentialScanRequest, request: Request):
     safe_filename = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", pathlib.Path(req.filename).name) or "uploaded_file.txt"
     res = analyze_and_generate_receipt(safe_filename, req.content, action=req.action or "read_file")
     return sanitize_payload(res)
+
+
+@api_router.post("/demo/chat", response_model=DocumentChatResponse)
+async def demo_document_chat(req: DocumentChatRequest, request: Request):
+    """
+    TripLine Security Intelligence Chatbot:
+    Answers user inquiries regarding document block status, ArmorIQ SDK decisions,
+    detected credentials, cryptographic receipt evidence, and LLM shielding guarantees.
+    """
+    verify_csrf_and_origin(request)
+    from agent.credential_scanner import answer_document_question
+    
+    # Safe bounds check
+    if len(req.message) > 4096:
+        raise HTTPException(status_code=413, detail="Message exceeds 4KB limit")
+    if req.document_content and len(req.document_content) > 64 * 1024:
+        raise HTTPException(status_code=413, detail="File content exceeds 64KB safety limit")
+        
+    safe_filename = re.sub(r"[^a-zA-Z0-9_\-\.]", "_", pathlib.Path(req.document_name).name) or "document.txt"
+    ans = answer_document_question(
+        message=req.message,
+        document_name=safe_filename,
+        document_content=req.document_content,
+        scan_result=req.scan_result,
+        history=req.history,
+    )
+    return sanitize_payload(ans)
 
 
 

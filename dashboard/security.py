@@ -1,5 +1,6 @@
 import re
 import secrets
+from pathlib import Path
 from typing import Any
 
 def redact_secret(text: str) -> str:
@@ -18,9 +19,20 @@ def redact_secret(text: str) -> str:
     
     return text
 
+_CSRF_FILE = Path(__file__).resolve().parent.parent / ".tripline_csrf_token"
 _PROCESS_CSRF_TOKEN = secrets.token_hex(32)
 
 def get_process_csrf_token() -> str:
+    global _PROCESS_CSRF_TOKEN
+    try:
+        if _CSRF_FILE.exists():
+            saved = _CSRF_FILE.read_text().strip()
+            if len(saved) == 64:
+                _PROCESS_CSRF_TOKEN = saved
+                return _PROCESS_CSRF_TOKEN
+        _CSRF_FILE.write_text(_PROCESS_CSRF_TOKEN)
+    except Exception:
+        pass
     return _PROCESS_CSRF_TOKEN
 
 def verify_csrf_and_origin(request) -> None:
@@ -70,7 +82,8 @@ def verify_csrf_and_origin(request) -> None:
     # CSRF Token check (enforced on browser requests and whenever token is provided)
     token = request.headers.get("x-csrf-token")
     if origin or referer or token:
-        if not token or token != _PROCESS_CSRF_TOKEN:
+        valid_token = get_process_csrf_token()
+        if not token or (token != valid_token and token != _PROCESS_CSRF_TOKEN):
             raise HTTPException(status_code=403, detail="Invalid or missing CSRF token")
 
 

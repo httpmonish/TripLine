@@ -34,3 +34,4 @@ This document contains explicit allowlisted exemptions from the two-way UI-API c
 | GET | `/api/volunteer/applications/{application_id}` | Scoped volunteer application detail endpoint for Phase 2 volunteer demonstration. |
 | GET | `/api/volunteer/stats` | Aggregated volunteer privacy statistics endpoint for Phase 2 volunteer demonstration. |
 | POST | `/api/volunteer/media-preview` | Volunteer media attachment boundary check endpoint for Phase 2 volunteer demonstration. |
+| POST | `/api/demo/chat` | Synthetic document security assistant endpoint for credential scan questions. |

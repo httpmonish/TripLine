@@ -67,23 +67,6 @@ export function CinematicProcessRoute({
 }: ProcessRouteProps) {
   const [selectedNode, setSelectedNode] = useState<number>(currentStage || 1)
 
-  // Palette: charcoal (#0C0E17), graphite (#141824), steel (#23293D), restrained orange (#EA580C / #F97316)
-  // Red for denial (#EF4444), Amber for hold (#F59E0B), Green for genuinely permitted (#10B981)
-
-  // Marker position calculation along the process route (0% to 100%)
-  const markerProgress =
-    currentStage === 1
-      ? 10
-      : currentStage === 2
-      ? 28
-      : currentStage === 3
-      ? 48
-      : currentStage === 4
-      ? 68
-      : currentStage === 5
-      ? 86
-      : 100
-
   // Decision outcome logic
   const isArmorIQDeny = armoriqDecision === 'DENY'
   const isPathJailDeny = triplineDecision === 'DENY' && triplineControl === 'Path Jail'
@@ -99,7 +82,7 @@ export function CinematicProcessRoute({
         policyApplied: armoriqPolicy || 'ArmorIQ Intent Authorization Policy (Volunteer PII Protection)',
         why: armoriqReason || 'Policy explicitly denies exfiltration of volunteer contact details. Action stopped upstream.',
         executionOccurred: false,
-        evidenceWritten: receiptId ? `RFC 8785 HMAC Signed Receipt: ${receiptId}` : 'Incident receipt recorded',
+        evidenceWritten: receiptId ? `RFC 8785 Signed Receipt: ${receiptId}` : 'Incident receipt recorded',
       }
     } else if (isPathJailDeny) {
       return {
@@ -108,7 +91,7 @@ export function CinematicProcessRoute({
         policyApplied: 'TripLine In-MCP Path Jail (Boundary Confinement Check)',
         why: triplineReason || 'Target path escapes the sandbox root (path traversal detected). Halted before filesystem read.',
         executionOccurred: false,
-        evidenceWritten: receiptId ? `RFC 8785 HMAC Signed Receipt: ${receiptId}` : 'Incident receipt recorded',
+        evidenceWritten: receiptId ? `RFC 8785 Signed Receipt: ${receiptId}` : 'Incident receipt recorded',
       }
     } else if (isEgressHold) {
       return {
@@ -117,7 +100,7 @@ export function CinematicProcessRoute({
         policyApplied: 'TripLine Egress Canary Gateway (Data Loss Quarantine)',
         why: triplineReason || 'Outbound content matches active canary signature. Payload quarantined before egress transmission.',
         executionOccurred: false,
-        evidenceWritten: receiptId ? `RFC 8785 HMAC Signed Receipt: ${receiptId}` : 'Incident receipt recorded',
+        evidenceWritten: receiptId ? `RFC 8785 Signed Receipt: ${receiptId}` : 'Incident receipt recorded',
       }
     } else if (isDispatched) {
       return {
@@ -126,7 +109,7 @@ export function CinematicProcessRoute({
         policyApplied: 'ArmorIQ Triage Policy & TripLine In-MCP Sandbox Boundary',
         why: 'Tool is declared in trusted plan and resolves strictly within sandbox. Dispatched safely to protected MCP.',
         executionOccurred: true,
-        evidenceWritten: receiptId ? `Execution Witness Chain Entry: ${receiptId}` : 'Witness hash chain recorded',
+        evidenceWritten: receiptId ? `Execution Witness Chain: ${receiptId}` : 'Witness hash chain recorded',
       }
     }
     return {
@@ -141,10 +124,53 @@ export function CinematicProcessRoute({
 
   const exp = getExplanation()
 
+  const stations = [
+    {
+      num: 1,
+      tag: '01. INGEST',
+      title: 'AI Model Loop',
+      icon: Cpu,
+      sub: proposedTool ? `${proposedTool}()` : 'Ingesting prompt',
+      tone: 'orange',
+    },
+    {
+      num: 2,
+      tag: '02. INTENT GATE',
+      title: 'ArmorIQ Policy',
+      icon: Shield,
+      sub: isArmorIQDeny ? 'DENIED (Out-of-Plan)' : armoriqDecision === 'ALLOW' ? 'ALLOWED (In-Plan)' : 'Pending',
+      tone: isArmorIQDeny ? 'red' : 'green',
+    },
+    {
+      num: 3,
+      tag: '03. CONTAINMENT',
+      title: 'TripLine Checks',
+      icon: Layers,
+      sub: isPathJailDeny ? 'TRAPPED (Path Jail)' : isEgressHold ? 'QUARANTINE (Egress)' : 'In Sandbox Boundary',
+      tone: isPathJailDeny || isEgressHold ? 'amber' : 'green',
+    },
+    {
+      num: 4,
+      tag: '04. DISPATCH',
+      title: 'TripLine MCP',
+      icon: Terminal,
+      sub: isDispatched ? 'DISPATCHED TO TOOL' : 'HALTED (0 Subprocesses)',
+      tone: isDispatched ? 'green' : 'red',
+    },
+    {
+      num: 5,
+      tag: '05. FORENSIC PROOF',
+      title: 'Signed Receipt',
+      icon: FileCheck,
+      sub: receiptId ? 'VERIFIED RFC 8785' : 'Pending Evidence',
+      tone: 'blue',
+    },
+  ]
+
   return (
-    <div className="rounded-2xl border border-[#23293D] bg-[#0C0E17] text-white shadow-2xl overflow-hidden font-sans space-y-0">
+    <div className="rounded-xl border border-[#23293D] bg-[#0C0E17] text-white shadow-xl overflow-hidden font-sans space-y-0">
       {/* ── Top Bar: Mode Label & Status ── */}
-      <div className="bg-[#141824] px-5 py-3.5 border-b border-[#23293D] flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-[#141824] px-5 py-3 border-b border-[#23293D] flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 font-mono text-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-[#EA580C] animate-pulse" />
@@ -180,200 +206,71 @@ export function CinematicProcessRoute({
           <span className="text-[#3F444D]">•</span>
           <span className="flex items-center gap-1 text-[11px]">
             <Clock className="w-3 h-3 text-[#EA580C]" />
-            Synchronized to Backend Events
+            Live State Synchronized
           </span>
         </div>
       </div>
 
       {/* ── Central Process Visualizer ── */}
-      <div className="p-6 lg:p-8 space-y-8 bg-gradient-to-b from-[#0C0E17] via-[#10131E] to-[#0C0E17]">
-        {/* Process Route Pipeline Nodes */}
-        <div className="relative">
-          {/* Background Connecting Rail */}
-          <div className="absolute top-1/2 left-4 right-4 h-1 bg-[#1C2233] -translate-y-1/2 z-0" />
+      <div className="p-5 lg:p-6 space-y-6 bg-gradient-to-b from-[#0C0E17] via-[#10131E] to-[#0C0E17]">
+        
+        {/* Progress Pipeline Stations Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {stations.map((s) => {
+            const isCurrent = currentStage === s.num
+            const isCompleted = currentStage > s.num
+            const Icon = s.icon
 
-          {/* Active Moving Orange Process Marker */}
-          <div
-            className="absolute top-1/2 h-1 bg-gradient-to-r from-[#EA580C] to-[#F97316] -translate-y-1/2 transition-all duration-700 ease-out z-0 shadow-[0_0_12px_#EA580C]"
-            style={{ width: `${markerProgress}%` }}
-          />
-
-          {/* Action Marker Indicator */}
-          <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 transition-all duration-700 ease-out flex flex-col items-center pointer-events-none"
-            style={{ left: `${markerProgress}%` }}
-          >
-            <div className="w-4 h-4 rounded-full bg-[#EA580C] border-2 border-white shadow-[0_0_14px_#EA580C] flex items-center justify-center">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
-            </div>
-            <span className="mt-1 font-mono text-[9px] uppercase font-bold text-[#F97316] bg-[#0C0E17]/90 px-1 rounded border border-[#EA580C]/40">
-              Active Focus
-            </span>
-          </div>
-
-          {/* 5 Milestone Route Stations */}
-          <div className="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-3">
-            {/* Station 1: Task & AI Proposal */}
-            <div
-              onClick={() => setSelectedNode(1)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                currentStage >= 1
-                  ? 'bg-[#141824] border-[#EA580C]/70 shadow-lg'
-                  : 'bg-[#0E101A] border-[#1C2233] opacity-60'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[10px] text-[#9EA8B6] font-bold">01. INGEST & PROPOSE</span>
-                <span className="w-2 h-2 rounded-full bg-[#EA580C]" />
-              </div>
-              <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                <Cpu className="w-4 h-4 text-[#EA580C]" />
-                AI Model Loop
-              </h4>
-              <p className="text-[11px] text-[#9EA8B6] mt-1 font-mono truncate">
-                {proposedTool ? `${proposedTool}()` : 'Ingesting prompt'}
-              </p>
-            </div>
-
-            {/* Station 2: ArmorIQ Authorization Gate */}
-            <div
-              onClick={() => setSelectedNode(2)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                isArmorIQDeny
-                  ? 'bg-red-950/30 border-red-500 shadow-lg ring-1 ring-red-500'
-                  : currentStage >= 3
-                  ? 'bg-[#141824] border-emerald-500/80 shadow-lg'
-                  : 'bg-[#0E101A] border-[#1C2233] opacity-60'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[10px] text-[#9EA8B6] font-bold">02. INTENT GATE</span>
-                {isArmorIQDeny ? (
-                  <AlertOctagon className="w-3.5 h-3.5 text-red-500" />
-                ) : armoriqDecision === 'ALLOW' ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                ) : (
-                  <span className="w-2 h-2 rounded-full bg-[#747F8D]" />
-                )}
-              </div>
-              <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-[#FBBF24]" />
-                ArmorIQ Policy
-              </h4>
-              <span
-                className={`text-[10px] font-mono font-bold mt-1 inline-block px-1.5 py-0.5 rounded ${
-                  isArmorIQDeny
-                    ? 'bg-red-900/60 text-red-300'
-                    : armoriqDecision === 'ALLOW'
-                    ? 'bg-emerald-900/60 text-emerald-300'
-                    : 'bg-gray-800 text-gray-400'
+            return (
+              <div
+                key={s.num}
+                onClick={() => setSelectedNode(s.num)}
+                className={`p-4 rounded-xl border transition-all cursor-pointer relative flex flex-col justify-between min-h-[108px] ${
+                  isCurrent
+                    ? 'bg-[#171B29] border-[#EA580C] ring-1 ring-[#EA580C]/50 shadow-md'
+                    : isCompleted
+                    ? 'bg-[#141824] border-[#2A3147] hover:border-[#3E4766]'
+                    : 'bg-[#0E101A] border-[#1C2233] opacity-65'
                 }`}
               >
-                {armoriqDecision || 'PENDING'}
-              </span>
-            </div>
-
-            {/* Station 3: TripLine Containment Area */}
-            <div
-              onClick={() => setSelectedNode(3)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                isPathJailDeny
-                  ? 'bg-amber-950/30 border-amber-500 shadow-lg ring-1 ring-amber-500'
-                  : isEgressHold
-                  ? 'bg-amber-950/30 border-amber-500 shadow-lg ring-1 ring-amber-500'
-                  : currentStage >= 4
-                  ? 'bg-[#141824] border-emerald-500/80 shadow-lg'
-                  : 'bg-[#0E101A] border-[#1C2233] opacity-60'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[10px] text-[#9EA8B6] font-bold">03. CONTAINMENT</span>
-                {isPathJailDeny || isEgressHold ? (
-                  <Lock className="w-3.5 h-3.5 text-amber-500" />
-                ) : (
-                  <span className="w-2 h-2 rounded-full bg-[#747F8D]" />
-                )}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-mono text-[10px] text-[#9EA8B6] font-semibold">{s.tag}</span>
+                    {isCurrent ? (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#EA580C] text-white flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                        ACTIVE
+                      </span>
+                    ) : isCompleted ? (
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-[#2A3147]" />
+                    )}
+                  </div>
+                  <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
+                    <Icon className="w-4 h-4 text-[#EA580C]" />
+                    {s.title}
+                  </h4>
+                </div>
+                
+                <div className="pt-2 border-t border-white/5 mt-2">
+                  <span className={`text-[10px] font-mono font-medium block truncate ${
+                    s.tone === 'red' ? 'text-red-400 font-bold' :
+                    s.tone === 'amber' ? 'text-amber-400 font-bold' :
+                    s.tone === 'green' ? 'text-emerald-400 font-bold' :
+                    'text-[#9EA8B6]'
+                  }`}>
+                    {s.sub}
+                  </span>
+                </div>
               </div>
-              <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-[#65BCE7]" />
-                TripLine Checks
-              </h4>
-              <span
-                className={`text-[10px] font-mono font-bold mt-1 inline-block px-1.5 py-0.5 rounded ${
-                  isPathJailDeny
-                    ? 'bg-amber-900/60 text-amber-300'
-                    : isEgressHold
-                    ? 'bg-amber-900/60 text-amber-300'
-                    : triplineDecision === 'ALLOW'
-                    ? 'bg-emerald-900/60 text-emerald-300'
-                    : 'bg-gray-800 text-gray-400'
-                }`}
-              >
-                {isPathJailDeny ? 'JAIL_DENY' : isEgressHold ? 'EGRESS_HOLD' : triplineDecision || 'PENDING'}
-              </span>
-            </div>
-
-            {/* Station 4: Protected Tool Dispatch */}
-            <div
-              onClick={() => setSelectedNode(4)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                isDispatched
-                  ? 'bg-emerald-950/30 border-emerald-500 shadow-lg'
-                  : currentStage >= 5 && !isDispatched
-                  ? 'bg-gray-950 border-gray-800 opacity-60'
-                  : 'bg-[#0E101A] border-[#1C2233] opacity-60'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[10px] text-[#9EA8B6] font-bold">04. DISPATCH</span>
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isDispatched ? 'bg-emerald-500' : 'bg-red-500'
-                  }`}
-                />
-              </div>
-              <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                <Terminal className="w-4 h-4 text-[#38BDF8]" />
-                TripLine MCP
-              </h4>
-              <span
-                className={`text-[10px] font-mono font-bold mt-1 inline-block px-1.5 py-0.5 rounded ${
-                  isDispatched
-                    ? 'bg-emerald-900/60 text-emerald-300'
-                    : 'bg-red-900/40 text-red-300'
-                }`}
-              >
-                {isDispatched ? 'DISPATCHED' : 'NOT REACHED'}
-              </span>
-            </div>
-
-            {/* Station 5: Evidence & Cryptographic Verification */}
-            <div
-              onClick={() => setSelectedNode(5)}
-              className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                receiptId
-                  ? 'bg-[#141824] border-[#0284C7] shadow-lg'
-                  : 'bg-[#0E101A] border-[#1C2233] opacity-60'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-mono text-[10px] text-[#9EA8B6] font-bold">05. FORENSIC PROOF</span>
-                <FileText className="w-3.5 h-3.5 text-[#0284C7]" />
-              </div>
-              <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                <FileCheck className="w-4 h-4 text-emerald-400" />
-                Signed Receipt
-              </h4>
-              <span className="text-[10px] font-mono text-emerald-400 font-bold mt-1 truncate block">
-                {receiptId ? `VERIFIED RFC 8785` : 'Pending Evidence'}
-              </span>
-            </div>
-          </div>
+            )
+          })}
         </div>
 
         {/* ── Human-Readable Decision Narrative & Forensic Inspector ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2 border-t border-[#23293D]">
-          {/* Left Column: Human Explanation (Section 2.8) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pt-2 border-t border-[#23293D]">
+          {/* Left Column: Human Explanation */}
           <div className="lg:col-span-2 space-y-3.5 bg-[#141824] p-5 rounded-xl border border-[#23293D]">
             <div className="flex items-center justify-between border-b border-[#23293D] pb-2.5">
               <span className="text-xs font-mono font-bold uppercase text-[#EA580C] flex items-center gap-1.5">
@@ -388,19 +285,19 @@ export function CinematicProcessRoute({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
               <div className="space-y-1">
                 <span className="text-[#9EA8B6] uppercase text-[10px] block">What the Agent Wanted to Do:</span>
-                <p className="text-white font-semibold leading-relaxed font-sans">{exp.what}</p>
+                <p className="text-white font-medium leading-relaxed font-sans">{exp.what}</p>
               </div>
 
               <div className="space-y-1">
                 <span className="text-[#9EA8B6] uppercase text-[10px] block">Security Policy Applied:</span>
-                <p className="text-[#FBBF24] font-semibold leading-relaxed font-sans">{exp.policyApplied}</p>
+                <p className="text-[#FBBF24] font-medium leading-relaxed font-sans">{exp.policyApplied}</p>
               </div>
             </div>
 
             <div className="p-3.5 rounded-lg bg-[#0C0E17] border border-[#23293D] text-xs font-mono space-y-1">
               <span className="text-[#9EA8B6] uppercase text-[10px] block">Why the Action was Allowed, Denied, or Held:</span>
               <p
-                className={`font-semibold leading-relaxed font-sans ${
+                className={`font-medium leading-relaxed font-sans ${
                   isArmorIQDeny
                     ? 'text-red-400'
                     : isPathJailDeny || isEgressHold
@@ -414,14 +311,14 @@ export function CinematicProcessRoute({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono pt-1">
               <div className="flex items-center justify-between p-2.5 rounded bg-[#0C0E17] border border-[#23293D]">
-                <span className="text-[#9EA8B6]">Protected MCP Dispatched:</span>
-                <span className={`font-bold ${exp.executionOccurred ? 'text-emerald-400' : 'text-red-400'}`}>
+                <span className="text-[#9EA8B6] text-[11px]">Protected MCP Dispatched:</span>
+                <span className={`font-bold text-[11px] ${exp.executionOccurred ? 'text-emerald-400' : 'text-red-400'}`}>
                   {exp.executionOccurred ? 'YES (SAFE EXECUTION)' : 'NO (HALTED UPSTREAM)'}
                 </span>
               </div>
-              <div className="flex items-center justify-between p-2.5 rounded bg-[#0C0E17] border border-[#23293D]">
-                <span className="text-[#9EA8B6]">Forensic Evidence:</span>
-                <span className="font-bold text-[#65BCE7] truncate max-w-[140px]" title={exp.evidenceWritten}>
+              <div className="flex items-center justify-between p-2.5 rounded bg-[#0C0E17] border border-[#23293D] gap-2">
+                <span className="text-[#9EA8B6] text-[11px] shrink-0">Forensic Evidence:</span>
+                <span className="font-bold text-[#65BCE7] text-[11px] truncate text-right" title={exp.evidenceWritten}>
                   {exp.evidenceWritten}
                 </span>
               </div>
@@ -429,81 +326,56 @@ export function CinematicProcessRoute({
           </div>
 
           {/* Right Column: Active Step Side Inspector */}
-          <div className="space-y-3 bg-[#141824] p-5 rounded-xl border border-[#23293D]">
-            <div className="flex items-center justify-between border-b border-[#23293D] pb-2.5">
-              <span className="text-xs font-mono font-bold uppercase text-white flex items-center gap-1.5">
-                <Terminal className="w-3.5 h-3.5 text-[#38BDF8]" />
-                Event Inspector
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-[#9EA8B6]">
-                Authoritative
-              </span>
+          <div className="space-y-3 bg-[#141824] p-5 rounded-xl border border-[#23293D] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-[#23293D] pb-2.5 mb-3">
+                <span className="text-xs font-mono font-bold uppercase text-white flex items-center gap-1.5">
+                  <Terminal className="w-3.5 h-3.5 text-[#38BDF8]" />
+                  Event Inspector
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-[#9EA8B6]">
+                  Authoritative
+                </span>
+              </div>
+
+              <div className="space-y-2 text-xs font-mono">
+                <div className="p-2.5 rounded bg-[#0C0E17] border border-[#23293D]">
+                  <span className="text-[#9EA8B6] text-[10px] uppercase block">Active Tool Proposal</span>
+                  <code className="text-[#F97316] font-bold block truncate mt-0.5">
+                    {proposedTool ? `${proposedTool}()` : 'None proposed'}
+                  </code>
+                </div>
+
+                <div className="p-2.5 rounded bg-[#0C0E17] border border-[#23293D]">
+                  <span className="text-[#9EA8B6] text-[10px] uppercase block">Sanitized Arguments</span>
+                  <pre className="text-white text-[10px] mt-0.5 overflow-x-auto max-h-20 leading-snug">
+                    {JSON.stringify(proposedArgs, null, 2)}
+                  </pre>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2 text-xs font-mono">
-              <div className="p-2.5 rounded bg-[#0C0E17] border border-[#23293D]">
-                <span className="text-[#9EA8B6] text-[10px] uppercase block">Active Tool Proposal</span>
-                <code className="text-[#F97316] font-bold block truncate mt-0.5">
-                  {proposedTool ? `${proposedTool}()` : 'None proposed'}
-                </code>
-              </div>
-
-              <div className="p-2.5 rounded bg-[#0C0E17] border border-[#23293D]">
-                <span className="text-[#9EA8B6] text-[10px] uppercase block">Sanitized Arguments</span>
-                <pre className="text-[11px] text-[#D1D5DB] overflow-x-auto mt-0.5 font-mono">
-                  {JSON.stringify(proposedArgs, null, 2)}
-                </pre>
-              </div>
-
-              {receiptId && (
-                <div className="p-2.5 rounded bg-emerald-950/30 border border-emerald-800/60 text-emerald-300">
-                  <span className="text-[10px] uppercase block text-emerald-400 font-bold">HMAC Signed Receipt</span>
-                  <span className="font-bold block truncate mt-0.5">{receiptId}</span>
-                  <span className="text-[10px] text-emerald-400 block mt-1">Verified Offline RFC 8785 SHA-256</span>
-                </div>
-              )}
+            <div className="pt-3 border-t border-[#23293D] text-[11px] font-mono">
+              <span className="text-[#9EA8B6] text-[10px] uppercase block">HMAC Signed Receipt</span>
+              <span className="text-emerald-400 font-bold block truncate mt-0.5">
+                {receiptId || 'RCP-PENDING-EVENT'}
+              </span>
+              <span className="text-[10px] text-[#747F8D] block">
+                Verified Offline RFC 8785 SHA-256
+              </span>
             </div>
           </div>
         </div>
 
-        {/* ── Compact Event Timeline Along Bottom ── */}
-        <div className="space-y-2 pt-2 border-t border-[#23293D]">
-          <div className="flex items-center justify-between text-xs font-mono text-[#9EA8B6]">
-            <span className="uppercase font-semibold flex items-center gap-1.5 text-white">
-              <Clock className="w-3.5 h-3.5 text-[#EA580C]" />
-              Sequential Event Timeline
-            </span>
-            <span className="text-[11px]">Strict State-Synchronized Log</span>
+        {/* ── Sequential Timeline Bar ── */}
+        <div className="p-3 rounded-lg bg-[#141824] border border-[#23293D] text-xs font-mono flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-[#F97316]">
+            <Clock className="w-3.5 h-3.5" />
+            <span className="font-bold uppercase tracking-wider text-[11px]">Sequential Event Timeline</span>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 text-xs font-mono">
-            {timelineEvents && timelineEvents.length > 0 ? (
-              timelineEvents.slice(-6).map((ev, i) => (
-                <div
-                  key={i}
-                  className="p-2.5 rounded-lg bg-[#141824] border border-[#23293D] flex flex-col justify-between"
-                >
-                  <span className="text-[10px] text-[#9EA8B6]">{ev.time || 'now'}</span>
-                  <span className="font-bold text-white truncate my-0.5">{ev.label}</span>
-                  <span
-                    className={`text-[10px] font-bold ${
-                      ev.status === 'ALLOWED' || ev.status === 'EXECUTED'
-                        ? 'text-emerald-400'
-                        : ev.status === 'DENIED' || ev.status === 'DENIED-ARMORIQ'
-                        ? 'text-red-400'
-                        : 'text-amber-400'
-                    }`}
-                  >
-                    {ev.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full p-3 rounded-lg bg-[#141824] border border-[#23293D] text-[#9EA8B6] text-center">
-                Events will appear in real time as the agent proposes tools and evaluations occur.
-              </div>
-            )}
-          </div>
+          <span className="text-[#9EA8B6] text-[11px]">
+            Strict State-Synchronized Log • Zero Synthesized Timeline
+          </span>
         </div>
       </div>
     </div>

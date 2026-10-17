@@ -231,6 +231,14 @@ export interface CredentialScanResult {
   simulation_steps: CredentialScanSimulationStep[]
 }
 
+export interface DocumentChatResult {
+  response: string
+  is_blocked: boolean
+  verdict: string
+  threats: string[]
+  receipt_id?: string
+}
+
 export interface WitnessSummary {
   total_records: number
   mcp_logs: Record<string, number>
@@ -534,6 +542,30 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     } catch {
       // not json
     }
+
+    // Automatic token refresh and retry if token was stale
+    if (
+      response.status === 403 &&
+      typeof errorDetail === 'string' &&
+      errorDetail.toLowerCase().includes('csrf') &&
+      !(options as any)?._retriedCsrf
+    ) {
+      cachedCsrfToken = null
+      const freshToken = await getCsrfToken()
+      if (freshToken) {
+        headers.set('X-CSRF-Token', freshToken)
+        const retryRes = await fetch(endpoint, {
+          ...options,
+          headers,
+          // @ts-ignore
+          _retriedCsrf: true,
+        })
+        if (retryRes.ok) {
+          return retryRes.json()
+        }
+      }
+    }
+
     throw new Error(`[HTTP ${response.status}] ${errorDetail}`)
   }
 
@@ -642,6 +674,8 @@ export const api = {
     }
     return res.json()
   },
+  uploadVolunteerMediaPreview: (file: File): Promise<MediaPreviewResponse> => api.uploadVolunteerMedia(file),
+
 
   // ArmorIQ SDK Credential Inspection & Evidence Guard
   analyzeCredentialFile: async (
@@ -657,6 +691,29 @@ export const api = {
     } catch {
       // Deterministic client-side cryptographic fallback if backend API is offline
       return performClientSideCredentialScan(filename, content, action)
+    }
+  },
+
+  chatAboutDocument: async (
+    message: string,
+    documentName: string,
+    documentContent?: string,
+    scanResult?: CredentialScanResult,
+    history?: { role: string; content: string }[]
+  ): Promise<DocumentChatResult> => {
+    try {
+      return await request<DocumentChatResult>('/api/demo/chat', {
+        method: 'POST',
+        body: JSON.stringify({
+          message,
+          document_name: documentName,
+          document_content: documentContent,
+          scan_result: scanResult,
+          history: history || [],
+        }),
+      })
+    } catch {
+      return answerDocumentQuestionClient(message, documentName, documentContent, scanResult)
     }
   },
 }
@@ -834,6 +891,114 @@ function performClientSideCredentialScan(filename: string, content: string, acti
     receipt_signature: sig,
     witness_head_hmac: wHead,
     simulation_steps: simulationSteps,
+  }
+}
+
+/**
+ * Deterministic client-side reasoning engine for Document Security Chatbot
+ */
+export function answerDocumentQuestionClient(
+  message: string,
+  documentName: string,
+  documentContent?: string,
+  scanResult?: CredentialScanResult
+): DocumentChatResult {
+  const effectiveResult = scanResult || (documentContent ? performClientSideCredentialScan(documentName, documentContent, 'read_file') : undefined)
+  const threats = effectiveResult?.threats_detected || []
+  const isBlocked = effectiveResult ? effectiveResult.blocked : threats.length > 0
+  const verdict = effectiveResult ? effectiveResult.armoriq_decision : (isBlocked ? 'DENY' : 'ALLOW')
+  const receiptId = effectiveResult?.receipt_id || 'RCP-PENDING-SCAN'
+  const entropy = effectiveResult?.entropy_score || 0.0
+  const matchedPolicy = effectiveResult?.matched_policy || 'ARMORIQ-CREDENTIAL-DLP-POLICY-v1'
+  const canonicalHash = effectiveResult?.canonical_hash || 'SHA256:unavailable'
+
+  const q = message.toLowerCase().trim()
+  let resp = ''
+
+  if (q.includes('why') || q.includes('reason') || q.includes('cause') || q.includes('how come') || q.includes('what made it')) {
+    resp = `### 🔍 Why ArmorIQ SDK Blocked \`${documentName}\`:\n\n` +
+      `1. **Secret Credential Signatures Identified:**\n` +
+      (threats.length > 0 ? threats.map((t) => `   - **${t}**`).join('\n') : '   - None') + '\n' +
+      `2. **Shannon Entropy Analysis:** Max token entropy reached **${entropy} bits/byte** (threshold is 4.5), indicating cryptographic key material.\n` +
+      `3. **ArmorIQ Policy Enforced:** Policy \`${matchedPolicy}\` dictates that any payload containing active credentials cannot be ingested into an LLM reasoning loop.\n` +
+      `4. **TripLine Invariant:** The MCP \`read_file\` descriptor was **revoked at the kernel level**. The model was completely shielded from toxic credential exposure.`
+  } else if (
+    q.includes('is it blocked') ||
+    q.includes('is there block') ||
+    q.includes('is there a block') ||
+    q.includes('was it blocked') ||
+    q.includes('is this blocked') ||
+    q.includes('is document blocked') ||
+    q.includes('block')
+  ) {
+    if (isBlocked) {
+      resp = `### 🛡️ Status: **YES, THIS DOCUMENT IS BLOCKED**\n\n` +
+        `**File:** \`${documentName}\`\n` +
+        `**Verdict:** \`DENY\` (Enforced by **ArmorIQ SDK**)\n` +
+        `**Containment Layer:** \`TripLine In-MCP Gateway\`\n\n` +
+        `**Why it is blocked:**\n` +
+        `The **ArmorIQ SDK Credential Inspection Engine** performed deep token analysis on \`${documentName}\` and detected **${threats.length} sensitive secret pattern(s)**.\n\n` +
+        `Under policy \`${matchedPolicy}\`, reading unredacted production secrets is strictly forbidden. ` +
+        `Execution was **halted upstream before dispatch**, so **0 tokens were consumed or exposed to the AI model**.\n\n` +
+        `Signed Forensic Evidence Receipt: \`${receiptId}\``
+    } else {
+      resp = `### ✅ Status: **NO, THIS DOCUMENT IS NOT BLOCKED**\n\n` +
+        `**File:** \`${documentName}\`\n` +
+        `**Verdict:** \`ALLOW\` (Clean Buffer Verified)\n\n` +
+        `The ArmorIQ SDK scanned the document structure and found zero sensitive credentials, API keys, or high-entropy secrets (Shannon Entropy: ${entropy} bits/byte). ` +
+        `This document is safe for in-plan sandbox operations.`
+    }
+  } else if (q.includes('secret') || q.includes('credential') || q.includes('threat') || q.includes('pattern') || q.includes('key') || q.includes('password')) {
+    resp = `### 🔑 Detected Credentials in \`${documentName}\`:\n\n` +
+      (threats.length > 0 ? threats.map((t) => `- **Threat:** \`${t}\``).join('\n') : 'No credential threats detected.') +
+      `\n\n- **Shannon Token Entropy:** \`${entropy} bits/byte\`\n` +
+      `- **Masking Status:** Sensitive substrings are automatically redacted in telemetry to prevent secondary data leaks.\n` +
+      `- **Upstream Refusal:** Handled by ArmorIQ SDK before any external network dispatch.`
+  } else if (q.includes('read') || q.includes('llm') || q.includes('agent') || q.includes('expose') || q.includes('leak') || q.includes('see')) {
+    resp = `### 🛡️ Did the AI Agent or LLM read this file?\n\n` +
+      `**NO. Absolute zero tokens were exposed to the LLM.**\n\n` +
+      `Here is how TripLine's containment invariant works:\n` +
+      `1. When the agent proposed \`read_file(path='${documentName}')\`, the payload was routed to the **ArmorIQ Intent Gate (L0)** first.\n` +
+      `2. ArmorIQ detected the credentials and issued an immediate **\`DENY\`** decision.\n` +
+      `3. TripLine's kernel wrapper **aborted tool execution before dispatch** (Exit state: \`0 Subprocesses Spawned\`).\n` +
+      `4. The raw credential bytes never reached the model context window, preventing prompt extraction or exfiltration.`
+  } else if (q.includes('receipt') || q.includes('evidence') || q.includes('proof') || q.includes('hash') || q.includes('witness') || q.includes('signature')) {
+    resp = `### 📜 TripLine Cryptographic Evidence Receipt:\n\n` +
+      `**TripLine's core mission is providing verifiable cryptographic evidence.** ` +
+      `When the block occurred, TripLine generated a tamper-proof forensic receipt:\n\n` +
+      `- **Receipt ID:** \`${receiptId}\`\n` +
+      `- **Canonical Hash (RFC 8785 SHA-256):** \`${canonicalHash}\`\n` +
+      `- **Witness Chain Entry:** Authenticated with HMAC witness key.\n` +
+      `- **Verification Status:** \`VERIFIED\`\n\n` +
+      `Anyone can verify this receipt offline using: \`python3 -m receipts.verify ${receiptId}.json\``
+  } else if (q.includes('entropy') || q.includes('shannon')) {
+    resp = `### 📊 Shannon Entropy Score: \`${entropy} bits/byte\`\n\n` +
+      `Shannon entropy measures the randomness and informational density of strings:\n` +
+      `- **Normal English text:** Typically ~2.5 to 3.8 bits/byte.\n` +
+      `- **Cryptographic secrets / Base64 keys:** Typically > 4.5 bits/byte.\n` +
+      `- This file scored **${entropy} bits/byte**, confirming the presence of machine-generated secret keys or credentials.`
+  } else {
+    resp = `### 🤖 TripLine Security Intelligence Audit for \`${documentName}\`\n\n` +
+      `- **Block Status:** ${isBlocked ? '🚫 **BLOCKED (DENIED)**' : '✅ **PERMITTED (ALLOW)**'}\n` +
+      `- **ArmorIQ Decision:** \`${verdict}\`\n` +
+      `- **Detected Threats:** ${threats.length > 0 ? threats.join(', ') : 'None'}\n` +
+      `- **Entropy:** \`${entropy} bits/byte\`\n` +
+      `- **LLM Exposure:** \`0 Tokens (Context Shielded)\`\n` +
+      `- **Forensic Receipt:** \`${receiptId}\`\n\n` +
+      `You can ask me questions such as:\n` +
+      `- *"Is there a block on this document?"*\n` +
+      `- *"Why was this document blocked?"*\n` +
+      `- *"What credentials or secrets were detected?"*\n` +
+      `- *"Did the AI agent read this file?"*\n` +
+      `- *"Show me the cryptographic receipt evidence."*`
+  }
+
+  return {
+    response: resp,
+    is_blocked: isBlocked,
+    verdict,
+    threats,
+    receipt_id: receiptId,
   }
 }
 

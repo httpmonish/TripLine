@@ -147,19 +147,8 @@ export function Header() {
             </div>
           </nav>
 
-          {/* Desktop Right CTAs: Glossary + Execution Demo */}
+          {/* Desktop Right CTAs: Execution Demo */}
           <div className="hidden lg:flex items-center gap-2.5">
-            <button
-              onClick={() => setGlossaryOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#CDD2D8] bg-[#FFFFFF] hover:bg-[#EAEDF0] text-xs font-sans text-[#59636E] hover:text-[#20252B] transition-colors"
-              title="Open Cybersecurity Glossary"
-              data-local="toggle-glossary"
-              data-testid="btn-open-glossary"
-            >
-              <HelpCircle className="w-3.5 h-3.5 text-[#65BCE7]" />
-              <span>Glossary</span>
-            </button>
-
             <Link
               href="/#workflow"
               data-local="skip-to-workflow"
@@ -173,14 +162,6 @@ export function Header() {
 
           {/* Mobile Navigation Toggle */}
           <div className="flex items-center gap-2 lg:hidden">
-            <button
-              onClick={() => setGlossaryOpen(true)}
-              className="p-2 rounded-lg text-[#59636E] hover:text-[#20252B]"
-              aria-label="Open Glossary"
-              data-local="open-glossary-mobile"
-            >
-              <HelpCircle className="w-4 h-4 text-[#65BCE7]" />
-            </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="p-2 rounded-lg text-[#59636E] hover:text-[#20252B] focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
