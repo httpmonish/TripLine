@@ -68,15 +68,27 @@ ALLOWED_INVESTIGATION_OPERATIONS = {
 class ArmorIQSessionContext:
     """Manages active ArmorIQ session lifecycle, ensuring execution outcome is reported post-dispatch."""
 
-    def __init__(self, session: Any = None, mode: str = "offline"):
+    def __init__(self, session: Any = None, tool_name: str = "", tool_args: Optional[Dict[str, Any]] = None, mode: str = "offline"):
         self.session = session
+        self.tool_name = tool_name
+        self.tool_args = tool_args or {}
         self.mode = mode
 
-    def report_execution(self, status: str = "success") -> None:
+    def report_execution(self, status: str = "success", result: Any = None) -> None:
         """Reports real operation execution outcome and cleanly closes the session."""
         if self.session is not None:
             try:
-                self.session.report(status=status)
+                from armoriq_sdk import ReportOptions
+                report_opts = ReportOptions(
+                    status="success" if status == "success" else "failed",
+                    error_message=None if status == "success" else "Operation failed or denied",
+                )
+                self.session.report(
+                    tool_name=self.tool_name,
+                    tool_args=self.tool_args,
+                    result=result or {"status": status},
+                    opts=report_opts,
+                )
             except Exception as exc:
                 log.warning("Could not report execution outcome to ArmorIQ: %s", exc)
             finally:
@@ -109,10 +121,10 @@ def check_armoriq_enforcement(
             reason = getattr(check_res, "reason", "ArmorIQ evaluation completed")
             matched_policy = getattr(check_res, "matched_policy", "platform-policy")
 
-            context = ArmorIQSessionContext(session=session, mode=mode)
+            context = ArmorIQSessionContext(session=session, tool_name=tool_name, tool_args=tool_args, mode=mode)
             # If denied at check time, report denial immediately and close
             if not allowed:
-                context.report_execution(status="denied")
+                context.report_execution(status="failed", result={"error": reason})
 
             return {
                 "decision": "ALLOW" if allowed else "DENY",
