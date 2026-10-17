@@ -171,6 +171,18 @@ ALLOWED_TOOLS = {
         "required": ["name"],
         "types": {"name": str},
     },
+    "analyze_electron_app": {
+        "required": ["target_id"],
+        "types": {"target_id": str},
+    },
+    "inspect_analysis_view": {
+        "required": ["evidence_id"],
+        "types": {"evidence_id": str, "view_kind": str},
+    },
+    "trace_application_feature": {
+        "required": ["evidence_id", "seed_value"],
+        "types": {"evidence_id": str, "seed_value": str, "seed_kind": str, "direction": str},
+    },
 }
 
 
@@ -439,8 +451,13 @@ class DynamicReasoningLoop:
                     final_response_text = f"Agent stopped: safety budget exceeded ({exc})."
                     break
 
-                raw_tool_name = tc.get("name", "")
-                raw_tool_args = tc.get("arguments", {})
+                raw_tool_name = tc.get("name") or tc.get("function", {}).get("name", "")
+                raw_tool_args = tc.get("arguments") or tc.get("function", {}).get("arguments", {})
+                if isinstance(raw_tool_args, str):
+                    try:
+                        raw_tool_args = json.loads(raw_tool_args)
+                    except Exception:
+                        pass
                 call_id = tc.get("id") or f"tc_{uuid.uuid4().hex[:6]}"
 
                 proposed = ProposedAction(

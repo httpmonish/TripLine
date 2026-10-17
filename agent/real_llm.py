@@ -107,6 +107,64 @@ TRIAGE_TOOLS_SCHEMA = [
             },
             "required": ["name"]
         }
+    },
+    {
+        "name": "analyze_electron_app",
+        "description": "Analyze an approved synthetic JavaScript/Electron application via the REA static analysis engine. Requires an approved target_id (e.g., 'synthetic-electron-app'). Arbitrary filesystem paths are rejected.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "target_id": {
+                    "type": "string",
+                    "description": "The approved target identifier (e.g. 'synthetic-electron-app')"
+                }
+            },
+            "required": ["target_id"]
+        }
+    },
+    {
+        "name": "inspect_analysis_view",
+        "description": "Inspect a retained evidence view from a previous REA analysis session without repeating the full analysis.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "evidence_id": {
+                    "type": "string",
+                    "description": "The evidence ID returned from a prior analyze_electron_app call"
+                },
+                "view_kind": {
+                    "type": "string",
+                    "description": "The view kind to inspect (default 'summary')"
+                }
+            },
+            "required": ["evidence_id"]
+        }
+    },
+    {
+        "name": "trace_application_feature",
+        "description": "Trace a specific feature seed (e.g. an IPC channel or module name) through the authenticated application graph on the active REA session.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "evidence_id": {
+                    "type": "string",
+                    "description": "The evidence ID of the analyzed application"
+                },
+                "seed_value": {
+                    "type": "string",
+                    "description": "The seed name or literal to trace (e.g. 'main.js' or 'vault:status')"
+                },
+                "seed_kind": {
+                    "type": "string",
+                    "description": "Seed kind: 'module', 'literal', or 'function' (default 'module')"
+                },
+                "direction": {
+                    "type": "string",
+                    "description": "Trace direction: 'both', 'forward', or 'backward' (default 'both')"
+                }
+            },
+            "required": ["evidence_id", "seed_value"]
+        }
     }
 ]
 

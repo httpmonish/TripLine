@@ -1,0 +1,12 @@
+{
+  "name": "synthetic-secure-vault",
+  "version": "1.0.0",
+  "description": "Synthetic Electron application for TripLine REA Phase R1 static analysis verification",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "electron": "^34.0.0"
+  }
+}

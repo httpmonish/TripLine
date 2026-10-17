@@ -20,6 +20,7 @@ TRUSTED_TRIAGE_ACTIONS = [
     "read_file",
     "comment_issue",
     "label_issue",
+    "analyze_electron_app",
 ]
 
 # Actions explicitly banned from triage plans

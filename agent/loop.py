@@ -47,7 +47,7 @@ class AgentLoop:
                     self.allowed_tools = {getattr(tc, "name", str(tc)) for tc in tool_calls}
                     return _OfflineToken(list(self.allowed_tools))
                 def check(self, tool_name, tool_args):
-                    safe_tools = {"read_issue", "read_file", "list_dir", "run_tests", "write_patch", "comment_issue"}
+                    safe_tools = {"read_issue", "read_file", "list_dir", "run_tests", "write_patch", "comment_issue", "analyze_electron_app"}
                     if tool_name not in safe_tools:
                         return _OfflineDecision(allowed=False, action="deny", reason=f"Tool {tool_name} not authorized")
                     return _OfflineDecision(allowed=True, action="allow")
@@ -113,7 +113,7 @@ class AgentLoop:
                     self.allowed_tools = {getattr(tc, "name", str(tc)) for tc in tool_calls}
                     return _OfflineToken(list(self.allowed_tools))
                 def check(self, tool_name, tool_args):
-                    safe_tools = {"read_issue", "read_file", "list_dir", "run_tests", "write_patch", "comment_issue"}
+                    safe_tools = {"read_issue", "read_file", "list_dir", "run_tests", "write_patch", "comment_issue", "analyze_electron_app"}
                     if tool_name not in safe_tools:
                         return _OfflineDecision(allowed=False, action="deny", reason=f"Tool {tool_name} not authorized")
                     return _OfflineDecision(allowed=True, action="allow")

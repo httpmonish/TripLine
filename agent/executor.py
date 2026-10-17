@@ -443,6 +443,74 @@ class ToolExecutor:
                     bytes_summary="0 bytes executed (Jail block)",
                 )
 
+        if tool_name == "analyze_electron_app":
+            raw_target = tool_args.get("target_id", "")
+            try:
+                from agent.rea_adapter import resolve_approved_target, REATargetValidationError
+                _ = resolve_approved_target(raw_target)
+            except Exception as rve:
+                receipt_path, receipt_id = self._generate_receipt(
+                    call_id=call_id,
+                    issue_id=issue_id,
+                    tool_name=tool_name,
+                    tool_args=tool_args,
+                    armoriq_decision="ALLOW",
+                    armoriq_reason=auth_dec.reason or "Tool permitted in triage policy",
+                    tripline_decision="DENY",
+                    tripline_reason=f"Target validation violation: {rve}",
+                    matched_policy=auth_dec.matched_policy,
+                    canary_token=canary_token,
+                    decision_source="TRIPLINE_JAIL",
+                )
+                return ExecutionResult(
+                    tool=tool_name,
+                    tool_args=tool_args,
+                    outcome="DENIED-JAIL",
+                    armoriq_decision="ALLOW",
+                    armoriq_reason=auth_dec.reason or "Tool permitted in triage policy",
+                    matched_policy=auth_dec.matched_policy,
+                    tripline_decision="DENY",
+                    tripline_reason=f"Target validation violation: {rve}",
+                    decision_source="TRIPLINE_JAIL",
+                    receipt_id=receipt_id,
+                    receipt_path=str(receipt_path),
+                    output={"error": f"Permission denied: {rve}"},
+                    bytes_summary="0 bytes executed (Target confinement block)",
+                )
+
+        if tool_name in ("inspect_analysis_view", "trace_application_feature"):
+            ev_id = str(tool_args.get("evidence_id", ""))
+            if not ev_id or ".." in ev_id or "/" in ev_id or "\\" in ev_id:
+                err_msg = f"Invalid evidence_id format: '{ev_id}'"
+                receipt_path, receipt_id = self._generate_receipt(
+                    call_id=call_id,
+                    issue_id=issue_id,
+                    tool_name=tool_name,
+                    tool_args=tool_args,
+                    armoriq_decision="ALLOW",
+                    armoriq_reason=auth_dec.reason or "Tool permitted in triage policy",
+                    tripline_decision="DENY",
+                    tripline_reason=f"Evidence boundary violation: {err_msg}",
+                    matched_policy=auth_dec.matched_policy,
+                    canary_token=canary_token,
+                    decision_source="TRIPLINE_JAIL",
+                )
+                return ExecutionResult(
+                    tool=tool_name,
+                    tool_args=tool_args,
+                    outcome="DENIED-JAIL",
+                    armoriq_decision="ALLOW",
+                    armoriq_reason=auth_dec.reason or "Tool permitted in triage policy",
+                    matched_policy=auth_dec.matched_policy,
+                    tripline_decision="DENY",
+                    tripline_reason=f"Evidence boundary violation: {err_msg}",
+                    decision_source="TRIPLINE_JAIL",
+                    receipt_id=receipt_id,
+                    receipt_path=str(receipt_path),
+                    output={"error": f"Permission denied: {err_msg}"},
+                    bytes_summary="0 bytes executed (Evidence confinement block)",
+                )
+
         # -------------------------------------------------------------
         # LAYER 3: Tripline Egress Canary Gateway Check (Only reached if ArmorIQ allowed)
         # -------------------------------------------------------------

@@ -94,6 +94,24 @@ TOOL_INVENTORY: Dict[str, Dict[str, Any]] = {
         "module": "mcp/repo_mcp/delete_branch.py",
         "required_args": ["name"],
     },
+    "analyze_electron_app": {
+        "safety_class": ToolSafetyClass.READ_ONLY,
+        "description": "Analyzes an approved JavaScript/Electron target via the REA MCP server.",
+        "module": "agent/rea_adapter.py",
+        "required_args": ["target_id"],
+    },
+    "inspect_analysis_view": {
+        "safety_class": ToolSafetyClass.READ_ONLY,
+        "description": "Inspects a retained analysis view on the active REA session.",
+        "module": "agent/rea_adapter.py",
+        "required_args": ["evidence_id"],
+    },
+    "trace_application_feature": {
+        "safety_class": ToolSafetyClass.READ_ONLY,
+        "description": "Traces a feature seed through an authenticated application graph on the active REA session.",
+        "module": "agent/rea_adapter.py",
+        "required_args": ["evidence_id", "seed_value"],
+    },
 }
 
 
@@ -164,6 +182,9 @@ class MCPToolAdapter:
                 res = mock_val(tool_args)
             else:
                 res = mock_val
+        elif tool_name == "analyze_electron_app":
+            from agent.rea_adapter import analyze_electron_app_wrapper, REAAdapter
+            res = analyze_electron_app_wrapper(tool_args.get("target_id", ""), adapter=REAAdapter(mode="mock"))
         else:
             res = {"status": "ok", "mock_default": True, "tool": tool_name}
 
@@ -298,6 +319,57 @@ class MCPToolAdapter:
                     "result": {"message": out},
                     "error": out if status == "error" else None,
                     "bytes_summary": f"{len(str(out))} bytes returned (sandbox_local)",
+                }
+
+            elif tool_name == "analyze_electron_app":
+                target_id = tool_args.get("target_id", "")
+                from agent.rea_adapter import analyze_electron_app_wrapper, get_rea_adapter
+                adapter = get_rea_adapter(mode="mock" if self.mode == MCPExecutionMode.MOCK else None)
+                out = analyze_electron_app_wrapper(target_id, adapter=adapter)
+                status = out.get("status", "error")
+                return {
+                    "status": status,
+                    "mode": self.mode.value,
+                    "tool": tool_name,
+                    "result": out if status == "ok" else {"error": out.get("error")},
+                    "error": out.get("error") if status != "ok" else None,
+                    "bytes_summary": f"{len(json.dumps(out))} bytes returned (rea_mcp)",
+                }
+
+            elif tool_name == "inspect_analysis_view":
+                evidence_id = tool_args.get("evidence_id", "")
+                view_kind = tool_args.get("view_kind", "summary")
+                from agent.rea_adapter import inspect_analysis_view_wrapper, get_rea_adapter
+                adapter = get_rea_adapter(mode="mock" if self.mode == MCPExecutionMode.MOCK else None)
+                out = inspect_analysis_view_wrapper(evidence_id, view_kind=view_kind, adapter=adapter)
+                status = out.get("status", "error")
+                return {
+                    "status": status,
+                    "mode": self.mode.value,
+                    "tool": tool_name,
+                    "result": out if status == "ok" else {"error": out.get("error")},
+                    "error": out.get("error") if status != "ok" else None,
+                    "bytes_summary": f"{len(json.dumps(out))} bytes returned (rea_mcp)",
+                }
+
+            elif tool_name == "trace_application_feature":
+                evidence_id = tool_args.get("evidence_id", "")
+                seed_value = tool_args.get("seed_value", "")
+                seed_kind = tool_args.get("seed_kind", "module")
+                direction = tool_args.get("direction", "both")
+                from agent.rea_adapter import trace_application_feature_wrapper, get_rea_adapter
+                adapter = get_rea_adapter(mode="mock" if self.mode == MCPExecutionMode.MOCK else None)
+                out = trace_application_feature_wrapper(
+                    evidence_id, seed_value=seed_value, seed_kind=seed_kind, direction=direction, adapter=adapter
+                )
+                status = out.get("status", "error")
+                return {
+                    "status": status,
+                    "mode": self.mode.value,
+                    "tool": tool_name,
+                    "result": out if status == "ok" else {"error": out.get("error")},
+                    "error": out.get("error") if status != "ok" else None,
+                    "bytes_summary": f"{len(json.dumps(out))} bytes returned (rea_mcp)",
                 }
 
             else:

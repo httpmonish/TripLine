@@ -21,6 +21,8 @@ armoriq.yaml
 agent/logs/
 results/ui_jobs/
 results/phase11/
+results/rea_investigations/
+investigations/
 
 
 # Temporary and deleted files
