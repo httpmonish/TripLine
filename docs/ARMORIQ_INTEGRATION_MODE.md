@@ -32,3 +32,13 @@
 - **Fail-Closed Behavior**: If ArmorIQ denies an action or raises `PolicyBlockedException`, Tripline does **not** call the MCP tool.
 - **Tripline Security Layers**: For any action ArmorIQ permits, Tripline's independent security layers (Path Jail against path traversal, Egress Gateway against canary leak) inspect arguments and contain the action.
 - **Receipts**: Every denied action produces a cryptographically signed HMAC receipt with full forensic attribution.
+
+---
+
+## 3. Phase 1 Implementation & Verification (2026-10-17)
+
+- **Repaired Authorization Contract**: Implemented `ToolExecutor.authorize(tool_name, tool_args, is_in_plan)` enforcing Rules A through H.
+- **Fail-Closed Runtime Invariant**: If an ArmorIQ session cannot be established or credentials fail (`InvalidTokenException: 401 Unauthorized`), the executor halts execution immediately with `AUTHORIZATION-UNAVAILABLE`.
+- **Truthful Attribution**: Local TripLine rejections (e.g., plan violations, forbidden operations such as `delete_branch`) are attributed to `TRIPLINE_PLANNER` or `TRIPLINE_LOCAL` unless genuinely evaluated and denied by ArmorIQ.
+- **Argument Binding**: Dispatched operations are cryptographically bound to the exact authorized parameters via `ToolExecutor.dispatch_authorized()`, preventing argument tampering or mismatch.
+- **Live Status**: `BLOCKED — CREDENTIALS` (Platform API returns HTTP 401 on token acquisition / bootstrap; offline deterministic test suite fully verifies all security invariants).
