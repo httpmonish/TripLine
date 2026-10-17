@@ -195,7 +195,6 @@ export interface RecordedScenario {
   canonicalHash: string
   witnessState: string
   explanation: string
-  // Seven distinct state distinctions required by spec
   distinctions: {
     actionAttempted: string
     authorizationDecision: string
@@ -481,7 +480,7 @@ const CHAPTERS: ChapterSpec[] = [
   },
 ]
 
-// ── 3D ISOMETRIC PLATFORM MATH & COORDINATE CALCULATOR ──
+// ── 3D ISOMETRIC METALLIC PLATFORM COMPONENT ──
 
 interface IsometricPlatformProps {
   cx: number
@@ -518,10 +517,9 @@ function IsometricPlatform({
   const topFace = `${cx},${cy - d / 2} ${cx + w / 2},${cy} ${cx},${cy + d / 2} ${cx - w / 2},${cy}`
   const frontLeft = `${cx - w / 2},${cy} ${cx},${cy + d / 2} ${cx},${cy + d / 2 + h} ${cx - w / 2},${cy + h}`
   const frontRight = `${cx},${cy + d / 2} ${cx + w / 2},${cy} ${cx + w / 2},${cy + h} ${cx},${cy + d / 2 + h}`
-  const dropShadow = `${cx - w / 2 - 8},${cy + h + 8} ${cx + w / 2 + 8},${cy + h + 8} ${cx},${cy + d / 2 + h + 16}`
+  const dropShadow = `${cx - w / 2 - 6},${cy + h + 6} ${cx + w / 2 + 6},${cy + h + 6} ${cx},${cy + d / 2 + h + 14}`
 
-  // Accent edge color depending on state
-  let rimColor = '#2B3545'
+  let rimColor = '#242C3A'
   let rimGlow = 'none'
   let topFill = 'url(#metal-deck-normal)'
 
@@ -550,66 +548,66 @@ function IsometricPlatform({
       className={`cursor-pointer transition-transform duration-300 ${isActive ? 'scale-[1.01]' : 'opacity-90 hover:opacity-100'}`}
       onClick={onClick}
     >
-      {/* Drop Shadow */}
-      <polygon points={dropShadow} fill="#05070A" opacity="0.75" filter="url(#shadow-blur)" />
+      {/* Platform Drop Shadow */}
+      <polygon points={dropShadow} fill="#05070A" opacity="0.8" filter="url(#shadow-blur)" />
 
       {/* Front Left Facet (Dark metallic extrusion) */}
-      <polygon points={frontLeft} fill="url(#metal-facet-left)" stroke="#161C26" strokeWidth="0.75" />
+      <polygon points={frontLeft} fill="url(#metal-facet-left)" stroke="#12161F" strokeWidth="0.75" />
 
       {/* Front Right Facet (Specular metallic extrusion) */}
-      <polygon points={frontRight} fill="url(#metal-facet-right)" stroke="#1A222E" strokeWidth="0.75" />
+      <polygon points={frontRight} fill="url(#metal-facet-right)" stroke="#161C26" strokeWidth="0.75" />
 
       {/* Top Deck Surface */}
-      <polygon points={topFace} fill={topFill} stroke={rimColor} strokeWidth={isActive ? '2' : '1'} filter={rimGlow} />
+      <polygon points={topFace} fill={topFill} stroke={rimColor} strokeWidth={isActive ? '2' : '1.2'} filter={rimGlow} />
 
-      {/* Isometric Grid Detail Lines on Top Deck */}
+      {/* Fine Isometric Internal Grid Traces */}
       <line
-        x1={cx - w / 4}
-        y1={cy - d / 4}
-        x2={cx + w / 4}
-        y2={cy + d / 4}
-        stroke="#273244"
+        x1={cx - w / 3.5}
+        y1={cy - d / 3.5}
+        x2={cx + w / 3.5}
+        y2={cy + d / 3.5}
+        stroke="#242C3A"
         strokeWidth="0.5"
         strokeDasharray="2 2"
         opacity="0.4"
       />
       <line
-        x1={cx - w / 4}
-        y1={cy + d / 4}
-        x2={cx + w / 4}
-        y2={cy - d / 4}
-        stroke="#273244"
+        x1={cx - w / 3.5}
+        y1={cy + d / 3.5}
+        x2={cx + w / 3.5}
+        y2={cy - d / 3.5}
+        stroke="#242C3A"
         strokeWidth="0.5"
         strokeDasharray="2 2"
         opacity="0.4"
       />
 
-      {/* Decorative Corner Registration Rivets */}
+      {/* Corner Hex Bolts */}
       <circle cx={cx} cy={cy - d / 2 + 5} r="1.5" fill="#4B5563" />
-      <circle cx={cx + w / 2 - 8} cy={cy} r="1.5" fill="#4B5563" />
+      <circle cx={cx + w / 2 - 7} cy={cy} r="1.5" fill="#4B5563" />
       <circle cx={cx} cy={cy + d / 2 - 5} r="1.5" fill="#4B5563" />
-      <circle cx={cx - w / 2 + 8} cy={cy} r="1.5" fill="#4B5563" />
+      <circle cx={cx - w / 2 + 7} cy={cy} r="1.5" fill="#4B5563" />
 
-      {/* Upright, Non-Distorted Horizontal Labels (Always razor sharp and horizontal!) */}
+      {/* Upright Non-Distorted Horizontal Labels (Bold, Crisp, Readable) */}
       <g pointerEvents="none">
         <text
           x={cx}
-          y={cy - 12}
+          y={cy - 14}
           textAnchor="middle"
           fill={isActive ? (isHalted ? '#EF4444' : isHeld ? '#F59E0B' : isPermitted ? '#10B981' : '#FF8A3D') : '#94A3B8'}
-          fontSize="9"
+          fontSize="9.5"
           fontFamily="monospace"
           fontWeight="700"
-          letterSpacing="0.08em"
+          letterSpacing="0.06em"
         >
           {tag}
         </text>
         <text
           x={cx}
-          y={cy + 4}
+          y={cy + 3}
           textAnchor="middle"
           fill="#FFFFFF"
-          fontSize="11.5"
+          fontSize="12.5"
           fontFamily="system-ui, -apple-system, sans-serif"
           fontWeight="700"
         >
@@ -617,10 +615,10 @@ function IsometricPlatform({
         </text>
         <text
           x={cx}
-          y={cy + 18}
+          y={cy + 19}
           textAnchor="middle"
           fill="#6B7280"
-          fontSize="8.5"
+          fontSize="9"
           fontFamily="monospace"
         >
           {sublabel}
@@ -655,7 +653,6 @@ export function FourPlaneArchitecture({
     return AUTHENTIC_RECORDED_SCENARIOS.find((s) => s.id === selectedScenarioId) || AUTHENTIC_RECORDED_SCENARIOS[0]
   }, [selectedScenarioId])
 
-  // Detect reduced-motion preference
   useEffect(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -666,13 +663,12 @@ export function FourPlaneArchitecture({
     }
   }, [])
 
-  // Reset verification state when scenario changes
   useEffect(() => {
     setVerificationResult(null)
     setVerificationError(null)
   }, [selectedScenarioId])
 
-  // IntersectionObserver for synchronized scroll chapters
+  // Synchronize active chapter with scroll
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -688,8 +684,8 @@ export function FourPlaneArchitecture({
           })
         },
         {
-          rootMargin: '-20% 0px -45% 0px',
-          threshold: [0.15, 0.45, 0.75],
+          rootMargin: '-25% 0px -40% 0px',
+          threshold: [0.15, 0.5],
         }
       )
       observer.observe(el)
@@ -709,7 +705,7 @@ export function FourPlaneArchitecture({
       target.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'center' })
       setTimeout(() => {
         isAutoScrolling.current = false
-      }, prefersReducedMotion ? 50 : 600)
+      }, prefersReducedMotion ? 50 : 500)
     }
   }
 
@@ -728,7 +724,7 @@ export function FourPlaneArchitecture({
       setVerificationError(err?.message || 'Verification endpoint call failed')
       setVerificationResult({
         receipt_id: scenario.receiptId,
-        verified: true, // Known authentic signature in reference bundle
+        verified: true,
         status: 'VERIFIED_OFFLINE_LEDGER',
         reason: 'HMAC-SHA256 signature chain matches canonical RFC 8785 hash across zero side-effect trace.',
         canonical_hash: scenario.canonicalHash,
@@ -747,197 +743,171 @@ export function FourPlaneArchitecture({
     }
   }
 
-  // ── PRECISE 3D CONNECTOR PATHS & FLOWING ACTION PACKET ──
-  // Layout coordinates in isometric canvas (viewBox: 0 0 840 680):
-  // Stage 1 (Agent): (140, 110)
-  // Stage 2 (ArmorIQ Gate): (380, 110)
-  // Rejection Pad (ArmorIQ Deny): (620, 110)
-  // Stage 3 Containment Deck:
-  //   Path Jail: (230, 290)
-  //   Egress Gateway: (530, 290)
-  // Stage 4 (Protected Dispatch): (230, 470)
-  // Stage 5 (Witness & Evidence): (560, 480)
+  // ── PACKET COORDINATES IN COMPACT 760x490 VIEWPORT ──
+  // Stage 1 (Agent): (130, 80)
+  // Stage 2 (ArmorIQ Gate): (370, 80)
+  // ArmorIQ Deny Terminal: (610, 80)
+  // Stage 3A (Path Jail): (230, 230)
+  // Stage 3B (Egress Gateway): (490, 230)
+  // Stage 4 (Protected Dispatch): (230, 390)
+  // Stage 5 (Witness & Evidence): (520, 390)
 
   const packetState = useMemo(() => {
-    const isPastOrAtArmorIQ = activeStage >= 1
-    const isPastOrAtContainment = activeStage >= 2
-    const isPastOrAtDispatch = activeStage >= 3
-    const isPastOrAtEvidence = activeStage >= 4
-
-    // Case 1: Ingress (Stage 0)
+    // Stage 0: Ingress
     if (activeStage === 0) {
       return {
-        x: 140,
-        y: 105,
+        x: 130,
+        y: 80,
         color: '#FF6B00',
         status: 'PROPOSAL_SYNTHESIZED',
         label: 'Action Proposal Formed',
-        reachedStage: 0,
       }
     }
 
-    // Case 2: ArmorIQ Stage (Stage 1)
+    // Stage 1: ArmorIQ Gate
     if (activeStage === 1) {
       if (scenario.id === 'S1-ARMORIQ-DENY') {
         return {
-          x: 620,
-          y: 105,
+          x: 610,
+          y: 80,
           color: '#EF4444',
           status: 'ARMORIQ_DENIED',
           label: 'ArmorIQ Policy Deny',
-          reachedStage: 1,
         }
       }
       return {
-        x: 380,
-        y: 105,
+        x: 370,
+        y: 80,
         color: '#FF8A3D',
         status: 'ARMORIQ_AUTHORIZED',
         label: 'ArmorIQ Intent Authorized',
-        reachedStage: 1,
       }
     }
 
-    // Case 3: Containment Stage (Stage 2)
+    // Stage 2: Containment
     if (activeStage === 2) {
       if (scenario.id === 'S1-ARMORIQ-DENY') {
-        // Halted upstream at ArmorIQ
         return {
-          x: 620,
-          y: 105,
+          x: 610,
+          y: 80,
           color: '#EF4444',
           status: 'UNREACHED_HALTED',
           label: 'Halted Upstream at ArmorIQ',
-          reachedStage: 1,
         }
       }
       if (scenario.id === 'S2-JAIL-DENY') {
         return {
           x: 230,
-          y: 285,
+          y: 230,
           color: '#EF4444',
           status: 'JAIL_VIOLATION_DENIED',
           label: 'TripLine Path Jail Deny',
-          reachedStage: 2,
         }
       }
       if (scenario.id === 'S3-CANARY-HOLD') {
         return {
-          x: 530,
-          y: 285,
+          x: 490,
+          y: 230,
           color: '#F59E0B',
           status: 'CANARY_QUARANTINE_HOLD',
           label: 'Egress Canary Quarantined',
-          reachedStage: 2,
         }
       }
-      // S4 clean permitted:
       return {
         x: 230,
-        y: 285,
+        y: 230,
         color: '#10B981',
         status: 'PATH_JAIL_VERIFIED',
         label: 'Inode Confinement Verified',
-        reachedStage: 2,
       }
     }
 
-    // Case 4: Protected Dispatch Stage (Stage 3)
+    // Stage 3: Protected Dispatch
     if (activeStage === 3) {
       if (scenario.stopStageIndex < 3) {
-        // Blocked upstream; packet never reaches dispatch
         if (scenario.id === 'S1-ARMORIQ-DENY') {
           return {
-            x: 620,
-            y: 105,
+            x: 610,
+            y: 80,
             color: '#EF4444',
             status: 'UNREACHED_HALTED',
             label: 'Halted at ArmorIQ (0 MCP Subprocesses)',
-            reachedStage: 1,
           }
         }
         if (scenario.id === 'S2-JAIL-DENY') {
           return {
             x: 230,
-            y: 285,
+            y: 230,
             color: '#EF4444',
             status: 'UNREACHED_HALTED',
             label: 'Halted at Path Jail (0 MCP Subprocesses)',
-            reachedStage: 2,
           }
         }
         if (scenario.id === 'S3-CANARY-HOLD') {
           return {
-            x: 530,
-            y: 285,
+            x: 490,
+            y: 230,
             color: '#F59E0B',
             status: 'UNREACHED_HELD',
             label: 'Held at Egress Gateway (0 Network Packets)',
-            reachedStage: 2,
           }
         }
       }
-      // S4 clean dispatch:
       return {
         x: 230,
-        y: 465,
+        y: 390,
         color: '#10B981',
         status: 'TOOL_DISPATCHED',
         label: 'Dispatched to Sandbox Tool',
-        reachedStage: 3,
       }
     }
 
-    // Case 5: Witness & Evidence Stage (Stage 4)
+    // Stage 4: Witness & Evidence
     if (activeStage === 4) {
       if (scenario.stopStageIndex < 4) {
-        // Blocked action produces evidence without executing tool
         return {
-          x: 560,
-          y: 475,
+          x: 520,
+          y: 390,
           color: scenario.verdictType === 'HOLD' ? '#F59E0B' : '#EF4444',
           status: 'INCIDENT_SEALED',
           label: `${scenario.verdictType} Incident Sealed (0 Executions)`,
-          reachedStage: 4,
         }
       }
       return {
-        x: 560,
-        y: 475,
+        x: 520,
+        y: 390,
         color: '#10B981',
         status: 'CLEAN_EXECUTION_SEALED',
         label: 'Execution Sealed & Verified',
-        reachedStage: 4,
       }
     }
 
     return {
-      x: 140,
-      y: 105,
+      x: 130,
+      y: 80,
       color: '#FF6B00',
       status: 'IDLE',
       label: 'Standing By',
-      reachedStage: 0,
     }
   }, [activeStage, scenario])
 
   return (
     <div
-      className={`w-full rounded-2xl border border-[#222836] bg-[#0A0C10] text-[#E2E8F0] shadow-2xl overflow-hidden font-sans ${className}`}
+      className={`w-full rounded-2xl border border-[#222836] bg-[#0A0C10] text-[#E2E8F0] shadow-2xl relative font-sans ${className}`}
       id="four-plane-architecture"
     >
-      {/* ── METALLIC GRAPHITE HEADER ── */}
-      <div className="p-5 sm:p-7 border-b border-[#1E2430] bg-gradient-to-r from-[#0C0F14] via-[#121620] to-[#0C0F14]">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF6B00]/15 border border-[#FF6B00]/40 font-mono text-[11px] font-semibold text-[#FF8A3D] tracking-wider uppercase">
+      {/* ── TOP CONTROL HEADER ── */}
+      <div className="p-4 sm:p-6 border-b border-[#1A202C] bg-gradient-to-r from-[#0C0F14] via-[#121620] to-[#0C0F14]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1.5 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF6B00]/15 border border-[#FF6B00]/40 font-mono text-[10.5px] font-semibold text-[#FF8A3D] uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] animate-pulse" />
                 CINEMATIC ARCHITECTURE
               </span>
               <span className="text-[#3E4552]">•</span>
-              <span className="font-mono text-[11px] text-[#94A3B8] tracking-wide uppercase font-semibold">
-                3D SCROLL-DRIVEN EXECUTION
+              <span className="font-mono text-[10.5px] text-[#94A3B8] uppercase font-semibold">
+                SCROLL-DRIVEN EXECUTION
               </span>
               <span className="text-[#3E4552]">•</span>
               <span className="px-2 py-0.5 rounded bg-[#161A22] border border-[#283140] font-mono text-[10px] text-[#A0AEC0]">
@@ -945,8 +915,8 @@ export function FourPlaneArchitecture({
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2.5">
-              <span>See where an action stops.</span>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              See where an action stops.
             </h2>
 
             <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
@@ -954,24 +924,11 @@ export function FourPlaneArchitecture({
             </p>
           </div>
 
-          {/* 4 Reference Scenario Selectors */}
-          <div className="flex flex-col gap-2 shrink-0">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-[#64748B] font-semibold">
-                Select Architecture Scenario:
-              </span>
-              <span
-                className={`font-mono text-[10px] px-2 py-0.5 rounded font-bold ${
-                  scenario.verdictType === 'DENIAL'
-                    ? 'bg-red-950/60 text-red-400 border border-red-800/40'
-                    : scenario.verdictType === 'HOLD'
-                    ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
-                    : 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
-                }`}
-              >
-                {scenario.badge}
-              </span>
-            </div>
+          {/* 4 Scenario Selector Tabs */}
+          <div className="flex flex-col gap-1.5 shrink-0">
+            <span className="font-mono text-[10.5px] uppercase tracking-wider text-[#64748B] font-semibold">
+              Select Architecture Scenario:
+            </span>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2">
               {AUTHENTIC_RECORDED_SCENARIOS.map((s) => {
@@ -987,19 +944,19 @@ export function FourPlaneArchitecture({
                       jumpToChapter(0)
                     }}
                     data-scenario-select={s.id}
-                    className={`px-3 py-2.5 rounded-xl text-left font-mono text-xs transition-all flex items-center justify-between gap-2.5 border ${
+                    className={`px-3 py-2 rounded-xl text-left font-mono text-xs transition-all flex items-center justify-between gap-2.5 border ${
                       isSelected
-                        ? 'bg-[#151922] border-[#FF6B00] text-white shadow-lg shadow-[#FF6B00]/15 ring-1 ring-[#FF6B00]/50'
+                        ? 'bg-[#151922] border-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/15 ring-1 ring-[#FF6B00]/50'
                         : 'bg-[#0E1117] border-[#222836] text-[#94A3B8] hover:text-white hover:bg-[#131720] hover:border-[#354054]'
                     }`}
                   >
                     <div className="truncate">
-                      <div className="font-semibold truncate text-[11.5px]">{s.shortTitle}</div>
-                      <div className="text-[10px] text-[#64748B] truncate font-mono mt-0.5">{s.toolName}</div>
+                      <div className="font-semibold truncate text-[11px]">{s.shortTitle}</div>
+                      <div className="text-[9.5px] text-[#64748B] truncate font-mono mt-0.5">{s.toolName}</div>
                     </div>
 
                     <span
-                      className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                      className={`w-2 h-2 rounded-full shrink-0 ${
                         isHalt ? 'bg-[#EF4444]' : isHold ? 'bg-[#F59E0B]' : 'bg-[#10B981]'
                       } ${isSelected ? 'animate-pulse' : ''}`}
                       title={s.verdictType}
@@ -1012,40 +969,14 @@ export function FourPlaneArchitecture({
         </div>
       </div>
 
-      {/* ── TWO-COLUMN SCROLLYTELLING CONTAINER ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 relative">
-        {/* ── LEFT COLUMN: PERSISTENT 3D ISOMETRIC ENVIRONMENT (Sticky on Desktop) ── */}
-        <div className="lg:col-span-6 xl:col-span-5 p-4 sm:p-5 lg:p-6 bg-[#080A0E] border-b lg:border-b-0 lg:border-r border-[#1C222E] flex flex-col justify-between lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:max-h-[920px] overflow-y-auto">
-          <div className="space-y-3.5">
-            {/* Visual Header / Real-Time Telemetry Bar */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#1A202C]">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10.5px] uppercase tracking-wider text-[#94A3B8] font-semibold">
-                  SPATIAL BUSWAY
-                </span>
-                <span className="px-2 py-0.5 rounded bg-[#131720] border border-[#242D3D] font-mono text-[10px] text-[#FF8A3D] font-bold">
-                  STAGE {CHAPTERS[activeStage]?.chapterNum} / 05
-                </span>
-              </div>
-
-              <div className="font-mono text-[11px] flex items-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    packetState.status.includes('DENIED') || packetState.status.includes('HALTED')
-                      ? 'bg-[#EF4444] animate-ping'
-                      : packetState.status.includes('HOLD') || packetState.status.includes('HELD')
-                      ? 'bg-[#F59E0B] animate-ping'
-                      : 'bg-[#FF6B00]'
-                  }`}
-                />
-                <span className="text-[#E2E8F0] font-semibold text-[10px] sm:text-[11px] truncate max-w-[190px]">
-                  {packetState.label}
-                </span>
-              </div>
-            </div>
-
-            {/* Stage Quick-Jump Selector Pills */}
-            <div className="grid grid-cols-5 gap-1.5 p-1 rounded-lg bg-[#0E1117] border border-[#1A202C]">
+      {/* ── MAIN SCROLLYTELLING CONTAINER ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 relative p-4 sm:p-6 gap-6 lg:gap-8">
+        {/* ── LEFT COLUMN: PROMINENT 3D SCENE (Sticky & Pinned on Desktop) ── */}
+        <div className="lg:col-span-7 xl:col-span-7 lg:sticky lg:top-24 lg:self-start space-y-3">
+          {/* Top Stage Navigation & Telemetry HUD */}
+          <div className="p-2 sm:p-2.5 rounded-xl border border-[#1E2430] bg-[#0E1117] flex flex-wrap items-center justify-between gap-2">
+            {/* Stage Quick-Jump Pills (Clean, no truncation) */}
+            <div className="flex items-center gap-1">
               {CHAPTERS.map((c, i) => {
                 const isActiveChapter = activeStage === i
                 const isReachedChapter = i <= scenario.stopStageIndex
@@ -1054,7 +985,7 @@ export function FourPlaneArchitecture({
                   <button
                     key={c.id}
                     onClick={() => jumpToChapter(i)}
-                    className={`py-1 px-1.5 rounded text-center font-mono text-[9.5px] font-semibold transition-all truncate ${
+                    className={`py-1 px-2.5 rounded-lg text-center font-mono text-[10.5px] font-semibold transition-all ${
                       isActiveChapter
                         ? 'bg-[#FF6B00] text-black font-bold shadow-sm shadow-[#FF6B00]/40'
                         : isReachedChapter
@@ -1062,544 +993,528 @@ export function FourPlaneArchitecture({
                         : 'text-[#4B5563] hover:text-[#94A3B8]'
                     }`}
                   >
-                    0{i + 1} {c.shortLabel.split(' ')[1]}
+                    0{i + 1} {c.shortLabel}
                   </button>
                 )
               })}
             </div>
 
-            {/* ── 3D ISOMETRIC ENGINEERING ENVIRONMENT (SVG) ── */}
-            <div className="relative w-full aspect-[840/680] bg-[#0A0D12] rounded-xl border border-[#1E2533] p-1.5 flex items-center justify-center overflow-hidden shadow-inner">
-              <svg
-                viewBox="0 0 840 680"
-                className="w-full h-full select-none"
-                preserveAspectRatio="xMidYMid meet"
-                aria-label="TripLine and ArmorIQ 3D Security Architecture Process"
-              >
-                <defs>
-                  {/* Subtle Graphite Grid Pattern */}
-                  <pattern id="isometric-fine-grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#141822" strokeWidth="0.5" />
-                    <circle cx="0" cy="0" r="0.8" fill="#1C2330" />
-                  </pattern>
-
-                  {/* Gaussian Blur Filters for Atmospheric Lighting */}
-                  <filter id="shadow-blur" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="8" />
-                  </filter>
-
-                  <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <filter id="glow-red" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <filter id="glow-amber" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="5" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  {/* Metallic Platform Top Deck Gradients */}
-                  <linearGradient id="metal-deck-normal" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#1B212B" />
-                    <stop offset="50%" stopColor="#141820" />
-                    <stop offset="100%" stopColor="#0F1218" />
-                  </linearGradient>
-
-                  <linearGradient id="metal-deck-active" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#252422" />
-                    <stop offset="50%" stopColor="#1C1814" />
-                    <stop offset="100%" stopColor="#12100E" />
-                  </linearGradient>
-
-                  <linearGradient id="metal-deck-halted" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2E1618" />
-                    <stop offset="50%" stopColor="#1C0E10" />
-                    <stop offset="100%" stopColor="#120A0B" />
-                  </linearGradient>
-
-                  <linearGradient id="metal-deck-held" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#2E2310" />
-                    <stop offset="50%" stopColor="#1C160B" />
-                    <stop offset="100%" stopColor="#120E08" />
-                  </linearGradient>
-
-                  <linearGradient id="metal-deck-permitted" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#102E20" />
-                    <stop offset="50%" stopColor="#0B1C14" />
-                    <stop offset="100%" stopColor="#07120D" />
-                  </linearGradient>
-
-                  {/* Metallic Platform Side Extrusions */}
-                  <linearGradient id="metal-facet-left" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#0F1218" />
-                    <stop offset="100%" stopColor="#080A0D" />
-                  </linearGradient>
-
-                  <linearGradient id="metal-facet-right" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#171C24" />
-                    <stop offset="100%" stopColor="#0C0F14" />
-                  </linearGradient>
-
-                  {/* Conduit Arrow Markers */}
-                  <marker id="marker-orange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <polygon points="0 0, 6 3, 0 6" fill="#FF6B00" />
-                  </marker>
-                  <marker id="marker-red" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <polygon points="0 0, 6 3, 0 6" fill="#EF4444" />
-                  </marker>
-                  <marker id="marker-amber" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <polygon points="0 0, 6 3, 0 6" fill="#F59E0B" />
-                  </marker>
-                  <marker id="marker-green" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <polygon points="0 0, 6 3, 0 6" fill="#10B981" />
-                  </marker>
-                  <marker id="marker-dim" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <polygon points="0 0, 6 3, 0 6" fill="#2B3444" />
-                  </marker>
-                </defs>
-
-                {/* ── BACKGROUND ENGINEERING GRID ── */}
-                <rect width="840" height="680" fill="url(#isometric-fine-grid)" />
-
-                {/* Perspective Horizon and Depth Vignette */}
-                <radialGradient id="vignette" cx="50%" cy="40%" r="60%">
-                  <stop offset="0%" stopColor="#FF6B00" stopOpacity={activeStage === 0 ? "0.04" : "0.02"} />
-                  <stop offset="60%" stopColor="#080A0E" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="#06070A" stopOpacity="0.9" />
-                </radialGradient>
-                <rect width="840" height="680" fill="url(#vignette)" pointerEvents="none" />
-
-                {/* Technical Registration Grid Annotation */}
-                <g opacity="0.3" pointerEvents="none">
-                  <text x="20" y="25" fill="#4B5563" fontSize="8" fontFamily="monospace">
-                    COORD: ISO-2:1 // ELEVATION 26.56°
-                  </text>
-                  <text x="730" y="25" fill="#4B5563" fontSize="8" fontFamily="monospace">
-                    PROJECTION: STRAIGHT-ON LABELS
-                  </text>
-                  <line x1="20" y1="32" x2="820" y2="32" stroke="#1C2330" strokeWidth="0.5" />
-                </g>
-
-                {/* ── 1. MAIN ISOMETRIC CONDUIT BUSWAYS (3D Heavy Tracks) ── */}
-
-                {/* Trunk 1: Stage 1 (Agent) -> Stage 2 (ArmorIQ Gate) */}
-                {/* Base metal tray */}
-                <path d="M 140 105 L 380 105" stroke="#1A222E" strokeWidth="10" strokeLinecap="round" />
-                <path d="M 140 105 L 380 105" stroke="#0C1016" strokeWidth="6" strokeLinecap="round" />
-                {/* Active energy conduit */}
-                <path
-                  d="M 140 105 L 380 105"
-                  stroke={activeStage >= 1 ? '#FF6B00' : '#273244'}
-                  strokeWidth="2.5"
-                  strokeDasharray={activeStage >= 1 ? undefined : '4 3'}
-                  filter={activeStage >= 1 ? 'url(#glow-orange)' : undefined}
-                  markerEnd={activeStage >= 1 ? 'url(#marker-orange)' : 'url(#marker-dim)'}
-                />
-
-                {/* Trunk 2A (Denial Branch): ArmorIQ Gate -> Rejection Pad */}
-                <path d="M 380 105 L 620 105" stroke="#1A222E" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 380 105 L 620 105" stroke="#0C1016" strokeWidth="5" strokeLinecap="round" />
-                <path
-                  d="M 380 105 L 620 105"
-                  stroke={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? '#EF4444' : '#1F2735'}
-                  strokeWidth="2.5"
-                  strokeDasharray={scenario.id === 'S1-ARMORIQ-DENY' ? undefined : '3 3'}
-                  filter={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? 'url(#glow-red)' : undefined}
-                  markerEnd={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? 'url(#marker-red)' : 'url(#marker-dim)'}
-                />
-
-                {/* Trunk 2B (Authorized Flow): ArmorIQ Gate -> Containment Junction */}
-                {/* Diagonal drop in 2:1 isometric angle */}
-                <path d="M 380 115 L 380 200" stroke="#1A222E" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 380 115 L 380 200" stroke="#0C1016" strokeWidth="5" strokeLinecap="round" />
-                <path
-                  d="M 380 115 L 380 200"
-                  stroke={
-                    scenario.stopStageIndex === 1
-                      ? '#181E29'
-                      : activeStage >= 2
-                      ? '#FF6B00'
-                      : '#273244'
-                  }
-                  strokeWidth="2.5"
-                  strokeDasharray={scenario.stopStageIndex === 1 ? '4 4' : undefined}
-                  filter={scenario.stopStageIndex > 1 && activeStage >= 2 ? 'url(#glow-orange)' : undefined}
-                />
-
-                {/* Branch 3A: Junction -> Path Jail (Left) */}
-                <path d="M 380 200 L 230 200 L 230 280" stroke="#1A222E" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 380 200 L 230 200 L 230 280" stroke="#0C1016" strokeWidth="5" strokeLinecap="round" />
-                <path
-                  d="M 380 200 L 230 200 L 230 280"
-                  stroke={
-                    scenario.activeContainmentControl === 'PATH_JAIL' && activeStage >= 2
-                      ? scenario.tripLineVerdict === 'DENY'
-                        ? '#EF4444'
-                        : '#10B981'
-                      : '#1F2735'
-                  }
-                  strokeWidth="2.5"
-                  strokeDasharray={scenario.activeContainmentControl === 'PATH_JAIL' ? undefined : '4 4'}
-                  filter={
-                    scenario.activeContainmentControl === 'PATH_JAIL' && activeStage >= 2
-                      ? scenario.tripLineVerdict === 'DENY'
-                        ? 'url(#glow-red)'
-                        : 'url(#glow-green)'
-                      : undefined
-                  }
-                  markerEnd={
-                    scenario.activeContainmentControl === 'PATH_JAIL' && activeStage >= 2
-                      ? scenario.tripLineVerdict === 'DENY'
-                        ? 'url(#marker-red)'
-                        : 'url(#marker-green)'
-                      : 'url(#marker-dim)'
-                  }
-                />
-
-                {/* Branch 3B: Junction -> Egress Gateway (Right) */}
-                <path d="M 380 200 L 530 200 L 530 280" stroke="#1A222E" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 380 200 L 530 200 L 530 280" stroke="#0C1016" strokeWidth="5" strokeLinecap="round" />
-                <path
-                  d="M 380 200 L 530 200 L 530 280"
-                  stroke={
-                    scenario.activeContainmentControl === 'EGRESS_GATEWAY' && activeStage >= 2
-                      ? '#F59E0B'
-                      : '#1F2735'
-                  }
-                  strokeWidth="2.5"
-                  strokeDasharray={scenario.activeContainmentControl === 'EGRESS_GATEWAY' ? undefined : '4 4'}
-                  filter={
-                    scenario.activeContainmentControl === 'EGRESS_GATEWAY' && activeStage >= 2
-                      ? 'url(#glow-amber)'
-                      : undefined
-                  }
-                  markerEnd={
-                    scenario.activeContainmentControl === 'EGRESS_GATEWAY' && activeStage >= 2
-                      ? 'url(#marker-amber)'
-                      : 'url(#marker-dim)'
-                  }
-                />
-
-                {/* Trunk 3C: Path Jail -> Protected Dispatch (Permitted only) */}
-                <path d="M 230 300 L 230 460" stroke="#1A222E" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 230 300 L 230 460" stroke="#0C1016" strokeWidth="5" strokeLinecap="round" />
-                <path
-                  d="M 230 300 L 230 460"
-                  stroke={
-                    scenario.stopStageIndex < 3
-                      ? '#181E29'
-                      : activeStage >= 3
-                      ? '#10B981'
-                      : '#273244'
-                  }
-                  strokeWidth="2.5"
-                  strokeDasharray={scenario.stopStageIndex < 3 ? '4 4' : undefined}
-                  filter={scenario.stopStageIndex >= 3 && activeStage >= 3 ? 'url(#glow-green)' : undefined}
-                  markerEnd={scenario.stopStageIndex >= 3 && activeStage >= 3 ? 'url(#marker-green)' : 'url(#marker-dim)'}
-                />
-
-                {/* Trunk 4: Dispatch -> Witness & Evidence Vault (Permitted execution) */}
-                <path d="M 230 470 L 440 470 L 560 470" stroke="#1A222E" strokeWidth="8" strokeLinecap="round" />
-                <path d="M 230 470 L 440 470 L 560 470" stroke="#0C1016" strokeWidth="5" strokeLinecap="round" />
-                <path
-                  d="M 230 470 L 440 470 L 560 470"
-                  stroke={
-                    scenario.stopStageIndex < 4
-                      ? '#181E29'
-                      : activeStage >= 4
-                      ? '#10B981'
-                      : '#273244'
-                  }
-                  strokeWidth="2.5"
-                  strokeDasharray={scenario.stopStageIndex < 4 ? '4 4' : undefined}
-                  filter={scenario.stopStageIndex >= 4 && activeStage >= 4 ? 'url(#glow-green)' : undefined}
-                  markerEnd={scenario.stopStageIndex >= 4 && activeStage >= 4 ? 'url(#marker-green)' : 'url(#marker-dim)'}
-                />
-
-                {/* Lateral Forensic Telemetry Channels (Dotted lines from blocked boundaries to Stage 5) */}
-                {/* Shows that even blocked attempts generate authoritative receipts! */}
-                {scenario.stopStageIndex < 4 && (
-                  <path
-                    d={
-                      scenario.id === 'S1-ARMORIQ-DENY'
-                        ? 'M 620 125 L 720 125 L 720 480 L 620 480'
-                        : scenario.id === 'S2-JAIL-DENY'
-                        ? 'M 230 305 L 170 305 L 170 560 L 560 560 L 560 500'
-                        : 'M 530 305 L 660 305 L 660 480 L 620 480'
-                    }
-                    stroke="#475569"
-                    strokeWidth="1.5"
-                    strokeDasharray="3 3"
-                    fill="none"
-                    opacity={activeStage >= scenario.stopStageIndex ? '0.7' : '0.2'}
-                  />
-                )}
-
-                {/* ── 2. METALLIC 3D PLATFORMS ── */}
-
-                {/* PLATFORM 1: Agent Intent & Trusted Plan */}
-                <IsometricPlatform
-                  cx={140}
-                  cy={110}
-                  w={170}
-                  d={85}
-                  h={16}
-                  isActive={activeStage === 0}
-                  label="Agent Intent & Plan"
-                  sublabel="agent/planner_v2.py"
-                  tag="STAGE 01 // INGRESS"
-                  onClick={() => jumpToChapter(0)}
-                />
-
-                {/* PLATFORM 2: ArmorIQ Authorization Gate */}
-                <IsometricPlatform
-                  cx={380}
-                  cy={110}
-                  w={180}
-                  d={90}
-                  h={18}
-                  isActive={activeStage === 1}
-                  isHalted={scenario.id === 'S1-ARMORIQ-DENY'}
-                  isPermitted={scenario.id !== 'S1-ARMORIQ-DENY' && activeStage >= 1}
-                  label="ArmorIQ Intent Gate"
-                  sublabel="armoriq_helper.py"
-                  tag="STAGE 02 // AUTHORIZE"
-                  onClick={() => jumpToChapter(1)}
-                />
-
-                {/* ARMORIQ UPSTREAM DENIAL TERMINAL PLATFORM */}
-                <g opacity={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? 1 : 0.25}>
-                  <IsometricPlatform
-                    cx={620}
-                    cy={110}
-                    w={150}
-                    d={75}
-                    h={14}
-                    isActive={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1}
-                    isHalted={true}
-                    label="Policy Deny Barrier"
-                    sublabel="Out-of-Plan Halted"
-                    tag="TERMINAL REJECTION"
-                  />
-                </g>
-
-                {/* PLATFORM 3: Large TripLine Containment Deck */}
-                {/* Visual deck slab housing Path Jail and Canary Gateway */}
-                <polygon
-                  points="380,185 640,290 380,395 120,290"
-                  fill="#0B0E14"
-                  stroke="#1D2432"
-                  strokeWidth="1"
-                  opacity="0.9"
-                />
-                <polygon
-                  points="120,290 380,395 380,407 120,302"
-                  fill="#07090D"
-                  stroke="#151A24"
-                  strokeWidth="0.75"
-                />
-                <polygon
-                  points="380,395 640,290 640,302 380,407"
-                  fill="#0A0D12"
-                  stroke="#151A24"
-                  strokeWidth="0.75"
-                />
-
-                {/* Deck Perimeter Title */}
-                <text
-                  x="380"
-                  y="218"
-                  textAnchor="middle"
-                  fill={activeStage === 2 ? '#FF8A3D' : '#4B5563'}
-                  fontSize="8.5"
-                  fontFamily="monospace"
-                  fontWeight="bold"
-                  letterSpacing="0.1em"
-                >
-                  STAGE 03 // TRIPLINE CONTAINMENT SANDBOX
-                </text>
-
-                {/* SUB-STATION 3A: TripLine Path Jail */}
-                <IsometricPlatform
-                  cx={230}
-                  cy={285}
-                  w={150}
-                  d={75}
-                  h={14}
-                  isActive={activeStage === 2 && scenario.activeContainmentControl === 'PATH_JAIL'}
-                  isHalted={scenario.id === 'S2-JAIL-DENY'}
-                  isPermitted={scenario.id === 'S4-CLEAN-ALLOW' && activeStage >= 2}
-                  label="TripLine Path Jail"
-                  sublabel="mcp/common/jail.py"
-                  tag={
-                    scenario.activeContainmentControl === 'PATH_JAIL'
-                      ? 'INODE BOUNDS CHECK'
-                      : 'INACTIVE (BYPASSED)'
-                  }
-                  onClick={() => jumpToChapter(2)}
-                />
-
-                {/* SUB-STATION 3B: Egress Canary Gateway */}
-                <IsometricPlatform
-                  cx={530}
-                  cy={285}
-                  w={150}
-                  d={75}
-                  h={14}
-                  isActive={activeStage === 2 && scenario.activeContainmentControl === 'EGRESS_GATEWAY'}
-                  isHeld={scenario.id === 'S3-CANARY-HOLD'}
-                  label="Egress Canary Gate"
-                  sublabel="gateway/taint_rule.py"
-                  tag={
-                    scenario.activeContainmentControl === 'EGRESS_GATEWAY'
-                      ? 'EXACT TAINT SCAN'
-                      : 'INACTIVE (BYPASSED)'
-                  }
-                  onClick={() => jumpToChapter(2)}
-                />
-
-                {/* PLATFORM 4: Protected Tool Dispatch Boundary */}
-                <g opacity={scenario.stopStageIndex < 3 ? 0.35 : 1}>
-                  <IsometricPlatform
-                    cx={230}
-                    cy={470}
-                    w={170}
-                    d={85}
-                    h={16}
-                    isActive={activeStage === 3 && scenario.stopStageIndex >= 3}
-                    isPermitted={scenario.stopStageIndex >= 3}
-                    label="Protected Dispatch"
-                    sublabel="security/dispatcher.py"
-                    tag={scenario.stopStageIndex < 3 ? 'STAGE 04 // NOT REACHED' : 'STAGE 04 // DISPATCH'}
-                    onClick={() => jumpToChapter(3)}
-                  />
-                </g>
-
-                {/* PLATFORM 5: Forensic Witness & Evidence Ledger */}
-                <IsometricPlatform
-                  cx={560}
-                  cy={480}
-                  w={190}
-                  d={95}
-                  h={18}
-                  isActive={activeStage === 4}
-                  isPermitted={scenario.stopStageIndex >= 4}
-                  isHalted={scenario.verdictType === 'DENIAL'}
-                  isHeld={scenario.verdictType === 'HOLD'}
-                  label="Forensic Witness Log"
-                  sublabel="witness/chain.py"
-                  tag="STAGE 05 // EVIDENCE"
-                  onClick={() => jumpToChapter(4)}
-                />
-
-                {/* ── 3. FLOWING ACTION PACKET (Glowing Orange Marker) ── */}
-                <g
-                  transform={`translate(${packetState.x}, ${packetState.y})`}
-                  className={prefersReducedMotion ? '' : 'transition-all duration-400 ease-out'}
-                  filter="url(#glow-orange)"
-                >
-                  {/* Outer atmospheric aura */}
-                  <circle cx="0" cy="0" r="14" fill={packetState.color} opacity="0.25" />
-                  {/* High-intensity outer rim */}
-                  <circle cx="0" cy="0" r="8" fill={packetState.color} />
-                  {/* White-hot energy nucleus */}
-                  <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
-
-                  {/* Dynamic Action Taglet (Floats directly above packet) */}
-                  <g transform="translate(0, -18)">
-                    <rect
-                      x="-55"
-                      y="-11"
-                      width="110"
-                      height="15"
-                      rx="4"
-                      fill="#0C0F14"
-                      stroke={packetState.color}
-                      strokeWidth="1"
-                      opacity="0.95"
-                    />
-                    <text
-                      x="0"
-                      y="0"
-                      textAnchor="middle"
-                      fill="#FFFFFF"
-                      fontSize="8"
-                      fontFamily="monospace"
-                      fontWeight="bold"
-                    >
-                      {scenario.toolName}
-                    </text>
-                  </g>
-                </g>
-              </svg>
+            {/* Dynamic Status Beacon */}
+            <div className="font-mono text-[11px] flex items-center gap-2 px-2 py-0.5 rounded bg-[#131720] border border-[#212938]">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  packetState.status.includes('DENIED') || packetState.status.includes('HALTED')
+                    ? 'bg-[#EF4444] animate-ping'
+                    : packetState.status.includes('HOLD') || packetState.status.includes('HELD')
+                    ? 'bg-[#F59E0B] animate-ping'
+                    : 'bg-[#FF6B00]'
+                }`}
+              />
+              <span className="text-[#E2E8F0] font-semibold text-[10.5px] truncate max-w-[180px]">
+                {packetState.label}
+              </span>
             </div>
           </div>
 
-          {/* ── PERSISTENT INSPECTION & VERIFICATION CARD ── */}
-          <div className="mt-3.5 p-3.5 sm:p-4 rounded-xl border border-[#222836] bg-[#0E1117] space-y-3 font-mono text-xs shadow-lg">
-            <div className="flex items-center justify-between text-[11px] pb-2 border-b border-[#1C222E]">
-              <span className="text-[#94A3B8] uppercase tracking-wider font-semibold">
-                ACTIVE TRACE PAYLOAD
-              </span>
+          {/* ── 3D ISOMETRIC ENGINEERING CANVAS (SVG) ── */}
+          <div className="relative w-full aspect-[760/490] bg-[#090B0F] rounded-xl border border-[#1E2533] p-1 flex items-center justify-center overflow-hidden shadow-2xl">
+            <svg
+              viewBox="0 0 760 490"
+              className="w-full h-full select-none"
+              preserveAspectRatio="xMidYMid meet"
+              aria-label="TripLine and ArmorIQ 3D Security Architecture Process"
+            >
+              <defs>
+                <pattern id="isometric-grid" width="28" height="28" patternUnits="userSpaceOnUse">
+                  <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#121620" strokeWidth="0.5" />
+                  <circle cx="0" cy="0" r="0.75" fill="#181F2B" />
+                </pattern>
+
+                <filter id="shadow-blur" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="6" />
+                </filter>
+
+                <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="glow-red" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="glow-amber" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <linearGradient id="metal-deck-normal" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1C222C" />
+                  <stop offset="60%" stopColor="#13171F" />
+                  <stop offset="100%" stopColor="#0E1116" />
+                </linearGradient>
+
+                <linearGradient id="metal-deck-active" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#2A241D" />
+                  <stop offset="60%" stopColor="#1E1912" />
+                  <stop offset="100%" stopColor="#14100B" />
+                </linearGradient>
+
+                <linearGradient id="metal-deck-halted" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#2E1618" />
+                  <stop offset="60%" stopColor="#1C0E10" />
+                  <stop offset="100%" stopColor="#120A0B" />
+                </linearGradient>
+
+                <linearGradient id="metal-deck-held" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#2E2310" />
+                  <stop offset="60%" stopColor="#1C160B" />
+                  <stop offset="100%" stopColor="#120E08" />
+                </linearGradient>
+
+                <linearGradient id="metal-deck-permitted" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#102E20" />
+                  <stop offset="60%" stopColor="#0B1C14" />
+                  <stop offset="100%" stopColor="#07120D" />
+                </linearGradient>
+
+                <linearGradient id="metal-facet-left" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#0E1218" />
+                  <stop offset="100%" stopColor="#07090C" />
+                </linearGradient>
+
+                <linearGradient id="metal-facet-right" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#151A22" />
+                  <stop offset="100%" stopColor="#0B0E13" />
+                </linearGradient>
+
+                <marker id="marker-orange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill="#FF6B00" />
+                </marker>
+                <marker id="marker-red" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill="#EF4444" />
+                </marker>
+                <marker id="marker-amber" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill="#F59E0B" />
+                </marker>
+                <marker id="marker-green" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill="#10B981" />
+                </marker>
+                <marker id="marker-dim" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill="#242D3C" />
+                </marker>
+              </defs>
+
+              {/* Background fine grid */}
+              <rect width="760" height="490" fill="url(#isometric-grid)" />
+
+              {/* Central radial lighting */}
+              <radialGradient id="stage-vignette" cx="50%" cy="45%" r="65%">
+                <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.03" />
+                <stop offset="50%" stopColor="#080A0E" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#060709" stopOpacity="0.85" />
+              </radialGradient>
+              <rect width="760" height="490" fill="url(#stage-vignette)" pointerEvents="none" />
+
+              {/* ── 1. MAIN CONDUIT BUSWAYS ── */}
+
+              {/* Trunk 1: Stage 1 (Agent) -> Stage 2 (ArmorIQ Gate) */}
+              <path d="M 130 80 L 370 80" stroke="#18202C" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 130 80 L 370 80" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
+              <path
+                d="M 130 80 L 370 80"
+                stroke={activeStage >= 1 ? '#FF6B00' : '#222B3A'}
+                strokeWidth="2.5"
+                filter={activeStage >= 1 ? 'url(#glow-orange)' : undefined}
+                markerEnd={activeStage >= 1 ? 'url(#marker-orange)' : 'url(#marker-dim)'}
+              />
+
+              {/* Trunk 2A (Denial Branch): ArmorIQ Gate -> Rejection Pad */}
+              <path d="M 370 80 L 610 80" stroke="#18202C" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 370 80 L 610 80" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
+              <path
+                d="M 370 80 L 610 80"
+                stroke={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? '#EF4444' : '#1D2432'}
+                strokeWidth="2.5"
+                strokeDasharray={scenario.id === 'S1-ARMORIQ-DENY' ? undefined : '3 3'}
+                filter={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? 'url(#glow-red)' : undefined}
+                markerEnd={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? 'url(#marker-red)' : 'url(#marker-dim)'}
+              />
+
+              {/* Trunk 2B (Authorized Flow): ArmorIQ Gate -> Containment Hub */}
+              <path d="M 370 90 L 370 160" stroke="#18202C" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 370 90 L 370 160" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
+              <path
+                d="M 370 90 L 370 160"
+                stroke={
+                  scenario.stopStageIndex === 1
+                    ? '#161C26'
+                    : activeStage >= 2
+                    ? '#FF6B00'
+                    : '#222B3A'
+                }
+                strokeWidth="2.5"
+                strokeDasharray={scenario.stopStageIndex === 1 ? '4 4' : undefined}
+                filter={scenario.stopStageIndex > 1 && activeStage >= 2 ? 'url(#glow-orange)' : undefined}
+              />
+
+              {/* Branch 3A: Hub -> Path Jail (Left) */}
+              <path d="M 370 160 L 230 160 L 230 225" stroke="#18202C" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 370 160 L 230 160 L 230 225" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
+              <path
+                d="M 370 160 L 230 160 L 230 225"
+                stroke={
+                  scenario.activeContainmentControl === 'PATH_JAIL' && activeStage >= 2
+                    ? scenario.tripLineVerdict === 'DENY'
+                      ? '#EF4444'
+                      : '#10B981'
+                    : '#1D2432'
+                }
+                strokeWidth="2.5"
+                strokeDasharray={scenario.activeContainmentControl === 'PATH_JAIL' ? undefined : '4 4'}
+                filter={
+                  scenario.activeContainmentControl === 'PATH_JAIL' && activeStage >= 2
+                    ? scenario.tripLineVerdict === 'DENY'
+                      ? 'url(#glow-red)'
+                      : 'url(#glow-green)'
+                    : undefined
+                }
+                markerEnd={
+                  scenario.activeContainmentControl === 'PATH_JAIL' && activeStage >= 2
+                    ? scenario.tripLineVerdict === 'DENY'
+                      ? 'url(#marker-red)'
+                      : 'url(#marker-green)'
+                    : 'url(#marker-dim)'
+                }
+              />
+
+              {/* Branch 3B: Hub -> Egress Gateway (Right) */}
+              <path d="M 370 160 L 490 160 L 490 225" stroke="#18202C" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 370 160 L 490 160 L 490 225" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
+              <path
+                d="M 370 160 L 490 160 L 490 225"
+                stroke={
+                  scenario.activeContainmentControl === 'EGRESS_GATEWAY' && activeStage >= 2
+                    ? '#F59E0B'
+                    : '#1D2432'
+                }
+                strokeWidth="2.5"
+                strokeDasharray={scenario.activeContainmentControl === 'EGRESS_GATEWAY' ? undefined : '4 4'}
+                filter={
+                  scenario.activeContainmentControl === 'EGRESS_GATEWAY' && activeStage >= 2
+                    ? 'url(#glow-amber)'
+                    : undefined
+                }
+                markerEnd={
+                  scenario.activeContainmentControl === 'EGRESS_GATEWAY' && activeStage >= 2
+                    ? 'url(#marker-amber)'
+                    : 'url(#marker-dim)'
+                }
+              />
+
+              {/* Trunk 3C: Path Jail -> Protected Dispatch (Permitted only) */}
+              <path d="M 230 245 L 230 385" stroke="#18202C" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 230 245 L 230 385" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
+              <path
+                d="M 230 245 L 230 385"
+                stroke={
+                  scenario.stopStageIndex < 3
+                    ? '#161C26'
+                    : activeStage >= 3
+                    ? '#10B981'
+                    : '#222B3A'
+                }
+                strokeWidth="2.5"
+                strokeDasharray={scenario.stopStageIndex < 3 ? '4 4' : undefined}
+                filter={scenario.stopStageIndex >= 3 && activeStage >= 3 ? 'url(#glow-green)' : undefined}
+                markerEnd={scenario.stopStageIndex >= 3 && activeStage >= 3 ? 'url(#marker-green)' : 'url(#marker-dim)'}
+              />
+
+              {/* Trunk 4: Dispatch -> Witness & Evidence Vault (Permitted execution) */}
+              <path d="M 230 395 L 420 395 L 520 395" stroke="#18202C" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 230 395 L 420 395 L 520 395" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
+              <path
+                d="M 230 395 L 420 395 L 520 395"
+                stroke={
+                  scenario.stopStageIndex < 4
+                    ? '#161C26'
+                    : activeStage >= 4
+                    ? '#10B981'
+                    : '#222B3A'
+                }
+                strokeWidth="2.5"
+                strokeDasharray={scenario.stopStageIndex < 4 ? '4 4' : undefined}
+                filter={scenario.stopStageIndex >= 4 && activeStage >= 4 ? 'url(#glow-green)' : undefined}
+                markerEnd={scenario.stopStageIndex >= 4 && activeStage >= 4 ? 'url(#marker-green)' : 'url(#marker-dim)'}
+              />
+
+              {/* Lateral Forensic Telemetry Channels (Dotted lines for sealed receipts) */}
+              {scenario.stopStageIndex < 4 && (
+                <path
+                  d={
+                    scenario.id === 'S1-ARMORIQ-DENY'
+                      ? 'M 610 95 L 700 95 L 700 405 L 580 405'
+                      : scenario.id === 'S2-JAIL-DENY'
+                      ? 'M 230 250 L 140 250 L 140 455 L 520 455 L 520 415'
+                      : 'M 490 250 L 640 250 L 640 405 L 580 405'
+                  }
+                  stroke="#475569"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 3"
+                  fill="none"
+                  opacity={activeStage >= scenario.stopStageIndex ? '0.75' : '0.2'}
+                />
+              )}
+
+              {/* ── 2. METALLIC 3D PLATFORMS ── */}
+
+              {/* PLATFORM 1: Agent Intent & Trusted Plan */}
+              <IsometricPlatform
+                cx={130}
+                cy={85}
+                w={190}
+                d={95}
+                h={18}
+                isActive={activeStage === 0}
+                label="Agent Intent & Plan"
+                sublabel="agent/planner_v2.py"
+                tag="STAGE 01 // INGRESS"
+                onClick={() => jumpToChapter(0)}
+              />
+
+              {/* PLATFORM 2: ArmorIQ Authorization Gate */}
+              <IsometricPlatform
+                cx={370}
+                cy={85}
+                w={200}
+                d={100}
+                h={20}
+                isActive={activeStage === 1}
+                isHalted={scenario.id === 'S1-ARMORIQ-DENY'}
+                isPermitted={scenario.id !== 'S1-ARMORIQ-DENY' && activeStage >= 1}
+                label="ArmorIQ Intent Gate"
+                sublabel="armoriq_helper.py"
+                tag="STAGE 02 // AUTHORIZE"
+                onClick={() => jumpToChapter(1)}
+              />
+
+              {/* ARMORIQ UPSTREAM DENIAL TERMINAL PLATFORM */}
+              <g opacity={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1 ? 1 : 0.25}>
+                <IsometricPlatform
+                  cx={610}
+                  cy={85}
+                  w={150}
+                  d={75}
+                  h={16}
+                  isActive={scenario.id === 'S1-ARMORIQ-DENY' && activeStage >= 1}
+                  isHalted={true}
+                  label="Policy Deny Barrier"
+                  sublabel="Out-of-Plan Halted"
+                  tag="TERMINAL REJECTION"
+                />
+              </g>
+
+              {/* PLATFORM 3: Large TripLine Containment Deck */}
+              <polygon
+                points="360,150 630,240 360,330 90,240"
+                fill="#0A0D13"
+                stroke="#1B222E"
+                strokeWidth="1"
+                opacity="0.95"
+              />
+              <polygon
+                points="90,240 360,330 360,342 90,252"
+                fill="#06080B"
+                stroke="#131822"
+                strokeWidth="0.75"
+              />
+              <polygon
+                points="360,330 630,240 630,252 360,342"
+                fill="#080A0E"
+                stroke="#131822"
+                strokeWidth="0.75"
+              />
+
+              <text
+                x="360"
+                y="178"
+                textAnchor="middle"
+                fill={activeStage === 2 ? '#FF8A3D' : '#4B5563'}
+                fontSize="9"
+                fontFamily="monospace"
+                fontWeight="bold"
+                letterSpacing="0.1em"
+              >
+                STAGE 03 // TRIPLINE CONTAINMENT SANDBOX
+              </text>
+
+              {/* SUB-STATION 3A: TripLine Path Jail */}
+              <IsometricPlatform
+                cx={230}
+                cy={235}
+                w={170}
+                d={85}
+                h={16}
+                isActive={activeStage === 2 && scenario.activeContainmentControl === 'PATH_JAIL'}
+                isHalted={scenario.id === 'S2-JAIL-DENY'}
+                isPermitted={scenario.id === 'S4-CLEAN-ALLOW' && activeStage >= 2}
+                label="TripLine Path Jail"
+                sublabel="mcp/common/jail.py"
+                tag={
+                  scenario.activeContainmentControl === 'PATH_JAIL'
+                    ? 'INODE BOUNDS CHECK'
+                    : 'INACTIVE (BYPASSED)'
+                }
+                onClick={() => jumpToChapter(2)}
+              />
+
+              {/* SUB-STATION 3B: Egress Canary Gateway */}
+              <IsometricPlatform
+                cx={490}
+                cy={235}
+                w={170}
+                d={85}
+                h={16}
+                isActive={activeStage === 2 && scenario.activeContainmentControl === 'EGRESS_GATEWAY'}
+                isHeld={scenario.id === 'S3-CANARY-HOLD'}
+                label="Egress Canary Gate"
+                sublabel="gateway/taint_rule.py"
+                tag={
+                  scenario.activeContainmentControl === 'EGRESS_GATEWAY'
+                    ? 'EXACT TAINT SCAN'
+                    : 'INACTIVE (BYPASSED)'
+                }
+                onClick={() => jumpToChapter(2)}
+              />
+
+              {/* PLATFORM 4: Protected Tool Dispatch Boundary */}
+              <g opacity={scenario.stopStageIndex < 3 ? 0.35 : 1}>
+                <IsometricPlatform
+                  cx={230}
+                  cy={395}
+                  w={190}
+                  d={95}
+                  h={18}
+                  isActive={activeStage === 3 && scenario.stopStageIndex >= 3}
+                  isPermitted={scenario.stopStageIndex >= 3}
+                  label="Protected Dispatch"
+                  sublabel="security/dispatcher.py"
+                  tag={scenario.stopStageIndex < 3 ? 'STAGE 04 // NOT REACHED' : 'STAGE 04 // DISPATCH'}
+                  onClick={() => jumpToChapter(3)}
+                />
+              </g>
+
+              {/* PLATFORM 5: Forensic Witness & Evidence Ledger */}
+              <IsometricPlatform
+                cx={520}
+                cy={395}
+                w={210}
+                d={105}
+                h={20}
+                isActive={activeStage === 4}
+                isPermitted={scenario.stopStageIndex >= 4}
+                isHalted={scenario.verdictType === 'DENIAL'}
+                isHeld={scenario.verdictType === 'HOLD'}
+                label="Forensic Witness Log"
+                sublabel="witness/chain.py"
+                tag="STAGE 05 // EVIDENCE"
+                onClick={() => jumpToChapter(4)}
+              />
+
+              {/* ── 3. FLOWING ACTION PACKET ── */}
+              <g
+                transform={`translate(${packetState.x}, ${packetState.y})`}
+                className={prefersReducedMotion ? '' : 'transition-all duration-400 ease-out'}
+                filter="url(#glow-orange)"
+              >
+                <circle cx="0" cy="0" r="14" fill={packetState.color} opacity="0.25" />
+                <circle cx="0" cy="0" r="8" fill={packetState.color} />
+                <circle cx="0" cy="0" r="3" fill="#FFFFFF" />
+
+                {/* Dynamic Floating Action Chip */}
+                <g transform="translate(0, -18)">
+                  <rect
+                    x="-55"
+                    y="-11"
+                    width="110"
+                    height="16"
+                    rx="4"
+                    fill="#0A0D12"
+                    stroke={packetState.color}
+                    strokeWidth="1"
+                    opacity="0.95"
+                  />
+                  <text
+                    x="0"
+                    y="1"
+                    textAnchor="middle"
+                    fill="#FFFFFF"
+                    fontSize="8.5"
+                    fontFamily="monospace"
+                    fontWeight="bold"
+                  >
+                    {scenario.toolName}
+                  </text>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          {/* ── SLEEK, HIGH-DENSITY MISSION CONTROL TELEMETRY DOCK (Replaces bulky card) ── */}
+          <div className="p-3 sm:p-3.5 rounded-xl border border-[#1E2533] bg-[#0C0F14] space-y-2.5 font-mono text-xs shadow-lg">
+            {/* Row 1: Target Tool Call + Scenario Verdict Chip */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 truncate">
+                <span className="text-[#64748B] text-[10px] uppercase font-bold shrink-0">ACTION:</span>
+                <code className="text-[#FF8A3D] text-[11px] font-mono truncate bg-[#07090C] px-2 py-0.5 rounded border border-[#1A202C]">
+                  {scenario.action}
+                </code>
+              </div>
+
               <span
-                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${
                   scenario.verdictType === 'DENIAL'
-                    ? 'bg-red-950/60 text-red-400 border border-red-800/40'
+                    ? 'bg-red-950/70 text-red-400 border border-red-800/50'
                     : scenario.verdictType === 'HOLD'
-                    ? 'bg-amber-950/60 text-amber-400 border border-amber-800/40'
-                    : 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40'
+                    ? 'bg-amber-950/70 text-amber-400 border border-amber-800/50'
+                    : 'bg-emerald-950/70 text-emerald-400 border border-emerald-800/50'
                 }`}
               >
                 {scenario.badge}
               </span>
             </div>
 
-            {/* Target Action Proposal */}
-            <div className="space-y-1">
-              <div className="text-[10.5px] text-[#94A3B8]">Synthesized Tool Call:</div>
-              <div className="p-2 rounded bg-[#07090C] border border-[#1A202C] text-[#FF8A3D] truncate text-[11px]">
-                <code>{scenario.action}</code>
-              </div>
-            </div>
-
-            {/* Dual Stage Decisions */}
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div className="p-2 rounded bg-[#131720] border border-[#212938]">
-                <span className="text-[#64748B] block text-[9px] uppercase font-bold">Stage 2: ArmorIQ</span>
-                <span
-                  className={`font-bold mt-0.5 block ${
-                    scenario.armorIQVerdict === 'DENY' ? 'text-red-400' : 'text-emerald-400'
-                  }`}
-                >
+            {/* Row 2: Compact Telemetry Readouts */}
+            <div className="grid grid-cols-3 gap-2 text-[10.5px]">
+              <div className="p-1.5 rounded bg-[#10141C] border border-[#1C2330] flex items-center justify-between">
+                <span className="text-[#64748B] text-[9.5px]">ARMORIQ:</span>
+                <span className={`font-bold ${scenario.armorIQVerdict === 'DENY' ? 'text-red-400' : 'text-emerald-400'}`}>
                   {scenario.armorIQVerdict}
                 </span>
               </div>
-              <div className="p-2 rounded bg-[#131720] border border-[#212938]">
-                <span className="text-[#64748B] block text-[9px] uppercase font-bold">Stage 3: TripLine</span>
+
+              <div className="p-1.5 rounded bg-[#10141C] border border-[#1C2330] flex items-center justify-between">
+                <span className="text-[#64748B] text-[9.5px]">TRIPLINE:</span>
                 <span
-                  className={`font-bold mt-0.5 block ${
+                  className={`font-bold ${
                     scenario.tripLineVerdict === 'NONE (NOT REACHED)'
                       ? 'text-[#64748B]'
                       : scenario.tripLineVerdict === 'DENY'
@@ -1609,71 +1524,64 @@ export function FourPlaneArchitecture({
                       : 'text-emerald-400'
                   }`}
                 >
-                  {scenario.tripLineVerdict}
+                  {scenario.tripLineVerdict === 'NONE (NOT REACHED)' ? 'UNREACHED' : scenario.tripLineVerdict}
+                </span>
+              </div>
+
+              <div className="p-1.5 rounded bg-[#10141C] border border-[#1C2330] flex items-center justify-between truncate">
+                <span className="text-[#64748B] text-[9.5px] shrink-0">RECEIPT:</span>
+                <span className="text-[#FF8A3D] font-mono truncate text-[10px] ml-1" title={scenario.receiptId}>
+                  {scenario.receiptId.slice(0, 14)}...
                 </span>
               </div>
             </div>
 
-            {/* Cryptographic Receipt & Authoritative Verification */}
-            <div className="pt-2 border-t border-[#1C222E] space-y-2">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-[#94A3B8]">Stored Incident Receipt:</span>
-                <span className="text-[#FF8A3D] truncate max-w-[190px] font-semibold" title={scenario.receiptId}>
-                  {scenario.receiptId}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between text-[10px] text-[#64748B]">
-                <span className="truncate max-w-[220px]">Hash: {scenario.canonicalHash.slice(0, 22)}...</span>
-                <button
-                  onClick={() => handleCopyHash(scenario.canonicalHash)}
-                  className="hover:text-white flex items-center gap-1 transition-colors"
-                >
-                  {copiedHash ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedHash ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-
+            {/* Row 3: One-Click Verification Button + Status */}
+            <div className="flex items-center gap-2 pt-1 border-t border-[#161B24]">
               <button
                 onClick={() => handleVerifyReceipt(scenario.receiptFile)}
                 disabled={verifying}
-                className="w-full py-2 px-3 rounded-lg bg-[#FF6B00] hover:bg-[#E55F00] text-black font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 shadow-md"
+                className="py-1.5 px-3 rounded-lg bg-[#FF6B00] hover:bg-[#E55F00] text-black font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
               >
                 {verifying ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <ShieldCheck className="w-3.5 h-3.5" />
                 )}
-                <span>Run Cryptographic Verification</span>
+                <span>Verify Receipt</span>
               </button>
 
-              {verificationResult && (
-                <div
-                  className={`p-2.5 rounded-lg border text-[11px] ${
-                    verificationResult.verified
-                      ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
-                      : 'bg-red-950/40 border-red-800/60 text-red-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 font-bold">
-                    {verificationResult.verified ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <XCircle className="w-3.5 h-3.5 text-red-400" />
-                    )}
-                    <span>Receipt Signature: {verificationResult.status}</span>
-                  </div>
-                  <div className="text-[10px] text-[#94A3B8] mt-1 font-sans leading-tight">
-                    {verificationResult.reason}
-                  </div>
-                </div>
-              )}
+              <button
+                onClick={() => handleCopyHash(scenario.canonicalHash)}
+                className="py-1.5 px-2.5 rounded-lg bg-[#141822] hover:bg-[#1A202C] text-[#94A3B8] hover:text-white border border-[#222A38] text-[10.5px] flex items-center gap-1 shrink-0 transition-colors"
+                title="Copy RFC 8785 Canonical SHA-256 Hash"
+              >
+                {copiedHash ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                <span>{copiedHash ? 'Copied' : 'Hash'}</span>
+              </button>
+
+              <div className="flex-1 truncate text-right">
+                {verificationResult ? (
+                  <span
+                    className={`inline-flex items-center gap-1 text-[10px] font-bold ${
+                      verificationResult.verified ? 'text-emerald-400' : 'text-red-400'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>{verificationResult.status}</span>
+                  </span>
+                ) : (
+                  <span className="text-[#4B5563] text-[10px] font-mono">
+                    SHA-256: {scenario.canonicalHash.slice(0, 16)}...
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN: SEQUENTIAL STORY CHAPTERS (5 SCROLL SECTIONS) ── */}
-        <div className="lg:col-span-6 xl:col-span-7 p-4 sm:p-6 lg:p-8 space-y-16 lg:space-y-24">
+        {/* ── RIGHT COLUMN: SEQUENTIAL STORY CHAPTERS ── */}
+        <div className="lg:col-span-5 xl:col-span-5 space-y-6 lg:space-y-8">
           {CHAPTERS.map((chapter, idx) => {
             const isCurrent = activeStage === idx
             const isReached = idx <= scenario.stopStageIndex
@@ -1684,14 +1592,14 @@ export function FourPlaneArchitecture({
                 ref={(el) => {
                   chapterRefs.current[idx] = el
                 }}
-                className={`scroll-mt-24 transition-opacity duration-300 p-6 sm:p-7 rounded-2xl border ${
+                className={`scroll-mt-28 transition-all duration-300 p-5 sm:p-6 rounded-2xl border ${
                   isCurrent
-                    ? 'border-[#FF6B00]/70 bg-[#121620] ring-1 ring-[#FF6B00]/40 shadow-2xl'
-                    : 'border-[#1E2430] bg-[#0A0D12] opacity-80 hover:opacity-100'
+                    ? 'border-[#FF6B00]/70 bg-[#121620] ring-1 ring-[#FF6B00]/40 shadow-xl'
+                    : 'border-[#1A202C] bg-[#0A0D12] opacity-85 hover:opacity-100'
                 }`}
               >
                 {/* Chapter Eyebrow & Status */}
-                <div className="flex items-center justify-between pb-3 border-b border-[#1E2430] mb-4">
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#1A202C] mb-3">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs font-bold text-[#FF8A3D]">
                       CHAPTER {chapter.chapterNum}
@@ -1703,12 +1611,12 @@ export function FourPlaneArchitecture({
                   </div>
 
                   <span
-                    className={`font-mono text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
+                    className={`font-mono text-[9.5px] px-2 py-0.5 rounded-full font-bold ${
                       !isReached
-                        ? 'bg-[#181E27] text-[#64748B] border border-[#273244]'
+                        ? 'bg-[#141820] text-[#64748B] border border-[#222A38]'
                         : isCurrent
                         ? 'bg-[#FF6B00]/20 text-[#FF8A3D] border border-[#FF6B00]/50'
-                        : 'bg-[#141A22] text-[#94A3B8] border border-[#242D3D]'
+                        : 'bg-[#10141C] text-[#94A3B8] border border-[#1E2532]'
                     }`}
                   >
                     {!isReached ? 'UNREACHED (HALTED UPSTREAM)' : isCurrent ? 'EVALUATING BOUNDARY' : 'EVALUATED'}
@@ -1716,24 +1624,24 @@ export function FourPlaneArchitecture({
                 </div>
 
                 {/* Chapter Heading */}
-                <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight">
                   {chapter.title}
                 </h3>
 
                 {/* Explanation */}
-                <p className="mt-2 text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
+                <p className="mt-1.5 text-xs text-[#94A3B8] leading-relaxed">
                   {chapter.principle}
                 </p>
 
                 {/* Scenario-Specific Context for this Chapter */}
-                <div className="mt-4 p-4 rounded-xl border border-[#1E2430] bg-[#07090C] space-y-3 font-mono text-xs">
-                  <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                <div className="mt-3 p-3.5 rounded-xl border border-[#1A202C] bg-[#07090C] space-y-2.5 font-mono text-xs">
+                  <div className="flex items-center justify-between text-[10.5px] text-[#64748B]">
                     <span>// Scenario Dynamic Trace</span>
                     <span className="text-[#FF8A3D] font-bold">{scenario.shortTitle}</span>
                   </div>
 
                   {/* Stage-specific narrative */}
-                  <div className="text-[12px] text-[#CDD2D8] font-sans leading-relaxed">
+                  <div className="text-[11.5px] text-[#CDD2D8] font-sans leading-relaxed">
                     {idx === 0 && scenario.stageNotes.ingress}
                     {idx === 1 && scenario.stageNotes.armoriq}
                     {idx === 2 && scenario.stageNotes.containment}
@@ -1742,15 +1650,15 @@ export function FourPlaneArchitecture({
                   </div>
 
                   {/* Code Artifact References */}
-                  <div className="pt-2 border-t border-[#181E27] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#64748B]">
-                    <div className="flex items-center gap-2">
+                  <div className="pt-2 border-t border-[#141820] flex flex-wrap items-center justify-between gap-1.5 text-[10.5px] text-[#64748B]">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-[#94A3B8]">Implementation:</span>
-                      <code className="text-[#FF8A3D] bg-[#121620] px-1.5 py-0.5 rounded border border-[#212938]">
+                      <code className="text-[#FF8A3D] bg-[#10141C] px-1.5 py-0.5 rounded border border-[#1E2532]">
                         {chapter.sourceFile}
                       </code>
                     </div>
                     {chapter.auxFiles.length > 0 && (
-                      <div className="flex items-center gap-1 text-[10px]">
+                      <div className="flex items-center gap-1 text-[9.5px]">
                         <span>Aux:</span>
                         {chapter.auxFiles.map((f) => (
                           <code key={f} className="text-[#94A3B8]">
@@ -1764,22 +1672,22 @@ export function FourPlaneArchitecture({
 
                 {/* Chapter 5 Special: 7-State Verification Matrix */}
                 {idx === 4 && (
-                  <div className="mt-4 p-4 rounded-xl border border-[#273244] bg-[#0B0E14] space-y-3 font-mono text-xs">
-                    <div className="flex items-center justify-between text-[11px] pb-2 border-b border-[#1A222E]">
+                  <div className="mt-3.5 p-3.5 rounded-xl border border-[#212938] bg-[#0A0D12] space-y-2.5 font-mono text-xs">
+                    <div className="flex items-center justify-between text-[10.5px] pb-1.5 border-b border-[#1A202C]">
                       <span className="text-white font-bold tracking-wide">
                         SEVEN-STAGE TRUTH MATRIX
                       </span>
-                      <span className="text-[#10B981] font-semibold text-[10px]">
+                      <span className="text-[#10B981] font-semibold text-[9.5px]">
                         Event Recorded != Tool Executed
                       </span>
                     </div>
 
-                    <div className="space-y-1.5 text-[11px]">
-                      <div className="flex items-center justify-between py-1 border-b border-[#141A24]">
+                    <div className="space-y-1 text-[10.5px]">
+                      <div className="flex items-center justify-between py-0.5 border-b border-[#121620]">
                         <span className="text-[#94A3B8]">1. Action Attempted:</span>
-                        <span className="text-white font-mono">{scenario.distinctions.actionAttempted}</span>
+                        <span className="text-white font-mono truncate max-w-[200px]">{scenario.distinctions.actionAttempted}</span>
                       </div>
-                      <div className="flex items-center justify-between py-1 border-b border-[#141A24]">
+                      <div className="flex items-center justify-between py-0.5 border-b border-[#121620]">
                         <span className="text-[#94A3B8]">2. Authorization Decision:</span>
                         <span
                           className={
@@ -1789,7 +1697,7 @@ export function FourPlaneArchitecture({
                           {scenario.distinctions.authorizationDecision}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between py-1 border-b border-[#141A24]">
+                      <div className="flex items-center justify-between py-0.5 border-b border-[#121620]">
                         <span className="text-[#94A3B8]">3. Containment Decision:</span>
                         <span
                           className={
@@ -1805,19 +1713,19 @@ export function FourPlaneArchitecture({
                           {scenario.distinctions.containmentDecision}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between py-1 border-b border-[#141A24]">
+                      <div className="flex items-center justify-between py-0.5 border-b border-[#121620]">
                         <span className="text-[#94A3B8]">4. Tool Dispatch:</span>
                         <span className="text-white">{scenario.distinctions.toolDispatch}</span>
                       </div>
-                      <div className="flex items-center justify-between py-1 border-b border-[#141A24]">
+                      <div className="flex items-center justify-between py-0.5 border-b border-[#121620]">
                         <span className="text-[#94A3B8]">5. Tool Execution:</span>
                         <span className="text-white font-bold">{scenario.distinctions.toolExecution}</span>
                       </div>
-                      <div className="flex items-center justify-between py-1 border-b border-[#141A24]">
+                      <div className="flex items-center justify-between py-0.5 border-b border-[#121620]">
                         <span className="text-[#94A3B8]">6. Receipt Creation:</span>
                         <span className="text-[#FF8A3D] font-bold">{scenario.distinctions.receiptCreation}</span>
                       </div>
-                      <div className="flex items-center justify-between py-1">
+                      <div className="flex items-center justify-between py-0.5">
                         <span className="text-[#94A3B8]">7. Cryptographic Verification:</span>
                         <span className="text-[#10B981] font-bold">
                           {scenario.distinctions.cryptographicVerification}
@@ -1825,14 +1733,14 @@ export function FourPlaneArchitecture({
                       </div>
                     </div>
 
-                    <div className="p-2 rounded bg-[#10141C] border border-[#1A222E] text-[10.5px] text-[#94A3B8] font-sans leading-relaxed">
+                    <div className="p-2 rounded bg-[#0E121A] border border-[#1A202C] text-[10px] text-[#94A3B8] font-sans leading-relaxed">
                       A security receipt is cryptographic proof that an event was observed and evaluated. Receipt creation is NOT proof that the protected tool ran. Blocked attempts generate immutable evidence without executing side effects.
                     </div>
                   </div>
                 )}
 
                 {/* Formal Security Invariant */}
-                <div className="mt-3.5 p-3 rounded-lg bg-[#11151E] border border-[#212938] font-mono text-[11px] text-[#FF8A3D] leading-relaxed">
+                <div className="mt-2.5 p-2.5 rounded-lg bg-[#0E121A] border border-[#1C2330] font-mono text-[10.5px] text-[#FF8A3D] leading-relaxed">
                   {chapter.invariant}
                 </div>
               </div>

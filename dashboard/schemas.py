@@ -363,3 +363,22 @@ class CredentialScanResponse(BaseModel):
     simulation_steps: List[Dict[str, Any]]
 
 
+# ── Document Intelligence Chatbot Schemas ────────────────────────────────────
+
+class DocumentChatRequest(BaseModel):
+    message: str = Field(..., description="User query about the document or security analysis")
+    document_name: str = Field(..., description="Target file name")
+    document_content: Optional[str] = Field(default=None, description="Optional document buffer")
+    scan_result: Optional[Dict[str, Any]] = Field(default=None, description="Prior scan result or receipt")
+    history: Optional[List[Dict[str, str]]] = Field(default=[], description="Chat dialogue history")
+
+
+class DocumentChatResponse(BaseModel):
+    response: str = Field(..., description="Assistant response explaining block status and document details")
+    is_blocked: bool = Field(..., description="Whether the document is blocked by ArmorIQ SDK")
+    verdict: str = Field(..., description="ArmorIQ decision: DENY or ALLOW")
+    threats: List[str] = Field(default=[], description="List of detected secret/credential patterns")
+    receipt_id: Optional[str] = Field(default=None, description="TripLine signed evidence receipt ID")
+
+
+
