@@ -537,8 +537,8 @@ function IsometricPlatform({
       rimGlow = 'url(#glow-green)'
       topFill = 'url(#metal-deck-permitted)'
     } else {
-      rimColor = '#FF6B00'
-      rimGlow = 'url(#glow-orange)'
+      rimColor = '#38BDF8'
+      rimGlow = 'url(#glow-cyan)'
       topFill = 'url(#metal-deck-active)'
     }
   }
@@ -594,7 +594,7 @@ function IsometricPlatform({
           x={cx}
           y={cy - 14}
           textAnchor="middle"
-          fill={isActive ? (isHalted ? '#EF4444' : isHeld ? '#F59E0B' : isPermitted ? '#10B981' : '#FF8A3D') : '#94A3B8'}
+          fill={isActive ? (isHalted ? '#EF4444' : isHeld ? '#F59E0B' : isPermitted ? '#10B981' : '#38BDF8') : '#94A3B8'}
           fontSize="9.5"
           fontFamily="monospace"
           fontWeight="700"
@@ -758,7 +758,7 @@ export function FourPlaneArchitecture({
       return {
         x: 130,
         y: 80,
-        color: '#FF6B00',
+        color: '#38BDF8',
         status: 'PROPOSAL_SYNTHESIZED',
         label: 'Action Proposal Formed',
       }
@@ -778,7 +778,7 @@ export function FourPlaneArchitecture({
       return {
         x: 370,
         y: 80,
-        color: '#FF8A3D',
+        color: '#38BDF8',
         status: 'ARMORIQ_AUTHORIZED',
         label: 'ArmorIQ Intent Authorized',
       }
@@ -885,7 +885,7 @@ export function FourPlaneArchitecture({
     return {
       x: 130,
       y: 80,
-      color: '#FF6B00',
+      color: '#38BDF8',
       status: 'IDLE',
       label: 'Standing By',
     }
@@ -893,16 +893,16 @@ export function FourPlaneArchitecture({
 
   return (
     <div
-      className={`w-full rounded-2xl border border-[#222836] bg-[#0A0C10] text-[#E2E8F0] shadow-2xl relative font-sans ${className}`}
+      className={`w-full rounded-2xl border border-[#1E293B] bg-[#0A0E17] text-[#E2E8F0] shadow-2xl relative font-sans ${className}`}
       id="four-plane-architecture"
     >
       {/* ── TOP CONTROL HEADER ── */}
-      <div className="p-4 sm:p-6 border-b border-[#1A202C] bg-gradient-to-r from-[#0C0F14] via-[#121620] to-[#0C0F14]">
+      <div className="p-4 sm:p-6 border-b border-[#1E293B] bg-gradient-to-r from-[#0B101D] via-[#101827] to-[#0B101D]">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-1.5 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF6B00]/15 border border-[#FF6B00]/40 font-mono text-[10.5px] font-semibold text-[#FF8A3D] uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B00] animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#0284C7]/15 border border-[#0284C7]/40 font-mono text-[10.5px] font-semibold text-[#38BDF8] uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] animate-pulse" />
                 CINEMATIC ARCHITECTURE
               </span>
               <span className="text-[#3E4552]">•</span>
@@ -910,7 +910,7 @@ export function FourPlaneArchitecture({
                 SCROLL-DRIVEN EXECUTION
               </span>
               <span className="text-[#3E4552]">•</span>
-              <span className="px-2 py-0.5 rounded bg-[#161A22] border border-[#283140] font-mono text-[10px] text-[#A0AEC0]">
+              <span className="px-2 py-0.5 rounded bg-[#101726] border border-[#1E293B] font-mono text-[10px] text-[#A0AEC0]">
                 RECORDED SCENARIO
               </span>
             </div>
@@ -946,8 +946,8 @@ export function FourPlaneArchitecture({
                     data-scenario-select={s.id}
                     className={`px-3 py-2 rounded-xl text-left font-mono text-xs transition-all flex items-center justify-between gap-2.5 border ${
                       isSelected
-                        ? 'bg-[#151922] border-[#FF6B00] text-white shadow-md shadow-[#FF6B00]/15 ring-1 ring-[#FF6B00]/50'
-                        : 'bg-[#0E1117] border-[#222836] text-[#94A3B8] hover:text-white hover:bg-[#131720] hover:border-[#354054]'
+                        ? 'bg-[#101B2E] border-[#0284C7] text-white shadow-md shadow-[#0284C7]/20 ring-1 ring-[#0284C7]/50'
+                        : 'bg-[#0A0E17] border-[#1E293B] text-[#94A3B8] hover:text-white hover:bg-[#0F172A] hover:border-[#334155]'
                     }`}
                   >
                     <div className="truncate">
@@ -974,7 +974,7 @@ export function FourPlaneArchitecture({
         {/* ── LEFT COLUMN: PROMINENT 3D SCENE (Sticky & Pinned on Desktop) ── */}
         <div className="lg:col-span-7 xl:col-span-7 lg:sticky lg:top-24 lg:self-start space-y-3">
           {/* Top Stage Navigation & Telemetry HUD */}
-          <div className="p-2 sm:p-2.5 rounded-xl border border-[#1E2430] bg-[#0E1117] flex flex-wrap items-center justify-between gap-2">
+          <div className="p-2 sm:p-2.5 rounded-xl border border-[#1E293B] bg-[#0A0E17] flex flex-wrap items-center justify-between gap-2">
             {/* Stage Quick-Jump Pills (Clean, no truncation) */}
             <div className="flex items-center gap-1">
               {CHAPTERS.map((c, i) => {
@@ -987,9 +987,9 @@ export function FourPlaneArchitecture({
                     onClick={() => jumpToChapter(i)}
                     className={`py-1 px-2.5 rounded-lg text-center font-mono text-[10.5px] font-semibold transition-all ${
                       isActiveChapter
-                        ? 'bg-[#FF6B00] text-black font-bold shadow-sm shadow-[#FF6B00]/40'
+                        ? 'bg-[#0284C7] text-white font-bold shadow-sm shadow-[#0284C7]/40'
                         : isReachedChapter
-                        ? 'text-[#94A3B8] hover:text-white hover:bg-[#161B24]'
+                        ? 'text-[#94A3B8] hover:text-white hover:bg-[#1E293B]'
                         : 'text-[#4B5563] hover:text-[#94A3B8]'
                     }`}
                   >
@@ -1000,14 +1000,14 @@ export function FourPlaneArchitecture({
             </div>
 
             {/* Dynamic Status Beacon */}
-            <div className="font-mono text-[11px] flex items-center gap-2 px-2 py-0.5 rounded bg-[#131720] border border-[#212938]">
+            <div className="font-mono text-[11px] flex items-center gap-2 px-2 py-0.5 rounded bg-[#0F172A] border border-[#1E293B]">
               <span
                 className={`w-2 h-2 rounded-full ${
                   packetState.status.includes('DENIED') || packetState.status.includes('HALTED')
                     ? 'bg-[#EF4444] animate-ping'
                     : packetState.status.includes('HOLD') || packetState.status.includes('HELD')
                     ? 'bg-[#F59E0B] animate-ping'
-                    : 'bg-[#FF6B00]'
+                    : 'bg-[#38BDF8]'
                 }`}
               />
               <span className="text-[#E2E8F0] font-semibold text-[10.5px] truncate max-w-[180px]">
@@ -1017,7 +1017,7 @@ export function FourPlaneArchitecture({
           </div>
 
           {/* ── 3D ISOMETRIC ENGINEERING CANVAS (SVG) ── */}
-          <div className="relative w-full aspect-[760/490] bg-[#090B0F] rounded-xl border border-[#1E2533] p-1 flex items-center justify-center overflow-hidden shadow-2xl">
+          <div className="relative w-full aspect-[760/490] bg-[#060911] rounded-xl border border-[#1E293B] p-1 flex items-center justify-center overflow-hidden shadow-2xl">
             <svg
               viewBox="0 0 760 490"
               className="w-full h-full select-none"
@@ -1034,7 +1034,7 @@ export function FourPlaneArchitecture({
                   <feGaussianBlur stdDeviation="6" />
                 </filter>
 
-                <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
+                <filter id="glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation="4" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
@@ -1073,9 +1073,9 @@ export function FourPlaneArchitecture({
                 </linearGradient>
 
                 <linearGradient id="metal-deck-active" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#2A241D" />
-                  <stop offset="60%" stopColor="#1E1912" />
-                  <stop offset="100%" stopColor="#14100B" />
+                  <stop offset="0%" stopColor="#1E3252" />
+                  <stop offset="60%" stopColor="#122137" />
+                  <stop offset="100%" stopColor="#0A1322" />
                 </linearGradient>
 
                 <linearGradient id="metal-deck-halted" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1106,8 +1106,8 @@ export function FourPlaneArchitecture({
                   <stop offset="100%" stopColor="#0B0E13" />
                 </linearGradient>
 
-                <marker id="marker-orange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                  <polygon points="0 0, 6 3, 0 6" fill="#FF6B00" />
+                <marker id="marker-cyan" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <polygon points="0 0, 6 3, 0 6" fill="#38BDF8" />
                 </marker>
                 <marker id="marker-red" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
                   <polygon points="0 0, 6 3, 0 6" fill="#EF4444" />
@@ -1128,9 +1128,9 @@ export function FourPlaneArchitecture({
 
               {/* Central radial lighting */}
               <radialGradient id="stage-vignette" cx="50%" cy="45%" r="65%">
-                <stop offset="0%" stopColor="#FF6B00" stopOpacity="0.03" />
-                <stop offset="50%" stopColor="#080A0E" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#060709" stopOpacity="0.85" />
+                <stop offset="0%" stopColor="#0284C7" stopOpacity="0.04" />
+                <stop offset="50%" stopColor="#080E1B" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#04060C" stopOpacity="0.85" />
               </radialGradient>
               <rect width="760" height="490" fill="url(#stage-vignette)" pointerEvents="none" />
 
@@ -1141,10 +1141,10 @@ export function FourPlaneArchitecture({
               <path d="M 130 80 L 370 80" stroke="#0B0E14" strokeWidth="5" strokeLinecap="round" />
               <path
                 d="M 130 80 L 370 80"
-                stroke={activeStage >= 1 ? '#FF6B00' : '#222B3A'}
+                stroke={activeStage >= 1 ? '#38BDF8' : '#1E293B'}
                 strokeWidth="2.5"
-                filter={activeStage >= 1 ? 'url(#glow-orange)' : undefined}
-                markerEnd={activeStage >= 1 ? 'url(#marker-orange)' : 'url(#marker-dim)'}
+                filter={activeStage >= 1 ? 'url(#glow-cyan)' : undefined}
+                markerEnd={activeStage >= 1 ? 'url(#marker-cyan)' : 'url(#marker-dim)'}
               />
 
               {/* Trunk 2A (Denial Branch): ArmorIQ Gate -> Rejection Pad */}
@@ -1168,12 +1168,12 @@ export function FourPlaneArchitecture({
                   scenario.stopStageIndex === 1
                     ? '#161C26'
                     : activeStage >= 2
-                    ? '#FF6B00'
-                    : '#222B3A'
+                    ? '#38BDF8'
+                    : '#1E293B'
                 }
                 strokeWidth="2.5"
                 strokeDasharray={scenario.stopStageIndex === 1 ? '4 4' : undefined}
-                filter={scenario.stopStageIndex > 1 && activeStage >= 2 ? 'url(#glow-orange)' : undefined}
+                filter={scenario.stopStageIndex > 1 && activeStage >= 2 ? 'url(#glow-cyan)' : undefined}
               />
 
               {/* Branch 3A: Hub -> Path Jail (Left) */}
@@ -1357,7 +1357,7 @@ export function FourPlaneArchitecture({
                 x="360"
                 y="178"
                 textAnchor="middle"
-                fill={activeStage === 2 ? '#FF8A3D' : '#4B5563'}
+                fill={activeStage === 2 ? '#38BDF8' : '#4B5563'}
                 fontSize="9"
                 fontFamily="monospace"
                 fontWeight="bold"
@@ -1443,7 +1443,15 @@ export function FourPlaneArchitecture({
               <g
                 transform={`translate(${packetState.x}, ${packetState.y})`}
                 className={prefersReducedMotion ? '' : 'transition-all duration-400 ease-out'}
-                filter="url(#glow-orange)"
+                filter={
+                  packetState.status.includes('DENIED') || packetState.status.includes('HALTED')
+                    ? 'url(#glow-red)'
+                    : packetState.status.includes('HOLD') || packetState.status.includes('HELD')
+                    ? 'url(#glow-amber)'
+                    : packetState.status.includes('CLEAN') || packetState.status.includes('VERIFIED')
+                    ? 'url(#glow-green)'
+                    : 'url(#glow-cyan)'
+                }
               >
                 <circle cx="0" cy="0" r="14" fill={packetState.color} opacity="0.25" />
                 <circle cx="0" cy="0" r="8" fill={packetState.color} />
@@ -1457,7 +1465,7 @@ export function FourPlaneArchitecture({
                     width="110"
                     height="16"
                     rx="4"
-                    fill="#0A0D12"
+                    fill="#0A0E17"
                     stroke={packetState.color}
                     strokeWidth="1"
                     opacity="0.95"
@@ -1479,12 +1487,12 @@ export function FourPlaneArchitecture({
           </div>
 
           {/* ── SLEEK, HIGH-DENSITY MISSION CONTROL TELEMETRY DOCK (Replaces bulky card) ── */}
-          <div className="p-3 sm:p-3.5 rounded-xl border border-[#1E2533] bg-[#0C0F14] space-y-2.5 font-mono text-xs shadow-lg">
+          <div className="p-3 sm:p-3.5 rounded-xl border border-[#1E293B] bg-[#0A0E17] space-y-2.5 font-mono text-xs shadow-lg">
             {/* Row 1: Target Tool Call + Scenario Verdict Chip */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 truncate">
                 <span className="text-[#64748B] text-[10px] uppercase font-bold shrink-0">ACTION:</span>
-                <code className="text-[#FF8A3D] text-[11px] font-mono truncate bg-[#07090C] px-2 py-0.5 rounded border border-[#1A202C]">
+                <code className="text-[#38BDF8] text-[11px] font-mono truncate bg-[#070B14] px-2 py-0.5 rounded border border-[#1E293B]">
                   {scenario.action}
                 </code>
               </div>
@@ -1504,14 +1512,14 @@ export function FourPlaneArchitecture({
 
             {/* Row 2: Compact Telemetry Readouts */}
             <div className="grid grid-cols-3 gap-2 text-[10.5px]">
-              <div className="p-1.5 rounded bg-[#10141C] border border-[#1C2330] flex items-center justify-between">
+              <div className="p-1.5 rounded bg-[#0F172A] border border-[#1E293B] flex items-center justify-between">
                 <span className="text-[#64748B] text-[9.5px]">ARMORIQ:</span>
                 <span className={`font-bold ${scenario.armorIQVerdict === 'DENY' ? 'text-red-400' : 'text-emerald-400'}`}>
                   {scenario.armorIQVerdict}
                 </span>
               </div>
 
-              <div className="p-1.5 rounded bg-[#10141C] border border-[#1C2330] flex items-center justify-between">
+              <div className="p-1.5 rounded bg-[#0F172A] border border-[#1E293B] flex items-center justify-between">
                 <span className="text-[#64748B] text-[9.5px]">TRIPLINE:</span>
                 <span
                   className={`font-bold ${
@@ -1528,20 +1536,20 @@ export function FourPlaneArchitecture({
                 </span>
               </div>
 
-              <div className="p-1.5 rounded bg-[#10141C] border border-[#1C2330] flex items-center justify-between truncate">
+              <div className="p-1.5 rounded bg-[#0F172A] border border-[#1E293B] flex items-center justify-between truncate">
                 <span className="text-[#64748B] text-[9.5px] shrink-0">RECEIPT:</span>
-                <span className="text-[#FF8A3D] font-mono truncate text-[10px] ml-1" title={scenario.receiptId}>
+                <span className="text-[#38BDF8] font-mono truncate text-[10px] ml-1" title={scenario.receiptId}>
                   {scenario.receiptId.slice(0, 14)}...
                 </span>
               </div>
             </div>
 
             {/* Row 3: One-Click Verification Button + Status */}
-            <div className="flex items-center gap-2 pt-1 border-t border-[#161B24]">
+            <div className="flex items-center gap-2 pt-1 border-t border-[#1E293B]">
               <button
                 onClick={() => handleVerifyReceipt(scenario.receiptFile)}
                 disabled={verifying}
-                className="py-1.5 px-3 rounded-lg bg-[#FF6B00] hover:bg-[#E55F00] text-black font-sans text-xs font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 shrink-0 shadow-sm"
+                className="py-1.5 px-3 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 shrink-0 shadow-sm shadow-[#0284C7]/20"
               >
                 {verifying ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -1553,7 +1561,7 @@ export function FourPlaneArchitecture({
 
               <button
                 onClick={() => handleCopyHash(scenario.canonicalHash)}
-                className="py-1.5 px-2.5 rounded-lg bg-[#141822] hover:bg-[#1A202C] text-[#94A3B8] hover:text-white border border-[#222A38] text-[10.5px] flex items-center gap-1 shrink-0 transition-colors"
+                className="py-1.5 px-2.5 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-[#94A3B8] hover:text-white border border-[#1E293B] text-[10.5px] flex items-center gap-1 shrink-0 transition-colors"
                 title="Copy RFC 8785 Canonical SHA-256 Hash"
               >
                 {copiedHash ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -1594,14 +1602,14 @@ export function FourPlaneArchitecture({
                 }}
                 className={`scroll-mt-28 transition-all duration-300 p-5 sm:p-6 rounded-2xl border ${
                   isCurrent
-                    ? 'border-[#FF6B00]/70 bg-[#121620] ring-1 ring-[#FF6B00]/40 shadow-xl'
-                    : 'border-[#1A202C] bg-[#0A0D12] opacity-85 hover:opacity-100'
+                    ? 'border-[#0284C7]/60 bg-[#0F172A] ring-1 ring-[#0284C7]/30 shadow-xl shadow-[#0284C7]/5'
+                    : 'border-[#1E293B] bg-[#0A0E17] opacity-85 hover:opacity-100'
                 }`}
               >
                 {/* Chapter Eyebrow & Status */}
-                <div className="flex items-center justify-between pb-2.5 border-b border-[#1A202C] mb-3">
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#1E293B] mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-[#FF8A3D]">
+                    <span className="font-mono text-xs font-bold text-[#38BDF8]">
                       CHAPTER {chapter.chapterNum}
                     </span>
                     <span className="text-[#3E4552]">•</span>
@@ -1615,7 +1623,7 @@ export function FourPlaneArchitecture({
                       !isReached
                         ? 'bg-[#141820] text-[#64748B] border border-[#222A38]'
                         : isCurrent
-                        ? 'bg-[#FF6B00]/20 text-[#FF8A3D] border border-[#FF6B00]/50'
+                        ? 'bg-[#0284C7]/20 text-[#38BDF8] border border-[#0284C7]/40'
                         : 'bg-[#10141C] text-[#94A3B8] border border-[#1E2532]'
                     }`}
                   >
@@ -1634,10 +1642,10 @@ export function FourPlaneArchitecture({
                 </p>
 
                 {/* Scenario-Specific Context for this Chapter */}
-                <div className="mt-3 p-3.5 rounded-xl border border-[#1A202C] bg-[#07090C] space-y-2.5 font-mono text-xs">
+                <div className="mt-3 p-3.5 rounded-xl border border-[#1E293B] bg-[#070B14] space-y-2.5 font-mono text-xs">
                   <div className="flex items-center justify-between text-[10.5px] text-[#64748B]">
                     <span>// Scenario Dynamic Trace</span>
-                    <span className="text-[#FF8A3D] font-bold">{scenario.shortTitle}</span>
+                    <span className="text-[#38BDF8] font-bold">{scenario.shortTitle}</span>
                   </div>
 
                   {/* Stage-specific narrative */}
@@ -1653,7 +1661,7 @@ export function FourPlaneArchitecture({
                   <div className="pt-2 border-t border-[#141820] flex flex-wrap items-center justify-between gap-1.5 text-[10.5px] text-[#64748B]">
                     <div className="flex items-center gap-1.5">
                       <span className="text-[#94A3B8]">Implementation:</span>
-                      <code className="text-[#FF8A3D] bg-[#10141C] px-1.5 py-0.5 rounded border border-[#1E2532]">
+                      <code className="text-[#38BDF8] bg-[#0F172A] px-1.5 py-0.5 rounded border border-[#1E293B]">
                         {chapter.sourceFile}
                       </code>
                     </div>
@@ -1672,8 +1680,8 @@ export function FourPlaneArchitecture({
 
                 {/* Chapter 5 Special: 7-State Verification Matrix */}
                 {idx === 4 && (
-                  <div className="mt-3.5 p-3.5 rounded-xl border border-[#212938] bg-[#0A0D12] space-y-2.5 font-mono text-xs">
-                    <div className="flex items-center justify-between text-[10.5px] pb-1.5 border-b border-[#1A202C]">
+                  <div className="mt-3.5 p-3.5 rounded-xl border border-[#1E293B] bg-[#0A0E17] space-y-2.5 font-mono text-xs">
+                    <div className="flex items-center justify-between text-[10.5px] pb-1.5 border-b border-[#1E293B]">
                       <span className="text-white font-bold tracking-wide">
                         SEVEN-STAGE TRUTH MATRIX
                       </span>
@@ -1723,7 +1731,7 @@ export function FourPlaneArchitecture({
                       </div>
                       <div className="flex items-center justify-between py-0.5 border-b border-[#121620]">
                         <span className="text-[#94A3B8]">6. Receipt Creation:</span>
-                        <span className="text-[#FF8A3D] font-bold">{scenario.distinctions.receiptCreation}</span>
+                        <span className="text-[#38BDF8] font-bold">{scenario.distinctions.receiptCreation}</span>
                       </div>
                       <div className="flex items-center justify-between py-0.5">
                         <span className="text-[#94A3B8]">7. Cryptographic Verification:</span>
@@ -1733,14 +1741,14 @@ export function FourPlaneArchitecture({
                       </div>
                     </div>
 
-                    <div className="p-2 rounded bg-[#0E121A] border border-[#1A202C] text-[10px] text-[#94A3B8] font-sans leading-relaxed">
+                    <div className="p-2 rounded bg-[#0E121A] border border-[#1E293B] text-[10px] text-[#94A3B8] font-sans leading-relaxed">
                       A security receipt is cryptographic proof that an event was observed and evaluated. Receipt creation is NOT proof that the protected tool ran. Blocked attempts generate immutable evidence without executing side effects.
                     </div>
                   </div>
                 )}
 
                 {/* Formal Security Invariant */}
-                <div className="mt-2.5 p-2.5 rounded-lg bg-[#0E121A] border border-[#1C2330] font-mono text-[10.5px] text-[#FF8A3D] leading-relaxed">
+                <div className="mt-2.5 p-2.5 rounded-lg bg-[#0F172A] border border-[#1E293B] font-mono text-[10.5px] text-[#38BDF8] leading-relaxed">
                   {chapter.invariant}
                 </div>
               </div>

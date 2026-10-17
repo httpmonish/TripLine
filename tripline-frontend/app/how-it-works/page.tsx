@@ -955,10 +955,10 @@ if not enforce_result.allowed:
       </section>
 
       {/* ── SCENE 6: INTERACTIVE 4-PLANE ARCHITECTURE ── */}
-      <section className="px-4 sm:px-6 py-20 border-b border-[#1E222A] bg-[#0E1013] text-white">
+      <section className="px-4 sm:px-6 py-20 border-b border-[#1E293B] bg-[#0B0F17] text-white">
         <div className="max-w-[1280px] mx-auto space-y-8">
           <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-widest text-[#F97316] font-bold">
+            <span className="font-mono text-xs uppercase tracking-widest text-[#0284C7] font-bold">
               // SCENE 6 — COMPLETE 4-PLANE TOPOLOGY
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mt-1">

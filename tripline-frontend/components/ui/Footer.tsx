@@ -53,7 +53,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#workflow" className="hover:text-[#20252B] transition-colors">
+                <Link href="/#demo-console" className="hover:text-[#20252B] transition-colors">
                   Execution Demo
                 </Link>
               </li>

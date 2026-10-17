@@ -26,7 +26,7 @@ export const ENTERPRISE_PRIMARY_LINKS = [
   { href: '/#architecture', label: 'Architecture' },
   { href: '/how-it-works', label: 'How It Works' },
   { href: '/agent', label: 'Agent' },
-  { href: '/#workflow', label: 'Execution Demo' },
+  { href: '/#demo-console', label: 'Execution Demo' },
   { href: '/receipts', label: 'Evidence' },
 ]
 
@@ -46,6 +46,17 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [auditMenuOpen, setAuditMenuOpen] = useState(false)
+
+  const handleLaunchDemoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === '/') {
+      e.preventDefault()
+      const target = document.getElementById('demo-console') || document.getElementById('workflow')
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        window.history.pushState(null, '', '#demo-console')
+      }
+    }
+  }
 
   return (
     <>
@@ -91,10 +102,13 @@ export function Header() {
                 pathname === link.href ||
                 (link.href !== '/' && !link.href.startsWith('/#') && pathname.startsWith(link.href))
 
+              const isDemoLink = link.href.includes('demo-console') || link.href.includes('workflow')
+
               return (
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={isDemoLink ? handleLaunchDemoClick : undefined}
                   className={`px-3 py-1.5 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-[#65BCE7] ${
                     isActive
                       ? 'bg-[#EAEDF0] text-[#0284C7] font-semibold border border-[#CDD2D8]/80 shadow-xs'
@@ -147,10 +161,22 @@ export function Header() {
             </div>
           </nav>
 
-          {/* Desktop Right CTAs: Execution Demo */}
+          {/* Desktop Right CTAs: Glossary + Launch Demo */}
           <div className="hidden lg:flex items-center gap-2.5">
+            <button
+              onClick={() => setGlossaryOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#CDD2D8] bg-[#FFFFFF] hover:bg-[#EAEDF0] text-xs font-sans text-[#59636E] hover:text-[#20252B] transition-colors"
+              title="Open Cybersecurity Glossary"
+              data-local="toggle-glossary"
+              data-testid="btn-open-glossary"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-[#65BCE7]" />
+              <span>Glossary</span>
+            </button>
+
             <Link
-              href="/#workflow"
+              href="/#demo-console"
+              onClick={handleLaunchDemoClick}
               data-local="skip-to-workflow"
               data-testid="btn-skip-live"
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
@@ -162,6 +188,14 @@ export function Header() {
 
           {/* Mobile Navigation Toggle */}
           <div className="flex items-center gap-2 lg:hidden">
+            <button
+              onClick={() => setGlossaryOpen(true)}
+              className="p-2 rounded-lg text-[#59636E] hover:text-[#20252B]"
+              aria-label="Open Glossary"
+              data-local="open-glossary-mobile"
+            >
+              <HelpCircle className="w-4 h-4 text-[#65BCE7]" />
+            </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="p-2 rounded-lg text-[#59636E] hover:text-[#20252B] focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
@@ -182,11 +216,16 @@ export function Header() {
                   pathname === link.href ||
                   (link.href !== '/' && !link.href.startsWith('/#') && pathname.startsWith(link.href))
 
+                const isDemoLink = link.href.includes('demo-console') || link.href.includes('workflow')
+
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    onClick={() => setMobileOpen(false)}
+                    onClick={(e) => {
+                      setMobileOpen(false)
+                      if (isDemoLink) handleLaunchDemoClick(e)
+                    }}
                     className={`block px-3 py-2 rounded-md text-sm transition-colors ${
                       isActive
                         ? 'bg-[#EAEDF0] text-[#0284C7] font-semibold border border-[#CDD2D8]/80'
@@ -220,8 +259,11 @@ export function Header() {
 
             <div className="pt-2 border-t border-[#CDD2D8]">
               <Link
-                href="/#workflow"
-                onClick={() => setMobileOpen(false)}
+                href="/#demo-console"
+                onClick={(e) => {
+                  setMobileOpen(false)
+                  handleLaunchDemoClick(e)
+                }}
                 className="w-full py-2.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-semibold flex items-center justify-center gap-2"
               >
                 <ShieldCheck className="w-4 h-4 text-white" />

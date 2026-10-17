@@ -307,7 +307,7 @@ export default function AgentPage() {
   const [reaRunning, setReaRunning] = useState(false)
   const [reaMessage, setReaMessage] = useState<string | null>(null)
 
-  const terminalEndRef = useRef<HTMLDivElement>(null)
+  const terminalLogsRef = useRef<HTMLDivElement>(null)
 
   // Current active scenario config
   const activeScenarioConfig = EXAMPLE_SCENARIOS.find((s) => s.id === selectedScenario) || EXAMPLE_SCENARIOS[0]
@@ -405,10 +405,10 @@ export default function AgentPage() {
     return () => unsubscribe()
   }, [selectedRun?.run_id, streamMode])
 
-  // ── 3. Auto-scroll terminal ──
+  // ── 3. Auto-scroll terminal container internally ──
   useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    if ((jobLines.length > 0 || runEvents.length > 0) && terminalLogsRef.current) {
+      terminalLogsRef.current.scrollTop = terminalLogsRef.current.scrollHeight
     }
   }, [jobLines, runEvents])
 
@@ -1641,7 +1641,7 @@ export default function AgentPage() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#0D0F18] border border-[#1C1F33] text-xs font-mono h-96 overflow-y-auto space-y-1.5 shadow-inner">
+              <div ref={terminalLogsRef} className="p-4 rounded-xl bg-[#0D0F18] border border-[#1C1F33] text-xs font-mono h-96 overflow-y-auto space-y-1.5 shadow-inner">
                 {streamMode === 'job' ? (
                   jobLines.length === 0 ? (
                     <div className="text-[#747F8D] py-12 text-center">
@@ -1667,7 +1667,6 @@ export default function AgentPage() {
                     </div>
                   ))
                 )}
-                <div ref={terminalEndRef} />
               </div>
             </div>
           )}

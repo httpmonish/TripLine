@@ -131,7 +131,7 @@ export default function ConsolePage() {
   const [runningJobKind, setRunningJobKind] = useState<string | null>(null)
   const [jobError, setJobError] = useState<string | null>(null)
 
-  const terminalEndRef = useRef<HTMLDivElement>(null)
+  const terminalLogsRef = useRef<HTMLDivElement>(null)
 
   // 1. Fetch job list from backend
   const loadJobs = async () => {
@@ -161,10 +161,10 @@ export default function ConsolePage() {
       .catch((err) => console.error('Failed to get job detail:', err))
   }, [selectedJobId])
 
-  // 3. Scroll terminal
+  // 3. Scroll terminal container internally
   useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    if (liveStreamLines.length > 0 && terminalLogsRef.current) {
+      terminalLogsRef.current.scrollTop = terminalLogsRef.current.scrollHeight
     }
   }, [liveStreamLines])
 
@@ -379,7 +379,7 @@ export default function ConsolePage() {
               </div>
             </div>
 
-            <div className="h-[460px] overflow-y-auto font-mono text-xs bg-[#181B20] text-[#CDD2D8] p-4 rounded-xl border border-[#2D3136] space-y-1.5 shadow-inner">
+            <div ref={terminalLogsRef} className="h-[460px] overflow-y-auto font-mono text-xs bg-[#181B20] text-[#CDD2D8] p-4 rounded-xl border border-[#2D3136] space-y-1.5 shadow-inner">
               {liveStreamLines.length === 0 ? (
                 <div className="py-24 text-center text-[#747F8D] space-y-2">
                   <p>No output recorded for this job.</p>
@@ -392,7 +392,6 @@ export default function ConsolePage() {
                   </div>
                 ))
               )}
-              <div ref={terminalEndRef} />
             </div>
 
             {activeJobDetail && (

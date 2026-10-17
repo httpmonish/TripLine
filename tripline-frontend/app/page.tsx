@@ -147,7 +147,7 @@ export default function EnterpriseHomePage() {
   const [copiedTerminal, setCopiedTerminal] = useState<boolean>(false)
 
   const unsubscribeRef = useRef<(() => void) | null>(null)
-  const terminalEndRef = useRef<HTMLDivElement | null>(null)
+  const terminalLogsRef = useRef<HTMLDivElement | null>(null)
 
   // Fetch initial readiness and receipts on mount
   useEffect(() => {
@@ -174,12 +174,42 @@ export default function EnterpriseHomePage() {
     }
   }, [])
 
-  // Auto-scroll terminal
+  // Auto-scroll terminal log container internally without scrolling the page window
   useEffect(() => {
-    if (terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    if (jobLines.length > 0 && terminalLogsRef.current) {
+      terminalLogsRef.current.scrollTop = terminalLogsRef.current.scrollHeight
     }
   }, [jobLines])
+
+  // Ensure fresh page opens at the top unless navigated with a specific hash
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
+  }, [])
+
+  // Handle smooth scroll to demo console on mount and hash changes
+  useEffect(() => {
+    const handleHash = () => {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash
+        if (hash === '#demo-console' || hash === '#workflow') {
+          const target = document.getElementById('demo-console') || document.getElementById('workflow')
+          if (target) {
+            setTimeout(() => {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }, 100)
+          }
+        }
+      }
+    }
+
+    handleHash()
+    window.addEventListener('hashchange', handleHash)
+    return () => {
+      window.removeEventListener('hashchange', handleHash)
+    }
+  }, [])
 
   const loadReceipts = async () => {
     try {
@@ -567,7 +597,15 @@ export default function EnterpriseHomePage() {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <a
-                href="#workflow"
+                href="#demo-console"
+                onClick={(e) => {
+                  e.preventDefault()
+                  const target = document.getElementById('demo-console') || document.getElementById('workflow')
+                  if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    window.history.pushState(null, '', '#demo-console')
+                  }
+                }}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
                 data-testid="btn-take-tour"
               >
@@ -646,10 +684,10 @@ export default function EnterpriseHomePage() {
       </section>
 
       {/* ── 3. FOUR-PLANE DIMENSIONAL ARCHITECTURE ── */}
-      <section id="architecture" className="scroll-mt-20 px-4 sm:px-6 py-20 border-b border-[#1E222A] bg-[#0E1013] text-white">
+      <section id="architecture" className="scroll-mt-20 px-4 sm:px-6 py-20 border-b border-[#1E293B] bg-[#0B0F17] text-white">
         <div className="max-w-[1280px] mx-auto space-y-8">
           <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-widest text-[#F97316] font-semibold">
+            <span className="font-mono text-xs uppercase tracking-widest text-[#0284C7] font-semibold">
               // 01 4-PLANE SECURITY ARCHITECTURE
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mt-1">
@@ -708,37 +746,64 @@ export default function EnterpriseHomePage() {
           </div>
 
           {/* Demonstration Mode Switcher: Preconfigured Workflows vs Upload Sensitive File */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setDemoTab('workflows')}
-              data-local="tab-workflows"
-              className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                demoTab === 'workflows'
-                  ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'
-                  : 'bg-[#FFFFFF] text-[#59636E] border border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#EAEDF0]'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>Governed Workflow Suites (4 Tasks)</span>
-            </button>
+          <div id="demo-console" className="scroll-mt-20 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDemoTab('workflows')}
+                data-local="tab-workflows"
+                className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  demoTab === 'workflows'
+                    ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'
+                    : 'bg-[#FFFFFF] text-[#59636E] border border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#EAEDF0]'
+                }`}
+              >
+                <Layers className="w-4 h-4" />
+                <span>Governed Workflow Suites (4 Tasks)</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setDemoTab('credential_scan')}
-              data-local="tab-credential-scan"
-              className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                demoTab === 'credential_scan'
-                  ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'
-                  : 'bg-[#FFFFFF] text-[#59636E] border border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#EAEDF0]'
-              }`}
-            >
-              <Upload className="w-4 h-4 text-amber-500" />
-              <span>Upload Sensitive File (ArmorIQ SDK Credential Guard)</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 font-sans">
-                NEW
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setDemoTab('credential_scan')}
+                data-local="tab-credential-scan"
+                className={`px-4 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  demoTab === 'credential_scan'
+                    ? 'bg-[#0284C7] text-white shadow-sm ring-2 ring-[#0284C7]/20'
+                    : 'bg-[#FFFFFF] text-[#59636E] border border-[#CDD2D8] hover:text-[#20252B] hover:bg-[#EAEDF0]'
+                }`}
+              >
+                <Upload className="w-4 h-4 text-amber-500" />
+                <span>Upload Sensitive File (ArmorIQ SDK Credential Guard)</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300 font-sans">
+                  NEW
+                </span>
+              </button>
+            </div>
+
+            {/* In-view Execute Selected Task action button */}
+            {demoTab === 'workflows' && (
+              <div className="flex items-center gap-2">
+                {jobStatus === 'running' ? (
+                  <button
+                    onClick={handleCancelJob}
+                    className="px-4 py-2.5 rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs font-sans flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+                    data-local="cancel-active-job-console"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-red-700 text-red-700" />
+                    <span>Stop Execution</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleLaunchTask()}
+                    className="px-5 py-2.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold text-xs font-sans flex items-center gap-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7] cursor-pointer"
+                    data-local="launch-demo-task-console"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-white text-white" />
+                    <span className="text-white font-bold">Execute Selected Task</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {demoTab === 'credential_scan' ? (
@@ -901,6 +966,7 @@ export default function EnterpriseHomePage() {
 
               {/* Log Content & Stream */}
               <div
+                ref={terminalLogsRef}
                 className="flex-1 p-4 overflow-y-auto font-mono text-xs text-[#C9D1D9] space-y-1.5 bg-[#0D1117] selection:bg-[#58A6FF]/30"
                 aria-live="polite"
               >
@@ -1017,7 +1083,6 @@ export default function EnterpriseHomePage() {
                     <span>[process terminated with exit code 1]</span>
                   </div>
                 )}
-                <div ref={terminalEndRef} />
               </div>
 
               {/* Interactive Linux Shell Prompt Bar */}
