@@ -31,7 +31,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react'
-import { HeroSecurityVisual } from '../components/diagrams/HeroSecurityVisual'
+import { ArmorIQUsageDashboard } from '../components/dashboard/ArmorIQUsageDashboard'
 import { SecurityArchitectureFlow } from '../components/diagrams/SecurityArchitectureFlow'
 import { FourPlaneArchitecture } from '../components/diagrams/FourPlaneArchitecture'
 import { CredentialScanDemo } from '../components/demo/CredentialScanDemo'
@@ -564,9 +564,9 @@ export default function EnterpriseHomePage() {
         id="product"
         className="relative px-4 sm:px-6 pt-14 pb-16 md:pt-20 md:pb-24 border-b border-[#CDD2D8] bg-[#FFFFFF] overflow-hidden"
       >
-        <div className="max-w-[1280px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="max-w-[1280px] mx-auto grid grid-cols-1 xl:grid-cols-12 gap-10 items-center">
           {/* Left Column: Product Explanation */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="xl:col-span-5 space-y-6">
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
               <span className="px-2.5 py-1 rounded bg-[#65BCE7]/10 border border-[#65BCE7]/30 text-[#20252B] font-semibold flex items-center gap-1.5">
@@ -584,13 +584,13 @@ export default function EnterpriseHomePage() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#20252B] leading-[1.1]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#20252B] leading-[1.1]">
               AI agents. Governed actions.<br />
               <span className="text-[#20252B]">Verifiable proof.</span>
             </h1>
 
             {/* Supporting Statement */}
-            <p className="text-base sm:text-lg text-[#59636E] max-w-2xl leading-relaxed">
+            <p className="text-base text-[#59636E] max-w-xl leading-relaxed">
               TripLine adds independent containment and verifiable execution evidence to governed AI workflows. ArmorIQ authorizes an action; TripLine’s implemented controls protect the applicable execution boundary and preserve evidence of what happened.
             </p>
 
@@ -639,9 +639,9 @@ export default function EnterpriseHomePage() {
             </div>
           </div>
 
-          {/* Right Column: Hero Visual */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end">
-            <HeroSecurityVisual />
+          {/* Right Column: Authentic ArmorIQ API Usage Dashboard */}
+          <div className="xl:col-span-7 flex justify-center xl:justify-end w-full">
+            <ArmorIQUsageDashboard />
           </div>
         </div>
       </section>

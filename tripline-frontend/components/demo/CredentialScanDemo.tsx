@@ -27,6 +27,9 @@ import {
   Send,
   Trash2,
   HelpCircle,
+  Activity,
+  CornerDownLeft,
+  Shield,
 } from 'lucide-react'
 import { api, CredentialScanResult, DocumentChatResult, ReceiptVerifyResponse, ReceiptTamperResponse } from '../../lib/api'
 
@@ -136,8 +139,15 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
   ])
   const [chatInput, setChatInput] = useState<string>('')
   const [isChatting, setIsChatting] = useState<boolean>(false)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const handleCopyMessage = (id: string, text: string) => {
+    navigator.clipboard?.writeText(text)
+    setCopiedMessageId(id)
+    setTimeout(() => setCopiedMessageId(null), 1800)
+  }
 
   useEffect(() => {
     if (chatScrollRef.current) {
