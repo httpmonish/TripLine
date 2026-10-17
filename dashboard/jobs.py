@@ -31,6 +31,13 @@ JOB_KINDS: Dict[str, Dict[str, Any]] = {
         "side_effects": "Generates scenario run log and receipts under results/phase3/scenario/",
         "cmd": [sys.executable, "scripts/run_phase3_scenario.py", "--rung", "0"],
     },
+    "security_proof": {
+        "live": False,
+        "cost_estimate": "$0.00 (deterministic sandbox)",
+        "timeout": 60,
+        "side_effects": "Executes supported deterministic sandbox scenario to demonstrate ArmorIQ denial, Path Jail, or Egress hold",
+        "cmd": [sys.executable, "scripts/run_phase3_scenario.py", "--rung", "0"],
+    },
     "armoriq_proof": {
         "live": True,
         "cost_estimate": "$0.00 (platform quota)",
@@ -79,6 +86,13 @@ JOB_KINDS: Dict[str, Dict[str, Any]] = {
         "timeout": 120,
         "side_effects": "Executes 5-issue queue through Agent v2 pipeline, generating receipts under results/phase11/",
         "cmd": [sys.executable, "scripts/run_agent_v2.py", "--mode", "B"],
+    },
+    "agent_task": {
+        "live": True,
+        "cost_estimate": "$0.00 (Mode B local execution + session check)",
+        "timeout": 180,
+        "side_effects": "Executes dynamic agent task with real LLM and ArmorIQ governance",
+        "cmd": [sys.executable, "scripts/run_dynamic_task.py"],
     },
     "rea_investigate": {
         "live": False,
@@ -203,9 +217,18 @@ class JobManager:
         record.save()
 
         cmd = list(job_info["cmd"])
-        # Support param customization if applicable
-        if record.kind == "scenario" and "rung" in record.params:
-            cmd = [sys.executable, "scripts/run_phase3_scenario.py", "--rung", str(record.params["rung"])]
+        if record.kind in ("scenario", "security_proof"):
+            rung = str(record.params.get("rung", 0))
+            cmd = [sys.executable, "scripts/run_phase3_scenario.py", "--rung", rung]
+            if "scenario" in record.params:
+                cmd.extend(["--scenario", str(record.params["scenario"])])
+        elif record.kind == "agent_task":
+            task_text = record.params.get("task", "Inspect README.md and summarize project goals")
+            mode = record.params.get("mode", "B")
+            model = record.params.get("model")
+            cmd = [sys.executable, "scripts/run_dynamic_task.py", "--task", str(task_text), "--mode", str(mode)]
+            if model:
+                cmd.extend(["--model", str(model)])
         elif record.kind == "rea_investigate":
             target = record.params.get("target", "synthetic-electron-app")
             tool = record.params.get("tool", "analyze_electron_app")
@@ -230,7 +253,17 @@ class JobManager:
             "PYTHONUNBUFFERED": "1",
             "HOME": str(pathlib.Path.home()),
         }
-        for k in ["ARMORIQ_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "TRIPLINE_ENABLE_LIVE"]:
+        for k in [
+            "ARMORIQ_API_KEY",
+            "ARMORIQ_MODE",
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "GEMINI_API_KEY",
+            "GOOGLE_API_KEY",
+            "TRIPLINE_ENABLE_LIVE",
+            "TRIPLINE_MODEL",
+            "GEMINI_MODEL",
+        ]:
             if k in os.environ:
                 env[k] = os.environ[k]
 

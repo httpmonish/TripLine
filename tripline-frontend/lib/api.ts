@@ -321,6 +321,10 @@ export interface AgentRunManifest {
   merkle_root?: string
   receipts?: any[]
   issues?: any[]
+  outcomes?: any[]
+  task?: string
+  final_answer?: string
+  observations?: any[]
   events?: any[]
   started_at?: string
   finished_at?: string
@@ -353,6 +357,16 @@ export interface PlatformStatus {
   registered_agent_name: string
   environment: string
   live_enabled: boolean
+  armoriq_status?: string
+  llm_provider?: string
+  llm_model?: string
+  llm_configured?: boolean
+  backend_available?: boolean
+  active_job_id?: string | null
+  run_count?: number
+  latest_run_id?: string | null
+  actionable_explanation?: string
+  readiness?: Record<string, any>
 }
 
 export interface GlossaryTerm {
@@ -484,7 +498,24 @@ export const api = {
   getAgentCrew: () => request<AgentCrewManifest>('/api/agent/crew'),
   getAgentRuns: () => request<AgentRunManifest[]>('/api/agent/runs'),
   getAgentRun: (runId: string) => request<AgentRunManifest>(`/api/agent/runs/${encodeURIComponent(runId)}`),
-  startAgentRun: () => request<JobRecord>('/api/agent/runs', { method: 'POST' }),
+  startAgentRun: (payload?: { task?: string; mode?: string; model?: string }) =>
+    request<JobRecord>('/api/agent/runs', {
+      method: 'POST',
+      body: payload ? JSON.stringify(payload) : undefined,
+    }),
+  startAgentTask: (task: string, mode: string = 'B', model?: string) =>
+    request<JobRecord>('/api/agent/task', {
+      method: 'POST',
+      body: JSON.stringify({ task, mode, model }),
+    }),
+  startSecurityProof: (scenario: string = 'all') =>
+    request<JobRecord>('/api/jobs', {
+      method: 'POST',
+      body: JSON.stringify({
+        kind: 'security_proof',
+        params: { scenario, rung: 0 },
+      }),
+    }),
   stopAgentRun: (runId: string) =>
     request<{ status: string; run_id: string; kill_switch: string }>(
       `/api/agent/runs/${encodeURIComponent(runId)}/stop`,

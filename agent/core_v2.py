@@ -121,13 +121,47 @@ class TriplineAgentV2:
         task_goal = "Autonomous triage and resolution of inbound repository issues"
         trusted_plan = planner.build_triage_plan(task_goal=task_goal)
 
-        # 3. Plan capture & token
-        plan_meta, intent_token = capture_and_mint(
-            client=self.armoriq_client,
-            trusted_plan=trusted_plan,
-            prompt="Autonomous issue triage loop",
-            llm=self.model_name,
-        )
+        # 3. Establish ArmorIQ session and start plan to capture intent token canonically
+        armoriq_session = None
+        plan_meta = None
+        intent_token = None
+
+        if self.armoriq_client:
+            try:
+                from armoriq_sdk import SessionOptions, ToolCall
+                session = self.armoriq_client.start_session(
+                    SessionOptions(
+                        mode="sdk",
+                        default_mcp_name="tripline-mcp",
+                        validity_seconds=300,
+                    )
+                )
+                tool_calls = [
+                    ToolCall(name=step["action"], args=step.get("params", {}))
+                    for step in trusted_plan.steps
+                ]
+                intent_token = session.start_plan(tool_calls, goal=trusted_plan.goal)
+                armoriq_session = session
+                from agent.plan_token import compute_merkle_root, CapturedPlanMeta
+                plan_meta = CapturedPlanMeta(
+                    plan_hash=trusted_plan.plan_hash,
+                    merkle_root=compute_merkle_root(trusted_plan.steps),
+                    total_steps=trusted_plan.step_count,
+                    plan_id=getattr(intent_token, "plan_id", None) or getattr(intent_token, "token_id", None),
+                    has_live_token=True,
+                    status="TOKEN_ISSUED_BY_IAP",
+                )
+            except Exception as e:
+                log.warning("Could not establish ArmorIQ session for run_queue: %s", e)
+                armoriq_session = None
+
+        if plan_meta is None:
+            plan_meta, intent_token = capture_and_mint(
+                client=None,
+                trusted_plan=trusted_plan,
+                prompt="Autonomous issue triage loop",
+                llm=self.model_name,
+            )
 
         bus.emit(
             event_type="plan_captured",
@@ -172,27 +206,6 @@ class TriplineAgentV2:
         # 5. Initialize Multi-Layer Tool Executor with genuine session wiring
         receipts_dir = run_dir / "receipts"
         receipts_dir.mkdir(parents=True, exist_ok=True)
-
-        armoriq_session = None
-        if self.armoriq_client:
-            try:
-                from armoriq_sdk import SessionOptions, ToolCall
-                session = self.armoriq_client.start_session(
-                    SessionOptions(
-                        mode="sdk",
-                        default_mcp_name="tripline-mcp",
-                        validity_seconds=300,
-                    )
-                )
-                tool_calls = [
-                    ToolCall(name=step["action"], args=step.get("params", {}))
-                    for step in trusted_plan.steps
-                ]
-                session.start_plan(tool_calls, goal=trusted_plan.goal)
-                armoriq_session = session
-            except Exception as e:
-                log.warning("Could not establish ArmorIQ session: %s", e)
-                armoriq_session = None
 
         executor = ToolExecutor(
             sandbox_dir=sandbox_dir,
@@ -491,29 +504,11 @@ class TriplineAgentV2:
         planner = TrustedPlanner(mcp_name="tripline-mcp")
         trusted_plan = planner.build_triage_plan(task_goal=task)
 
-        # 2. Plan capture & token
-        plan_meta, intent_token = capture_and_mint(
-            client=self.armoriq_client,
-            trusted_plan=trusted_plan,
-            prompt=task,
-            llm=self.model_name,
-        )
-
-        bus.emit(
-            event_type="plan_captured",
-            run_id=run_id,
-            layer="ARMORIQ",
-            source="ArmorIQClient",
-            data={
-                "task": task,
-                "plan_hash": plan_meta.plan_hash,
-                "merkle_root": plan_meta.merkle_root,
-                "status": plan_meta.status,
-            },
-        )
-
-        # 3. Initialize genuine ArmorIQ session if client available
+        # 2. Establish ArmorIQ session and start plan to capture intent token canonically
         armoriq_session = None
+        plan_meta = None
+        intent_token = None
+
         if self.armoriq_client:
             try:
                 from armoriq_sdk import SessionOptions, ToolCall
@@ -528,11 +523,41 @@ class TriplineAgentV2:
                     ToolCall(name=step["action"], args=step.get("params", {}))
                     for step in trusted_plan.steps
                 ]
-                session.start_plan(tool_calls, goal=trusted_plan.goal)
+                intent_token = session.start_plan(tool_calls, goal=trusted_plan.goal)
                 armoriq_session = session
+                from agent.plan_token import compute_merkle_root, CapturedPlanMeta
+                plan_meta = CapturedPlanMeta(
+                    plan_hash=trusted_plan.plan_hash,
+                    merkle_root=compute_merkle_root(trusted_plan.steps),
+                    total_steps=trusted_plan.step_count,
+                    plan_id=getattr(intent_token, "plan_id", None) or getattr(intent_token, "token_id", None),
+                    has_live_token=True,
+                    status="TOKEN_ISSUED_BY_IAP",
+                )
             except Exception as e:
                 log.warning("Could not establish ArmorIQ session for task: %s", e)
                 armoriq_session = None
+
+        if plan_meta is None:
+            plan_meta, intent_token = capture_and_mint(
+                client=None,
+                trusted_plan=trusted_plan,
+                prompt=task,
+                llm=self.model_name,
+            )
+
+        bus.emit(
+            event_type="plan_captured",
+            run_id=run_id,
+            layer="ARMORIQ",
+            source="ArmorIQClient",
+            data={
+                "task": task,
+                "plan_hash": plan_meta.plan_hash,
+                "merkle_root": plan_meta.merkle_root,
+                "status": plan_meta.status,
+            },
+        )
 
         receipts_dir = run_dir / "receipts"
         receipts_dir.mkdir(parents=True, exist_ok=True)
@@ -580,19 +605,56 @@ class TriplineAgentV2:
                 except Exception:
                     pass
 
-        # 6. Save Run Manifest
+        # 6. Save Run Manifest (reconciled schema matching run_queue)
+        receipts_list: List[str] = []
+        outcomes: List[Dict[str, Any]] = []
+        for s in response.steps:
+            if s.execution:
+                outcomes.append({
+                    "issue_id": issue_id or f"step-{s.step_index}",
+                    "title": f"Step {s.step_index}: {s.proposed_action.tool_name}",
+                    "tool": s.proposed_action.tool_name,
+                    "outcome": s.execution.outcome,
+                    "receipt_id": s.execution.receipt_id,
+                })
+                if s.execution.receipt_id and s.execution.receipt_id not in receipts_list:
+                    receipts_list.append(s.execution.receipt_id)
+
+        counts = {
+            "total_issues": len(outcomes) or 1,
+            "executed": response.executed_count,
+            "denied_by_armoriq": sum(1 for o in outcomes if o["outcome"] == "DENIED-ARMORIQ"),
+            "denied_by_jail": sum(1 for o in outcomes if o["outcome"] == "DENIED-JAIL"),
+            "held_by_egress": sum(1 for o in outcomes if o["outcome"] == "HELD-EGRESS"),
+            "denied_by_tripline": sum(1 for o in outcomes if o["outcome"] == "DENIED-TRIPLINE"),
+            "authorization_unavailable": sum(1 for o in outcomes if o["outcome"] == "AUTHORIZATION-UNAVAILABLE"),
+            "receipts_generated": len(receipts_list),
+        }
+
         manifest = {
             "run_id": run_id,
             "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "task": task,
             "model": self.model_name,
             "mode": self.mode,
+            "mode_wording": (
+                "Platform Proxy Mode"
+                if self.mode == "A"
+                else "ArmorIQ authorizes each action before Tripline's MCP executes it; calls are not proxied through the platform"
+            ),
             "user_email": self.identity.user_email,
+            "agent_id": self.identity.agent_id,
+            "plan_hash": plan_meta.plan_hash,
+            "merkle_root": plan_meta.merkle_root,
+            "crew": self.crew.to_crew_manifest(),
             "status": response.status,
             "final_response": response.final_response,
             "total_tool_calls": response.total_tool_calls,
             "executed_count": response.executed_count,
             "denied_count": response.denied_count,
+            "counts": counts,
+            "outcomes": outcomes,
+            "receipts": receipts_list,
             "steps": [s.to_dict() for s in response.steps],
         }
         manifest_path = run_dir / "run_manifest.json"

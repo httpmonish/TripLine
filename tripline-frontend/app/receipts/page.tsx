@@ -154,8 +154,8 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <div className="w-full flex flex-col">
-      <Section tone="dark">
+    <div className="w-full flex flex-col bg-[#F4F5F6]">
+      <Section tone="light">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <SectionHeader
             eyebrow="// FORENSIC REGISTRY"

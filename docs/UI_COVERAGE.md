@@ -2,8 +2,8 @@
 
 **Phase 9 Automated Verification Matrix**  
 **FastAPI Routes**: 61  
-**UI Elements Bound**: 50  
-**Allowed Exceptions**: 24  
+**UI Elements Bound**: 51  
+**Allowed Exceptions**: 25  
 
 ## 1. Route ↔ Page ↔ Element ↔ Test ID Mapping
 
@@ -12,7 +12,7 @@
 | GET | `/api/agent/crew` | `anchor-agent-crew` | `page.tsx` |
 | GET | `/api/agent/runs` | `anchor-agent-runs` | `page.tsx` |
 | POST | `/api/agent/runs` | `anchor-agent-runs-post` | `page.tsx` |
-| POST | `/api/agent/runs` | `unlabeled` | `page.tsx` |
+| POST | `/api/agent/runs` | `btn-start-agent-run` | `page.tsx` |
 | POST | `/api/agent/runs/{id}/stop` | `unlabeled` | `page.tsx` |
 | GET | `/api/agent/runs/{run_id}` | `anchor-agent-run-id` | `page.tsx` |
 | GET | `/api/agent/runs/{run_id}` | `unlabeled` | `page.tsx` |
@@ -47,6 +47,7 @@
 | GET | `/api/receipts/{identifier}` | `anchor-receipt-id` | `page.tsx` |
 | POST | `/api/receipts/{identifier}/tamper-check` | `btn-tamper-receipt` | `page.tsx` |
 | POST | `/api/receipts/{identifier}/verify` | `btn-verify-receipt` | `page.tsx` |
+| POST | `/api/receipts/{id}/verify` | `unlabeled` | `page.tsx` |
 | GET | `/api/runs` | `btn-refresh-runs` | `page.tsx` |
 | GET | `/api/runs/latest` | `btn-load-latest-run` | `page.tsx` |
 | GET | `/api/runs/{run_id}` | `btn-list-docs` | `page.tsx` |
@@ -66,6 +67,7 @@
 |---|---|
 | `/` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/about` | Documented protocol / background route in `docs/coverage_exceptions.md` |
+| `/api/agent/task` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/boundary` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/canary-hits` | Documented protocol / background route in `docs/coverage_exceptions.md` |
 | `/api/csrf-token` | Documented protocol / background route in `docs/coverage_exceptions.md` |

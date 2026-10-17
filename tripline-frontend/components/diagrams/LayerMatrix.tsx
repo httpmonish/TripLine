@@ -112,7 +112,7 @@ export function LayerMatrix({ previewMode = false, className = '' }: LayerMatrix
               onClick={() => setSelectedAttackId(atk.id)}
               className={`px-3 py-1.5 rounded-lg font-mono text-xs transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#65BCE7] ${
                 selectedAttackId === atk.id
-                  ? 'bg-[#20252B] text-white font-semibold shadow-sm'
+                  ? 'bg-[#0284C7] text-white font-semibold shadow-sm'
                   : 'bg-[#EAEDF0] text-[#59636E] hover:text-[#20252B] hover:bg-[#CDD2D8]/50 border border-[#CDD2D8]'
               }`}
               type="button"

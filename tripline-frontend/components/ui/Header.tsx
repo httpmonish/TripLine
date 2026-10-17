@@ -14,6 +14,7 @@ export const NAV_LINKS = [
   { href: '/receipts', label: '// RECEIPTS', short: 'Receipts', testid: 'nav-receipts' },
   { href: '/console', label: '// CONSOLE', short: 'Console', testid: 'nav-console' },
   { href: '/jail-burst', label: '// JAIL BURST', short: 'Jail Burst', testid: 'nav-burst' },
+  { href: '/how-it-works', label: '// HOW IT WORKS', short: 'How It Works', testid: 'nav-how-it-works' },
   { href: '/witness', label: '// WITNESS', short: 'Witness', testid: 'nav-witness' },
   { href: '/measured', label: '// MEASURED', short: 'Measured', testid: 'nav-measured' },
   { href: '/claims', label: '// CLAIMS', short: 'Claims', testid: 'nav-claims' },
@@ -23,7 +24,7 @@ export const NAV_LINKS = [
 export const ENTERPRISE_PRIMARY_LINKS = [
   { href: '/#product', label: 'Product' },
   { href: '/#architecture', label: 'Architecture' },
-  { href: '/#how-it-works', label: 'How It Works' },
+  { href: '/how-it-works', label: 'How It Works' },
   { href: '/#workflow', label: 'Execution Demo' },
   { href: '/receipts', label: 'Evidence' },
 ]
@@ -84,15 +85,26 @@ export function Header() {
             className="hidden lg:flex items-center gap-1 font-sans text-sm font-medium"
             aria-label="Main Navigation"
           >
-            {ENTERPRISE_PRIMARY_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="px-3 py-1.5 rounded-md text-[#59636E] hover:text-[#20252B] hover:bg-[#EAEDF0] transition-colors focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {ENTERPRISE_PRIMARY_LINKS.map((link) => {
+              const isActive =
+                pathname === link.href ||
+                (link.href !== '/' && !link.href.startsWith('/#') && pathname.startsWith(link.href))
+
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`px-3 py-1.5 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-[#65BCE7] ${
+                    isActive
+                      ? 'bg-[#EAEDF0] text-[#0284C7] font-semibold border border-[#CDD2D8]/80 shadow-xs'
+                      : 'text-[#59636E] hover:text-[#20252B] hover:bg-[#EAEDF0]'
+                  }`}
+                  data-local={`nav-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
 
             {/* Audit Suite Dropdown */}
             <div
@@ -151,10 +163,10 @@ export function Header() {
               href="/#workflow"
               data-local="skip-to-workflow"
               data-testid="btn-skip-live"
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-[#20252B] hover:bg-[#2D3136] text-white text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#65BCE7]" />
-              <span>Launch Demo</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-white" />
+              <span className="text-white">Launch Demo</span>
             </Link>
           </div>
 
@@ -217,10 +229,10 @@ export function Header() {
               <Link
                 href="/#workflow"
                 onClick={() => setMobileOpen(false)}
-                className="w-full py-2.5 rounded-lg bg-[#20252B] hover:bg-[#2D3136] text-white text-xs font-semibold flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-semibold flex items-center justify-center gap-2"
               >
-                <ShieldCheck className="w-4 h-4 text-[#65BCE7]" />
-                <span>Launch Demo</span>
+                <ShieldCheck className="w-4 h-4 text-white" />
+                <span className="text-white">Launch Demo</span>
               </Link>
             </div>
           </div>

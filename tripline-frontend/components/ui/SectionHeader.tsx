@@ -37,16 +37,16 @@ export function SectionHeader({
   }
 
   const eyebrowColor = isDark
-    ? 'text-[var(--text-muted-on-dark)]'
-    : 'text-[var(--text-muted-on-light)]'
+    ? 'text-[#9EA8B6]'
+    : 'text-[#59636E]'
 
   const titleColor = isDark
-    ? 'text-[var(--text-on-dark)]'
-    : 'text-[var(--text-on-light)]'
+    ? 'text-[#F4F5F6]'
+    : 'text-[#20252B]'
 
   const descColor = isDark
-    ? 'text-[var(--text-muted-on-dark)]'
-    : 'text-[var(--text-muted-on-light)]'
+    ? 'text-[#9EA8B6]'
+    : 'text-[#59636E]'
 
   return (
     <div className={`mb-12 ${className}`}>

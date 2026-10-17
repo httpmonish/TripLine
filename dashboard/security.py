@@ -30,7 +30,33 @@ def verify_csrf_and_origin(request) -> None:
     # Origin check (same-origin only)
     origin = request.headers.get("origin") or ""
     referer = request.headers.get("referer") or ""
-    allowed_hosts = ["127.0.0.1:8080", "localhost:8080", "127.0.0.1:3000", "localhost:3000"]
+    request_host = request.headers.get("host") or ""
+    
+    # Base allowed loopback hosts and ports
+    allowed_hosts = {
+        "127.0.0.1:8000", "localhost:8000",
+        "127.0.0.1:8080", "localhost:8080",
+        "127.0.0.1:3000", "localhost:3000",
+        "127.0.0.1:5173", "localhost:5173",
+        "0.0.0.0:8000", "0.0.0.0:8080",
+    }
+    
+    # Automatically allow whatever host the server is actually listening/serving on
+    if request_host:
+        allowed_hosts.add(request_host)
+        if request_host.startswith("localhost:"):
+            allowed_hosts.add(request_host.replace("localhost:", "127.0.0.1:"))
+        elif request_host.startswith("127.0.0.1:"):
+            allowed_hosts.add(request_host.replace("127.0.0.1:", "localhost:"))
+
+    # Add environment configured hosts
+    import os
+    env_hosts = os.environ.get("TRIPLINE_ALLOWED_HOSTS", "")
+    if env_hosts:
+        for h in env_hosts.split(","):
+            h = h.strip()
+            if h:
+                allowed_hosts.add(h)
     
     if origin:
         host = origin.split("://")[-1]

@@ -1398,6 +1398,16 @@ async def stream_agent_run_events(run_id: str):
 async def start_agent_run(request: Request):
     verify_csrf_and_origin(request)
 
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    task = body.get("task")
+    mode = body.get("mode", "B")
+    model = body.get("model")
+
     # Check TRIPLINE_ENABLE_LIVE gate per Rule R11 / Rule R4
     live_enabled = os.environ.get("TRIPLINE_ENABLE_LIVE", "").strip().lower() in ("1", "true", "yes")
     if not live_enabled:
@@ -1406,14 +1416,37 @@ async def start_agent_run(request: Request):
             detail="Live agent execution is disabled. Set TRIPLINE_ENABLE_LIVE=1 in environment to enable live LLM runs."
         )
 
+    has_armoriq = bool(os.environ.get("ARMORIQ_API_KEY"))
+    if not has_armoriq:
+        raise HTTPException(
+            status_code=403,
+            detail="Missing ArmorIQ credentials. Export ARMORIQ_API_KEY to authorize agent actions."
+        )
+
     # Check single active job concurrency
     active = [j for j in job_manager.jobs.values() if j.status in ("pending", "running")]
     if active:
         raise HTTPException(status_code=409, detail="A job is already running. Please wait for it.")
 
-    # Launch agent_v2 job
-    rec = await job_manager.start_job("agent_v2", live=True, confirm_token="CONFIRMED_LIVE_EXECUTION")
+    # Launch agent_task (dynamic) or agent_v2 (queue)
+    if task and str(task).strip():
+        rec = await job_manager.start_job(
+            "agent_task",
+            params={"task": str(task).strip(), "mode": mode, "model": model},
+            confirm_token="CONFIRMED_LIVE_EXECUTION",
+        )
+    else:
+        rec = await job_manager.start_job(
+            "agent_v2",
+            params={"mode": mode},
+            confirm_token="CONFIRMED_LIVE_EXECUTION",
+        )
     return sanitize_payload(rec.to_dict())
+
+
+@api_router.post("/agent/task")
+async def start_agent_task(request: Request):
+    return await start_agent_run(request)
 
 
 @api_router.post("/agent/runs/{run_id}/stop")
@@ -1434,7 +1467,50 @@ async def get_platform_status():
 
     live_enabled = os.environ.get("TRIPLINE_ENABLE_LIVE", "").strip().lower() in ("1", "true", "yes")
 
+    from agent.real_llm import detect_provider
+    provider, _, default_model = detect_provider()
+    llm_configured = provider != "none"
+
+    armoriq_status = "CONFIGURED" if key_present else "ABSENT"
+    p11_dir = REPO_ROOT / "results" / "phase11"
+    run_count = 0
+    latest_run_id = None
+    if p11_dir.exists():
+        manifests = sorted(p11_dir.glob("*/run_manifest.json"), reverse=True)
+        run_count = len(manifests)
+        if manifests:
+            armoriq_status = "EXERCISED"
+            try:
+                latest_data = json.loads(manifests[0].read_text(encoding="utf-8"))
+                latest_run_id = latest_data.get("run_id")
+            except Exception:
+                pass
+
+    active_jobs = [j for j in job_manager.jobs.values() if j.status in ("pending", "running")]
+    active_job_id = active_jobs[0].job_id if active_jobs else None
+
+    # Exact actionable explanation for missing dependencies
+    actionable_explanation = ""
+    if not live_enabled:
+        actionable_explanation = (
+            "Live dynamic agent execution is currently gated (TRIPLINE_ENABLE_LIVE is 0 or unset). "
+            "You can execute deterministic security proofs or inspect recorded demonstrations with zero API keys required."
+        )
+    elif not key_present:
+        actionable_explanation = (
+            "ArmorIQ API credentials are not configured. "
+            "Export ARMORIQ_API_KEY to enable live authorization. Deterministic sandbox proofs and recorded replays remain available."
+        )
+    elif not llm_configured:
+        actionable_explanation = (
+            "No LLM provider credentials configured (Gemini/Anthropic/OpenAI). "
+            "Export an API key to enable live reasoning. Deterministic sandbox proofs remain available."
+        )
+    else:
+        actionable_explanation = "All services and credentials are ready for live governed agent execution."
+
     return sanitize_payload({
+        "backend_available": True,
         "key_present": key_present,
         "sdk_version": "0.6.10",
         "integration_mode": "MODE_B",
@@ -1442,6 +1518,26 @@ async def get_platform_status():
         "registered_agent_name": "tripline-maintainer",
         "environment": "sandbox",
         "live_enabled": live_enabled,
+        "armoriq_status": armoriq_status,
+        "llm_provider": provider,
+        "llm_model": default_model,
+        "llm_configured": llm_configured,
+        "active_job_id": active_job_id,
+        "run_count": run_count,
+        "latest_run_id": latest_run_id,
+        "actionable_explanation": actionable_explanation,
+        "readiness": {
+            "backend": {"ready": True, "label": "Online (FastAPI /api)"},
+            "llm": {"ready": llm_configured, "provider": provider, "model": default_model},
+            "armoriq_credentials": {"ready": key_present, "status": armoriq_status},
+            "live_execution": {"ready": live_enabled and key_present and llm_configured, "enabled": live_enabled},
+            "authorization_service": {
+                "status": armoriq_status,
+                "label": "Exercised (past runs)" if armoriq_status == "EXERCISED" else ("Configured" if armoriq_status == "CONFIGURED" else "Absent"),
+            },
+            "sandbox_proofs": {"ready": True, "label": "Deterministic Offline Sandbox Ready"},
+            "recorded_replays": {"ready": run_count > 0, "count": run_count},
+        },
     })
 
 

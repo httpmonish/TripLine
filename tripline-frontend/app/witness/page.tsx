@@ -95,7 +95,7 @@ export default function WitnessPage() {
   }
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col bg-[#F4F5F6]">
       <Section tone="light">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <SectionHeader
@@ -138,7 +138,7 @@ export default function WitnessPage() {
               <button
                 onClick={handleVerifyWitness}
                 disabled={verifying}
-                className="px-4 py-2 rounded-lg bg-[#20252B] hover:bg-[#2D3136] text-white font-semibold text-xs font-mono transition-colors shadow-sm disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold text-xs font-mono transition-colors shadow-sm disabled:opacity-50"
                 data-testid="btn-verify-witness"
                 data-api="POST /api/witness/verify"
               >

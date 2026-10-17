@@ -11,7 +11,9 @@ export const metadata: Metadata = {
     'A governed-agent proof layer built for the ArmorIQ Flow State 2026 hackathon. A denial is a verdict, not a record. Tripline turns every denied or held agent action into a signed receipt anyone can verify offline.',
   icons: {
     icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
       { url: '/tripline-favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico' },
       { url: '/tripline-favicon-32.png', sizes: '32x32', type: 'image/png' },
     ],
     apple: [

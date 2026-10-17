@@ -25,6 +25,10 @@ import {
   RefreshCw,
   Search,
   Eye,
+  FileText,
+  Copy,
+  Check,
+  Trash2,
 } from 'lucide-react'
 import { HeroSecurityVisual } from '../components/diagrams/HeroSecurityVisual'
 import { SecurityArchitectureFlow } from '../components/diagrams/SecurityArchitectureFlow'
@@ -111,6 +115,13 @@ const DEMO_TASKS: DemoTaskConfig[] = [
   },
 ]
 
+const TASK_COMMANDS: Record<DemoTaskOption, string> = {
+  scenario: 'python3 scripts/run_phase3_scenario.py --rung 0',
+  jail_burst: 'python3 scripts/jail_burst.py --probes 8',
+  rea_investigate: 'python3 scripts/rea_investigator.py --mode offline --target synthetic-electron-app',
+  agent_v2: 'python3 scripts/run_agent_v2.py --mode B --governed',
+}
+
 export default function EnterpriseHomePage() {
   // State
   const [selectedTask, setSelectedTask] = useState<DemoTaskOption>('scenario')
@@ -129,6 +140,8 @@ export default function EnterpriseHomePage() {
   const [tamperResult, setTamperResult] = useState<ReceiptTamperResponse | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false)
   const [dismissHelp, setDismissHelp] = useState<boolean>(false)
+  const [terminalInput, setTerminalInput] = useState<string>('')
+  const [copiedTerminal, setCopiedTerminal] = useState<boolean>(false)
 
   const unsubscribeRef = useRef<(() => void) | null>(null)
   const terminalEndRef = useRef<HTMLDivElement | null>(null)
@@ -225,19 +238,35 @@ export default function EnterpriseHomePage() {
   }
 
   // Execute genuine backend job
-  const handleLaunchTask = async () => {
-    const config = DEMO_TASKS.find((t) => t.id === selectedTask)
+  const handleLaunchTask = async (overrideTask?: DemoTaskOption) => {
+    if (jobStatus === 'running') return
+    const taskToRun = overrideTask || selectedTask
+    if (overrideTask && overrideTask !== selectedTask) {
+      setSelectedTask(overrideTask)
+    }
+
+    const config = DEMO_TASKS.find((t) => t.id === taskToRun)
     if (!config) return
 
     if (config.requiresCredentials && !platformStatus?.live_enabled) {
-      setJobError(
+      const err =
         'Live execution requires TRIPLINE_ENABLE_LIVE=1 and an active ARMORIQ_API_KEY in the backend environment. Switch to "Multi-Layer Security Proof" or "Jail Burst Fuzzer" to run safe, deterministic tests.'
-      )
+      setJobError(err)
+      setJobLines((prev) => [
+        ...prev,
+        `tripline@gov-kernel:~/runtime$ ${TASK_COMMANDS[taskToRun]}`,
+        `[KERNEL] Spawning sandboxed process under TripLine containment...`,
+        `[ERROR] ${err}`,
+      ])
       return
     }
 
     setJobError(null)
-    setJobLines([])
+    setJobLines([
+      `tripline@gov-kernel:~/runtime$ ${TASK_COMMANDS[taskToRun]}`,
+      `[KERNEL] Spawning sandboxed process under TripLine containment...`,
+      `[ISOLATION] L0:ArmorIQ (active) | L1:PathJail (fstat) | L2:Canary (scan) | L3:HMAC-Witness (sha256)`,
+    ])
     setJobStatus('running')
     setCurrentStageIndex(1)
     setLastEventSummary(null)
@@ -278,13 +307,79 @@ export default function EnterpriseHomePage() {
         },
         (err) => {
           setJobStatus('failed')
-          setJobError(`Stream connection closed: ${err?.message || 'Network error'}`)
+          const errMsg = `Stream connection closed: ${err?.message || 'Network error'}`
+          setJobError(errMsg)
+          setJobLines((prev) => [...prev, `[ERROR] ${errMsg}`])
         }
       )
     } catch (err: any) {
       setJobStatus('failed')
-      setJobError(err.message || 'Failed to start job on backend')
+      const msg = err.message || 'Failed to start job on backend'
+      setJobError(msg)
+      setJobLines((prev) => [...prev, `[ERROR] ${msg}`])
     }
+  }
+
+  // Shell command input handler
+  const handleTerminalSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const cmd = terminalInput.trim()
+    setTerminalInput('')
+    if (!cmd) return
+
+    const lower = cmd.toLowerCase()
+    if (lower === 'clear') {
+      setJobLines([])
+      setJobError(null)
+      return
+    }
+
+    if (lower === 'help' || lower === '?') {
+      setJobLines((prev) => [
+        ...prev,
+        `tripline@gov-kernel:~/runtime$ ${cmd}`,
+        `TripLine Governed Agent OS - Available Commands:`,
+        `  ./scenario        - Run 3-attack triage security proof (P1/P2/P3)`,
+        `  ./jail            - Run Jail Burst 8-probe path traversal fuzzer`,
+        `  ./rea             - Run REA synthetic Electron reverse engineering`,
+        `  ./agent           - Run Live Governed Agent v2 loop (Mode B)`,
+        `  clear             - Clear terminal buffer`,
+        `  help              - Show this command reference`,
+      ])
+      return
+    }
+
+    if (lower.includes('scenario') || lower === './run' || lower === 'run') {
+      handleLaunchTask('scenario')
+    } else if (lower.includes('jail')) {
+      handleLaunchTask('jail_burst')
+    } else if (lower.includes('rea')) {
+      handleLaunchTask('rea_investigate')
+    } else if (lower.includes('agent')) {
+      handleLaunchTask('agent_v2')
+    } else {
+      setJobLines((prev) => [
+        ...prev,
+        `tripline@gov-kernel:~/runtime$ ${cmd}`,
+        `bash: command not found: ${cmd}. Type 'help' for available governed agent tasks.`,
+      ])
+    }
+  }
+
+  // Terminal copy handler
+  const handleCopyTerminal = () => {
+    const text = jobLines.join('\n')
+    if (navigator?.clipboard && text) {
+      navigator.clipboard.writeText(text)
+      setCopiedTerminal(true)
+      setTimeout(() => setCopiedTerminal(false), 2000)
+    }
+  }
+
+  // Terminal clear handler
+  const handleClearTerminal = () => {
+    setJobLines([])
+    setJobError(null)
   }
 
   // Cancel running job
@@ -469,29 +564,29 @@ export default function EnterpriseHomePage() {
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <a
-                href="#architecture"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#20252B] hover:bg-[#2D3136] text-white font-semibold text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
-                data-testid="btn-watch-live-hero"
+                href="#workflow"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
+                data-testid="btn-take-tour"
               >
-                <Layers className="w-4 h-4 text-[#65BCE7]" />
-                <span>Explore 4-Plane Architecture</span>
+                <ShieldCheck className="w-4 h-4 text-white" />
+                <span className="text-white">Launch Governed Demo</span>
               </a>
 
               <a
-                href="#workflow"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-[#CDD2D8] bg-[#FFFFFF] hover:bg-[#EAEDF0] text-[#20252B] font-medium text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
-                data-testid="btn-take-tour"
+                href="#architecture"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-[#CDD2D8] bg-[#FFFFFF] hover:bg-[#EAEDF0] text-[#0F172A] font-semibold text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
+                data-testid="btn-watch-live-hero"
               >
-                <span>Launch Governed Demo</span>
-                <ChevronRight className="w-4 h-4" />
+                <Layers className="w-4 h-4 text-[#0284C7]" />
+                <span className="text-[#0F172A]">Explore 4-Plane Architecture</span>
               </a>
 
               <Link
                 href="/receipts"
-                className="inline-flex items-center gap-1.5 px-4 py-3 rounded-lg text-[#59636E] hover:text-[#20252B] font-mono text-xs transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-3 rounded-lg border border-[#CDD2D8] bg-[#FFFFFF] hover:bg-[#EAEDF0] text-[#59636E] hover:text-[#0F172A] font-medium text-xs shadow-sm transition-colors"
               >
-                <span>Inspect Receipts</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <FileText className="w-3.5 h-3.5 text-[#0284C7]" />
+                <span className="text-[#0F172A]">Inspect Receipts</span>
               </Link>
             </div>
 
@@ -548,16 +643,16 @@ export default function EnterpriseHomePage() {
       </section>
 
       {/* ── 3. FOUR-PLANE DIMENSIONAL ARCHITECTURE ── */}
-      <section id="architecture" className="px-4 sm:px-6 py-20 border-b border-[#CDD2D8] bg-[#FFFFFF]">
+      <section id="architecture" className="scroll-mt-20 px-4 sm:px-6 py-20 border-b border-[#1E222A] bg-[#0E1013] text-white">
         <div className="max-w-[1280px] mx-auto space-y-8">
           <div className="max-w-3xl">
-            <span className="font-mono text-xs uppercase tracking-widest text-[#20252B] font-semibold">
+            <span className="font-mono text-xs uppercase tracking-widest text-[#F97316] font-semibold">
               // 01 4-PLANE SECURITY ARCHITECTURE
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#20252B] tracking-tight mt-1">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight mt-1">
               Layered Dimensional Execution Boundaries
             </h2>
-            <p className="text-sm sm:text-base text-[#59636E] mt-2 leading-relaxed">
+            <p className="text-sm sm:text-base text-[#94A3B8] mt-2 leading-relaxed">
               Every operation passes through pre-ingestion plan synthesis, upstream ArmorIQ intent authorization, in-MCP containment, and cryptographic receipt sealing. Click any plane or node to inspect its runtime invariant and authentic disk artifact.
             </p>
           </div>
@@ -568,14 +663,15 @@ export default function EnterpriseHomePage() {
       </section>
 
       {/* ── 4. EXECUTION DEMO & GENUINE WORKFLOW ── */}
-      <section id="workflow" className="px-4 sm:px-6 py-20 border-b border-[#CDD2D8] bg-[#F4F5F6]">
-        <div className="max-w-[1280px] mx-auto space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <section id="workflow" className="scroll-mt-20 px-4 sm:px-6 py-20 border-b border-[#CDD2D8] bg-[#F4F5F6]">
+        <div className="max-w-[1280px] mx-auto space-y-8">
+          {/* Header & Controls */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#CDD2D8]">
             <div className="max-w-2xl">
               <span className="font-mono text-xs uppercase tracking-widest text-[#20252B] font-semibold">
                 // 02 LIVE EXECUTION & DEMO CONTROLS
               </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#20252B] tracking-tight mt-1">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#20252B] tracking-tight mt-1">
                 Execute & Verify Governed Workflows
               </h2>
               <p className="text-sm text-[#59636E] mt-2 leading-relaxed">
@@ -588,28 +684,28 @@ export default function EnterpriseHomePage() {
               {jobStatus === 'running' ? (
                 <button
                   onClick={handleCancelJob}
-                  className="px-4 py-2.5 rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs font-sans flex items-center gap-2 transition-all shadow-sm"
+                  className="px-5 py-3 rounded-lg border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs sm:text-sm font-sans flex items-center gap-2 transition-all shadow-sm"
                   data-local="cancel-active-job"
                 >
-                  <Square className="w-3.5 h-3.5" />
+                  <Square className="w-4 h-4 fill-red-700 text-red-700" />
                   <span>Stop Execution</span>
                 </button>
               ) : (
                 <button
-                  onClick={handleLaunchTask}
-                  className="px-5 py-2.5 rounded-lg bg-[#20252B] hover:bg-[#2D3136] text-white font-semibold text-xs font-sans flex items-center gap-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
+                  onClick={() => handleLaunchTask()}
+                  className="px-6 py-3 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold text-xs sm:text-sm font-sans flex items-center gap-2 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#65BCE7]"
                   data-local="launch-demo-task"
                   data-testid="btn-run-agent-live"
                 >
-                  <Play className="w-3.5 h-3.5 text-[#65BCE7]" />
-                  <span>Execute Selected Task</span>
+                  <Play className="w-4 h-4 fill-white text-white" />
+                  <span className="text-white font-bold">Execute Selected Task</span>
                 </button>
               )}
             </div>
           </div>
 
           {/* Task Selector Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {DEMO_TASKS.map((task) => {
               const isSelected = selectedTask === task.id
               return (
@@ -621,16 +717,16 @@ export default function EnterpriseHomePage() {
                       setJobError(null)
                     }
                   }}
-                  className={`p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                  className={`p-5 sm:p-6 rounded-xl border transition-all cursor-pointer flex flex-col justify-between h-full min-h-[240px] ${
                     isSelected
-                      ? 'border-[#65BCE7] bg-[#FFFFFF] shadow-sm ring-1 ring-[#65BCE7]'
+                      ? 'border-[#0284C7] bg-[#FFFFFF] shadow-md ring-2 ring-[#0284C7]/30'
                       : 'border-[#CDD2D8] bg-[#FFFFFF] hover:border-[#747F8D] hover:bg-[#EAEDF0]'
                   }`}
                   role="button"
                   tabIndex={0}
                   data-local={`select-task-${task.id}`}
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-3 flex-1 flex flex-col">
                     <div className="flex items-center justify-between">
                       <span
                         className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
@@ -643,22 +739,26 @@ export default function EnterpriseHomePage() {
                       >
                         {task.badge}
                       </span>
-                      {isSelected && (
-                        <CheckCircle2 className="w-4 h-4 text-[#65BCE7]" />
+                      {isSelected ? (
+                        <CheckCircle2 className="w-4 h-4 text-[#0284C7]" />
+                      ) : (
+                        <span className="w-2 h-2 rounded-full bg-[#CDD2D8]" />
                       )}
                     </div>
 
-                    <h3 className="text-sm font-bold text-[#20252B] leading-snug">
+                    <h3 className="text-sm font-bold text-[#20252B] leading-snug min-h-[40px]">
                       {task.title}
                     </h3>
 
-                    <p className="text-xs text-[#59636E] leading-relaxed line-clamp-3">
+                    <p className="text-xs text-[#59636E] leading-relaxed flex-1">
                       {task.description}
                     </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#CDD2D8] text-[10px] font-mono text-[#747F8D]">
-                    <span className="block truncate">{task.expectedOutcome}</span>
+                  <div className="mt-4 pt-3.5 border-t border-[#CDD2D8] min-h-[38px] flex items-center">
+                    <div className="text-[11px] font-mono text-[#59636E] leading-snug break-words">
+                      {task.expectedOutcome}
+                    </div>
                   </div>
                 </div>
               )
@@ -677,82 +777,300 @@ export default function EnterpriseHomePage() {
           )}
 
           {/* Live Execution Timeline & Real Terminal Output */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Terminal Box */}
-            <div className="lg:col-span-8 bg-[#181B20] border border-[#2D3136] rounded-xl shadow-lg overflow-hidden flex flex-col h-[480px]">
-              <div className="px-5 py-3.5 bg-[#24272B] border-b border-[#2D3136] flex items-center justify-between text-xs font-sans">
-                <div className="flex items-center gap-2 text-white font-semibold">
-                  <Terminal className="w-3.5 h-3.5 text-[#65BCE7]" />
-                  <span>Execution Event Stream</span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Terminal Box: Authentic Linux Terminal Window */}
+            <div className="lg:col-span-8 bg-[#0D1117] border border-[#30363D] rounded-xl shadow-2xl overflow-hidden flex flex-col h-[540px]">
+              {/* Window Titlebar */}
+              <div className="px-4 py-2.5 bg-[#161B22] border-b border-[#30363D] flex items-center justify-between text-xs select-none">
+                {/* 3 Linux/Mac window dots + tab */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-[#FF5F56] border border-[#E0443E]/60 inline-block shadow-sm" />
+                    <span className="w-3 h-3 rounded-full bg-[#FFBD2E] border border-[#DEA123]/60 inline-block shadow-sm" />
+                    <span className="w-3 h-3 rounded-full bg-[#27C93F] border border-[#1AAB29]/60 inline-block shadow-sm" />
+                  </div>
+                  <div className="flex items-center gap-2 pl-2 border-l border-[#30363D] text-[#C9D1D9] font-mono text-[11px] font-medium">
+                    <Terminal className="w-3.5 h-3.5 text-[#58A6FF]" />
+                    <span>bash: tripline@containment-node: ~/runtime (tty1)</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 font-mono text-[11px] text-[#9EA8B6]">
-                  {jobStatus === 'running' && (
-                    <span className="flex items-center gap-1.5 text-[#65BCE7]">
-                      <RefreshCw className="w-3 h-3 animate-spin" /> RUNNING
-                    </span>
-                  )}
-                  {jobStatus === 'completed' && (
-                    <span className="text-[#10B981] font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> COMPLETED
-                    </span>
-                  )}
-                  {jobStatus === 'cancelled' && (
-                    <span className="text-[#F59E0B] font-semibold">CANCELLED</span>
-                  )}
-                  {jobStatus === 'failed' && (
-                    <span className="text-[#EF4444] font-semibold">FAILED</span>
-                  )}
-                  {activeJob && <span>ID: {activeJob.job_id}</span>}
+
+                {/* Right controls: Clear, Copy, Status Badge */}
+                <div className="flex items-center gap-2.5 font-mono text-[11px]">
+                  <button
+                    onClick={handleClearTerminal}
+                    className="text-[#8B949E] hover:text-[#C9D1D9] transition-colors p-1 rounded hover:bg-[#21262D] flex items-center gap-1 text-[11px] cursor-pointer"
+                    title="Clear terminal buffer"
+                    data-local="clear-terminal-header"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span className="hidden sm:inline">Clear</span>
+                  </button>
+                  <button
+                    onClick={handleCopyTerminal}
+                    className="text-[#8B949E] hover:text-[#C9D1D9] transition-colors p-1 rounded hover:bg-[#21262D] flex items-center gap-1 text-[11px] cursor-pointer"
+                    title="Copy terminal logs"
+                    data-local="copy-terminal-logs"
+                  >
+                    {copiedTerminal ? (
+                      <>
+                        <Check className="w-3 h-3 text-[#3FB950]" />
+                        <span className="text-[#3FB950] font-semibold">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span className="hidden sm:inline">Copy</span>
+                      </>
+                    )}
+                  </button>
+
+                  <div className="pl-1">
+                    {jobStatus === 'running' && (
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 font-mono text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                        LIVE SSE
+                      </span>
+                    )}
+                    {jobStatus === 'completed' && (
+                      <span className="px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-[#3FB950] font-mono text-[10px] font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-[#3FB950]" />
+                        EXIT 0
+                      </span>
+                    )}
+                    {jobStatus === 'cancelled' && (
+                      <span className="px-2 py-0.5 rounded bg-amber-950/60 border border-amber-500/30 text-[#D29922] font-mono text-[10px] font-bold">
+                        SIGINT
+                      </span>
+                    )}
+                    {jobStatus === 'failed' && (
+                      <span className="px-2 py-0.5 rounded bg-red-950/80 border border-red-500/40 text-[#F85149] font-mono text-[10px] font-bold flex items-center gap-1">
+                        <XCircle className="w-3 h-3 text-[#F85149]" />
+                        EXIT 1
+                      </span>
+                    )}
+                    {jobStatus === 'idle' && (
+                      <span className="px-2 py-0.5 rounded bg-[#21262D] border border-[#30363D] text-[#8B949E] font-mono text-[10px] font-semibold">
+                        READY
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Log Content */}
+              {/* Log Content & Stream */}
               <div
-                className="flex-1 p-4 overflow-y-auto font-mono text-xs text-[#CDD2D8] space-y-1 bg-[#181B20] selection:bg-[#65BCE7]/20"
+                className="flex-1 p-4 overflow-y-auto font-mono text-xs text-[#C9D1D9] space-y-1.5 bg-[#0D1117] selection:bg-[#58A6FF]/30"
                 aria-live="polite"
               >
+                {/* Linux Boot MOTD */}
+                <div className="font-mono text-xs space-y-2 pb-3 mb-2 border-b border-[#30363D]/60 text-[#8B949E]">
+                  <div className="text-[#58A6FF] font-semibold text-[11px] flex items-center justify-between">
+                    <span>Linux tripline-sec-kernel 6.8.0-gov x86_64 GNU/Linux</span>
+                    <span className="text-[#484F58]">tty1 (pts/0)</span>
+                  </div>
+                  <div className="text-[11px] leading-relaxed text-[#8B949E] border-l-2 border-[#58A6FF]/40 pl-3 py-1 bg-[#161B22]/60 rounded-r">
+                    <div>TripLine Multi-Boundary Containment Runtime [ArmorIQ SDK 0.1.20 | REA v2.4]</div>
+                    <div className="text-[#7EE787] font-medium mt-0.5">
+                      ✓ Boundaries Armed: L0 Intent-Policy, L1 Path-Jail, L2 Canary-Egress, L3 HMAC-Witness
+                    </div>
+                  </div>
+                </div>
+
                 {jobLines.length === 0 ? (
-                  <div className="py-24 text-center text-[#747F8D] space-y-2 font-sans">
-                    <p className="text-sm font-medium text-[#F4F5F6]">Ready to execute.</p>
-                    <p className="text-xs max-w-md mx-auto">
-                      Click <strong>&quot;Execute Selected Task&quot;</strong> above to launch the real backend process. Real events will stream here live.
-                    </p>
+                  <div className="font-mono text-xs space-y-3 py-2 text-[#8B949E]">
+                    <div className="flex items-center gap-1.5 font-bold text-xs pt-1">
+                      <span className="text-[#3FB950]">tripline@gov-kernel</span>
+                      <span className="text-[#8B949E]">:</span>
+                      <span className="text-[#58A6FF]">~/runtime</span>
+                      <span className="text-white">$</span>
+                      <span className="text-white font-mono ml-1 font-semibold">{TASK_COMMANDS[selectedTask]}</span>
+                      <span className="inline-block w-2 h-3.5 bg-[#3FB950] animate-pulse ml-1" />
+                    </div>
+
+                    <div className="pt-4 p-3 rounded bg-[#161B22]/80 border border-[#30363D] text-[11px] text-[#C9D1D9] space-y-1">
+                      <div className="font-semibold text-white">Execution Instructions:</div>
+                      <p className="text-[#8B949E]">
+                        • Click <strong className="text-white">&quot;Execute Selected Task&quot;</strong> above, press <strong>Enter</strong> in the shell prompt below, or click any quick command.
+                      </p>
+                      <p className="text-[#8B949E]">
+                        • Real events from the sandboxed Python subprocess will stream here live over Server-Sent Events (SSE).
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   jobLines.map((line, i) => {
-                    const isError = line.includes('[ERROR]') || line.includes('DENIED')
-                    const isSuccess = line.includes('EXECUTED') || line.includes('verified: VERIFIED') || line.includes('ALLOW')
-                    const isHold = line.includes('HELD') || line.includes('HOLD')
+                    const isPrompt = line.startsWith('tripline@gov-kernel:')
+                    const isKernel = line.startsWith('[KERNEL]') || line.startsWith('[ISOLATION]')
+                    const isError = line.includes('[ERROR]') || line.includes('DENIED') || line.includes('DENY') || line.includes('FAILED')
+                    const isSuccess = line.includes('EXECUTED') || line.includes('verified: VERIFIED') || line.includes('ALLOW') || line.includes('PASSED')
+                    const isHold = line.includes('HELD') || line.includes('HOLD') || line.includes('[WARN]')
+
+                    if (isPrompt) {
+                      const parts = line.split('$ ')
+                      const cmd = parts.slice(1).join('$ ')
+                      return (
+                        <div key={i} className="flex items-center gap-1.5 font-bold pt-2 pb-1 text-xs">
+                          <span className="text-[#3FB950]">tripline@gov-kernel</span>
+                          <span className="text-[#8B949E]">:</span>
+                          <span className="text-[#58A6FF]">~/runtime</span>
+                          <span className="text-white">$</span>
+                          <span className="text-white font-mono ml-1">{cmd}</span>
+                        </div>
+                      )
+                    }
+
+                    if (isKernel) {
+                      return (
+                        <div key={i} className="text-[#8B949E] text-[11px] font-mono leading-relaxed">
+                          <span className="text-[#58A6FF] font-semibold">{line.slice(0, line.indexOf(']') + 1)}</span>
+                          <span>{line.slice(line.indexOf(']') + 1)}</span>
+                        </div>
+                      )
+                    }
 
                     return (
                       <div
                         key={i}
-                        className={`leading-relaxed ${
-                          isError ? 'text-[#EF4444]' : isSuccess ? 'text-[#10B981]' : isHold ? 'text-[#F59E0B]' : 'text-[#CDD2D8]'
-                        }`}
+                        className="flex items-start gap-2.5 font-mono text-[11px] leading-relaxed group hover:bg-[#161B22] px-1 -mx-1 rounded transition-colors"
                       >
-                        {line}
+                        <span className="text-[#484F58] select-none text-[10px] w-6 shrink-0 text-right pt-0.5">
+                          {i + 1}
+                        </span>
+                        <div
+                          className={`flex-1 break-all ${
+                            isError
+                              ? 'text-[#F85149] font-medium'
+                              : isSuccess
+                              ? 'text-[#3FB950] font-medium'
+                              : isHold
+                              ? 'text-[#D29922] font-medium'
+                              : 'text-[#C9D1D9]'
+                          }`}
+                        >
+                          {line}
+                        </div>
                       </div>
                     )
                   })
                 )}
+
+                {/* Trailing Execution Cursor & Status */}
+                {jobStatus === 'running' && (
+                  <div className="flex items-center gap-2 pt-2 text-[#58A6FF] font-mono text-[11px]">
+                    <span className="w-2 h-3.5 bg-[#58A6FF] animate-pulse inline-block" />
+                    <span className="animate-pulse">
+                      process running [PID {activeJob?.job_id || 'subproc'}] • streaming stdout...
+                    </span>
+                  </div>
+                )}
+                {jobStatus === 'completed' && jobLines.length > 0 && (
+                  <div className="pt-2 text-[11px] font-mono text-[#3FB950] flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>[process exited with code 0 - sealed in witness ledger]</span>
+                  </div>
+                )}
+                {jobStatus === 'failed' && jobLines.length > 0 && (
+                  <div className="pt-2 text-[11px] font-mono text-[#F85149] flex items-center gap-1.5">
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>[process terminated with exit code 1]</span>
+                  </div>
+                )}
                 <div ref={terminalEndRef} />
+              </div>
+
+              {/* Interactive Linux Shell Prompt Bar */}
+              <div className="p-3 bg-[#161B22] border-t border-[#30363D] flex flex-col gap-2">
+                <form onSubmit={handleTerminalSubmit} className="flex items-center gap-2 font-mono text-xs">
+                  <div className="flex items-center gap-1 shrink-0 font-bold">
+                    <span className="text-[#3FB950]">tripline@gov-kernel</span>
+                    <span className="text-[#8B949E]">:</span>
+                    <span className="text-[#58A6FF]">~/runtime</span>
+                    <span className="text-white">$</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={terminalInput}
+                    onChange={(e) => setTerminalInput(e.target.value)}
+                    placeholder={
+                      jobStatus === 'running'
+                        ? 'Process executing live... (type command for next queue)'
+                        : 'Type command (e.g. ./scenario, ./jail, ./rea, clear, help)...'
+                    }
+                    className="flex-1 bg-transparent border-none text-white font-mono text-xs focus:outline-none placeholder-[#484F58]"
+                    data-local="terminal-command-input"
+                  />
+                  <button
+                    type="submit"
+                    className="px-2.5 py-1 rounded bg-[#21262D] hover:bg-[#30363D] text-[#C9D1D9] hover:text-white border border-[#30363D] text-[10px] font-mono transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
+                    title="Execute typed command"
+                    data-local="run-terminal-command"
+                  >
+                    <span>Run</span>
+                    <ArrowRight className="w-2.5 h-2.5" />
+                  </button>
+                </form>
+
+                {/* Quick launch tags */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#30363D]/40 text-[10px] font-mono text-[#8B949E]">
+                  <span className="uppercase text-[#484F58] font-bold">Quick Exec:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleLaunchTask('scenario')}
+                    disabled={jobStatus === 'running'}
+                    className="px-2 py-0.5 rounded bg-[#21262D] hover:bg-[#30363D] text-[#58A6FF] border border-[#30363D] transition-colors disabled:opacity-40 cursor-pointer"
+                    data-local="quick-exec-scenario"
+                  >
+                    ./run-scenario
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLaunchTask('jail_burst')}
+                    disabled={jobStatus === 'running'}
+                    className="px-2 py-0.5 rounded bg-[#21262D] hover:bg-[#30363D] text-[#E3B341] border border-[#30363D] transition-colors disabled:opacity-40 cursor-pointer"
+                    data-local="quick-exec-jail-burst"
+                  >
+                    ./jail-burst
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLaunchTask('rea_investigate')}
+                    disabled={jobStatus === 'running'}
+                    className="px-2 py-0.5 rounded bg-[#21262D] hover:bg-[#30363D] text-[#BC8CFF] border border-[#30363D] transition-colors disabled:opacity-40 cursor-pointer"
+                    data-local="quick-exec-rea"
+                  >
+                    ./rea-investigate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearTerminal}
+                    className="px-2 py-0.5 rounded bg-[#21262D] hover:bg-[#30363D] text-[#8B949E] hover:text-white border border-[#30363D] transition-colors cursor-pointer ml-auto"
+                    data-local="quick-clear-terminal"
+                  >
+                    clear
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Side Card: Direct Boundary Verdict Matrix */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="p-6 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] shadow-sm space-y-4">
-                <span className="font-mono text-xs uppercase tracking-wider text-[#747F8D] font-semibold block">
-                  // Multi-Boundary Decision Matrix
-                </span>
+            <div className="lg:col-span-4 flex flex-col h-full">
+              <div className="p-6 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] shadow-sm flex flex-col justify-between h-[540px]">
+                <div className="flex items-center justify-between pb-3.5 border-b border-[#CDD2D8]">
+                  <span className="font-mono text-xs uppercase tracking-wider text-[#747F8D] font-semibold block">
+                    // Multi-Boundary Decision Matrix
+                  </span>
+                  <span className="text-[10px] font-mono text-[#0284C7] bg-[#0284C7]/10 px-2 py-0.5 rounded font-semibold">
+                    Live Invariants
+                  </span>
+                </div>
 
-                <div className="space-y-3 text-xs">
+                <div className="space-y-3.5 my-auto py-2 text-xs">
                   {/* Attack 1 */}
-                  <div className="p-3 rounded-lg border border-[#CDD2D8] bg-[#F4F5F6] space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-[#20252B]">
-                      <span>1. delete_branch</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
+                  <div className="p-3.5 rounded-lg border border-[#CDD2D8] bg-[#F4F5F6] space-y-1.5 transition-all hover:border-[#747F8D]">
+                    <div className="flex items-start justify-between gap-2 font-bold text-[#20252B]">
+                      <span className="font-mono text-xs break-all">1. delete_branch</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 shrink-0 font-bold">
                         DENIED-ARMORIQ
                       </span>
                     </div>
@@ -763,10 +1081,10 @@ export default function EnterpriseHomePage() {
                   </div>
 
                   {/* Attack 2 */}
-                  <div className="p-3 rounded-lg border border-[#CDD2D8] bg-[#F4F5F6] space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-[#20252B]">
-                      <span>2. read_file(../../.ssh/id_rsa)</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-200">
+                  <div className="p-3.5 rounded-lg border border-[#CDD2D8] bg-[#F4F5F6] space-y-1.5 transition-all hover:border-[#747F8D]">
+                    <div className="flex items-start justify-between gap-2 font-bold text-[#20252B]">
+                      <span className="font-mono text-xs break-all">2. read_file(../../.ssh/id_rsa)</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 shrink-0 font-bold">
                         DENIED-JAIL
                       </span>
                     </div>
@@ -777,10 +1095,10 @@ export default function EnterpriseHomePage() {
                   </div>
 
                   {/* Attack 3 */}
-                  <div className="p-3 rounded-lg border border-[#CDD2D8] bg-[#F4F5F6] space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-[#20252B]">
-                      <span>3. comment_issue(canary)</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                  <div className="p-3.5 rounded-lg border border-[#CDD2D8] bg-[#F4F5F6] space-y-1.5 transition-all hover:border-[#747F8D]">
+                    <div className="flex items-start justify-between gap-2 font-bold text-[#20252B]">
+                      <span className="font-mono text-xs break-all">3. comment_issue(canary)</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 shrink-0 font-bold">
                         HELD-EGRESS
                       </span>
                     </div>
@@ -791,8 +1109,8 @@ export default function EnterpriseHomePage() {
                   </div>
                 </div>
 
-                <div className="pt-2 text-[11px] text-[#59636E] leading-relaxed border-t border-[#CDD2D8]">
-                  <strong>Why multi-layer defense is required:</strong> ArmorIQ governs authorization at the intent layer. TripLine enforces parameter-level path isolation and egress quarantine inside the tool.
+                <div className="pt-3.5 text-[11px] text-[#59636E] leading-relaxed border-t border-[#CDD2D8]">
+                  <strong className="text-[#20252B]">Why multi-layer defense is required:</strong> ArmorIQ governs authorization at the intent layer. TripLine enforces parameter-level path isolation and egress quarantine inside the tool.
                 </div>
               </div>
             </div>
@@ -801,7 +1119,7 @@ export default function EnterpriseHomePage() {
       </section>
 
       {/* ── 5. AUTHENTIC EVIDENCE & CRYPTOGRAPHIC VERIFICATION ── */}
-      <section id="evidence" className="px-4 sm:px-6 py-20 border-b border-[#CDD2D8] bg-[#FFFFFF]">
+      <section id="evidence" className="scroll-mt-20 px-4 sm:px-6 py-20 border-b border-[#CDD2D8] bg-[#FFFFFF]">
         <div className="max-w-[1280px] mx-auto space-y-10">
           <div className="max-w-3xl">
             <span className="font-mono text-xs uppercase tracking-widest text-[#20252B] font-semibold">
@@ -822,19 +1140,22 @@ export default function EnterpriseHomePage() {
                 No recorded receipts found. Run the Multi-Layer Security Proof above to generate fresh receipts.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {receipts.map((rcpt) => (
                   <div
                     key={rcpt.receipt_id}
-                    className="p-5 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] shadow-sm flex flex-col justify-between space-y-4"
+                    className="p-5 rounded-xl border border-[#CDD2D8] bg-[#FFFFFF] shadow-sm flex flex-col justify-between space-y-4 min-h-[200px]"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold text-[#20252B] truncate max-w-[200px]">
+                    <div className="space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <span
+                          className="font-mono text-xs font-bold text-[#20252B] truncate"
+                          title={rcpt.receipt_id}
+                        >
                           {rcpt.receipt_id}
                         </span>
                         <span
-                          className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border ${
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold border shrink-0 ${
                             rcpt.tripline_decision === 'ALLOW'
                               ? 'bg-[#ECFDF5] text-[#10B981] border-[#A7F3D0]'
                               : rcpt.tripline_decision?.includes('HOLD')
@@ -846,9 +1167,11 @@ export default function EnterpriseHomePage() {
                         </span>
                       </div>
 
-                      <div className="text-xs text-[#59636E] font-mono space-y-0.5">
+                      <div className="text-xs text-[#59636E] font-mono space-y-1">
                         <div>Tool: <span className="text-[#20252B] font-semibold">{rcpt.tool}</span></div>
-                        <div className="truncate">Hash: <span className="text-[#747F8D]">{rcpt.canonical_hash}</span></div>
+                        <div className="text-[11px] text-[#59636E]">
+                          Hash: <span className="text-[#747F8D] font-mono font-medium" title={rcpt.canonical_hash}>{rcpt.canonical_hash ? `${rcpt.canonical_hash.slice(0, 10)}...${rcpt.canonical_hash.slice(-8)}` : 'None'}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -856,21 +1179,21 @@ export default function EnterpriseHomePage() {
                       <button
                         onClick={() => handleVerifyReceipt(rcpt.receipt_id)}
                         disabled={verifyingReceiptId === rcpt.receipt_id}
-                        className="flex-1 py-1.5 px-2.5 rounded-lg bg-[#20252B] hover:bg-[#2D3136] text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 shadow-sm"
+                        className="flex-1 py-2 px-2.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 shadow-sm"
                         data-local={`verify-rcpt-${rcpt.receipt_id}`}
                       >
                         {verifyingReceiptId === rcpt.receipt_id ? (
-                          <RefreshCw className="w-3 h-3 animate-spin text-[#65BCE7]" />
+                          <RefreshCw className="w-3 h-3 animate-spin text-white" />
                         ) : (
-                          <CheckCircle2 className="w-3 h-3 text-[#65BCE7]" />
+                          <CheckCircle2 className="w-3 h-3 text-white" />
                         )}
-                        <span>Verify</span>
+                        <span className="text-white">Verify</span>
                       </button>
 
                       <button
                         onClick={() => handleTamperCheck(rcpt.receipt_id)}
                         disabled={tamperingReceiptId === rcpt.receipt_id}
-                        className="flex-1 py-1.5 px-2.5 rounded-lg border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                        className="flex-1 py-2 px-2.5 rounded-lg border border-red-300 text-red-700 bg-red-50 hover:bg-red-100 font-sans text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
                         data-local={`tamper-rcpt-${rcpt.receipt_id}`}
                       >
                         {tamperingReceiptId === rcpt.receipt_id ? (

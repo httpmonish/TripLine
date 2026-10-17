@@ -260,11 +260,11 @@ export function ReceiptCard({
             <button
               onClick={onVerify}
               disabled={isVerifying}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#20252B] hover:bg-[#2D3136] text-white font-semibold text-xs shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0284C7] hover:bg-[#0369A1] text-white font-semibold text-xs shadow-sm transition-colors cursor-pointer disabled:opacity-50"
               type="button"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#65BCE7]" />
-              <span>{isVerifying ? 'Verifying...' : 'Verify Signature'}</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-white" />
+              <span className="text-white">{isVerifying ? 'Verifying...' : 'Verify Signature'}</span>
             </button>
           )}
 

@@ -39,6 +39,15 @@ interface AllowlistedJobMeta {
 
 const ALLOWLISTED_JOBS: AllowlistedJobMeta[] = [
   {
+    kind: 'security_proof',
+    title: 'Deterministic Sandbox Security Proof',
+    description: 'Executes deterministic sandbox scenarios demonstrating ArmorIQ upstream policy denial, Path Jail containment, or Canary Egress quarantine.',
+    live: false,
+    cost: '$0.00',
+    timeoutSec: 60,
+    sideEffects: 'Generates structured scenario execution log and signed HMAC receipts in results/phase3/scenario/.',
+  },
+  {
     kind: 'jail_burst',
     title: 'Path-Jail Fuzzer Probes',
     description: 'Executes 8 directory traversal probes (dot-dot, hex-decode, symlinks) against the in-MCP jail boundary.',
@@ -280,11 +289,11 @@ export default function ConsolePage() {
                       className={`w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
                         isRunning
                           ? 'bg-[#EAEDF0] text-[#59636E] border border-[#CDD2D8] cursor-wait'
-                          : 'bg-[#20252B] hover:bg-[#2D3136] text-white shadow-sm'
+                          : 'bg-[#0284C7] hover:bg-[#0369A1] text-white shadow-sm'
                       }`}
                     >
-                      <Play className="w-3.5 h-3.5 text-[#65BCE7]" />
-                      <span>{isRunning ? 'Executing...' : 'Dispatch Operation'}</span>
+                      <Play className="w-3.5 h-3.5 text-white" />
+                      <span className="text-white">{isRunning ? 'Executing...' : 'Dispatch Operation'}</span>
                     </button>
                   </div>
                 </div>

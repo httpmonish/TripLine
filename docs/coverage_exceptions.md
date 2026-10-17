@@ -28,3 +28,4 @@ This document contains explicit allowlisted exemptions from the two-way UI-API c
 | GET | `/api/canary-hits` | Legacy Phase 8 endpoint preserved for backward compatibility and test suites. |
 | GET | `/api/witness/{trace_id}` | Legacy Phase 8 endpoint preserved for backward compatibility and test suites. |
 | GET | `/api/receipts/{identifier}/verify` | Legacy Phase 8 verification GET endpoint preserved for backward compatibility. |
+| POST | `/api/agent/task` | Direct dynamic task dispatch endpoint mirroring /api/agent/runs. |

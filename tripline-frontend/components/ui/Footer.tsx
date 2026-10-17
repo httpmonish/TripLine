@@ -7,7 +7,7 @@ import { ShieldCheck, CheckCircle2 } from 'lucide-react'
 
 export function Footer() {
   return (
-    <footer className="w-full bg-[#EAEDF0] border-t border-[#CDD2D8] text-[#59636E] py-16 text-xs">
+    <footer className="w-full bg-[#EAEDF0] border-t border-[#CDD2D8] text-[#59636E] py-16 sm:py-20 pb-24 text-xs">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 pb-12 border-b border-[#CDD2D8]">
           {/* Col 1 & 2: Brand Identity & Mission */}
@@ -18,16 +18,14 @@ export function Footer() {
             <p className="text-sm text-[#59636E] max-w-sm leading-relaxed">
               Governed AI-agent security platform. Enforce upstream authorization boundaries, contain execution inside in-MCP jails, and seal cryptographic receipts for every decision.
             </p>
-            <div className="pt-2 flex flex-wrap items-center gap-2 font-mono text-[11px] text-[#747F8D]">
-              <span className="px-2 py-0.5 rounded bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B]">
+            <div className="pt-3 flex flex-wrap items-center gap-2 font-mono text-[11px]">
+              <span className="px-2.5 py-1 rounded-md bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B] shadow-xs">
                 Fail-Closed Architecture
               </span>
-              <span>•</span>
-              <span className="px-2 py-0.5 rounded bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B]">
+              <span className="px-2.5 py-1 rounded-md bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B] shadow-xs">
                 Zero Synthesized Logs
               </span>
-              <span>•</span>
-              <span className="px-2 py-0.5 rounded bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B]">
+              <span className="px-2.5 py-1 rounded-md bg-[#FFFFFF] border border-[#CDD2D8] text-[#20252B] shadow-xs">
                 Offline Verifiable Receipts
               </span>
             </div>
@@ -50,7 +48,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#how-it-works" className="hover:text-[#20252B] transition-colors">
+                <Link href="/how-it-works" className="hover:text-[#20252B] transition-colors">
                   How It Works
                 </Link>
               </li>

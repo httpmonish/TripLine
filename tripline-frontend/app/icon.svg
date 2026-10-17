@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="64 46 272 272" width="64" height="64" role="img" aria-label="TripLine">
+  <title>TripLine</title>
+  <defs>
+    <filter id="tl-glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="tl-shade" gradientUnits="userSpaceOnUse" x1="200" y1="90" x2="200" y2="310">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.25"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Left Face -->
+  <path d="M104.74 145L200 200V310L104.74 255Z" fill="#6B6E7A" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/>
+
+  <!-- Right Face -->
+  <path d="M200 200L295.26 145V255L200 310Z" fill="#AEB1BA" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/>
+
+  <!-- Top Face -->
+  <path d="M200 90L295.26 145L200 200L104.74 145Z" fill="#0F1228" stroke="#FFFFFF" stroke-width="3.5" stroke-linejoin="round"/>
+
+  <!-- Shading overlay -->
+  <path d="M200 90L295.26 145V255L200 310L104.74 255V145Z" fill="url(#tl-shade)" pointer-events="none"/>
+
+  <!-- Apex tripwire stub / antenna -->
+  <path d="M200 90V62" stroke="#0F1228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Live tripwire tip glow -->
+  <circle cx="200" cy="62" r="5" fill="#5B4BFF" filter="url(#tl-glow)"/>
+
+  <!-- Center inspection node -->
+  <circle cx="200" cy="200" r="6.5" fill="#FFFFFF" stroke="#0F1228" stroke-width="3"/>
+</svg>
