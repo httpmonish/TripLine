@@ -125,6 +125,34 @@ def test_project_explainer():
     print("    [+] Explainer Video & Companion Assets: PASS")
 
 
+def test_live_walkthrough():
+    print("[*] QA 6: Verifying TripLine Live Website Walkthrough (Genuine Browser Recording)...")
+    walkthrough_video = VIDEO_DIR / "out" / "tripline_live_website_walkthrough.mp4"
+    assert walkthrough_video.exists(), f"Live walkthrough video missing: {walkthrough_video}"
+    
+    probe = subprocess.run([str(FFMPEG), "-i", str(walkthrough_video)], capture_output=True, text=True)
+    out = probe.stderr
+    
+    m_dur = re.search(r"Duration:\s*(\d+):(\d+):(\d+\.\d+)", out)
+    assert m_dur, "Duration string not found in walkthrough video"
+    hrs, mins, secs = map(float, m_dur.groups())
+    total_sec = hrs * 3600 + mins * 60 + secs
+    print(f"    - Live Walkthrough Duration: {total_sec:.2f}s ({total_sec/60:.2f} min) (Strict limit: < 300.0s)")
+    assert total_sec < 300.0, f"Walkthrough video must be strictly under 5 min (< 300s), got {total_sec}s"
+    assert total_sec >= 120.0, f"Walkthrough video too short: {total_sec}s"
+
+    assert "Video: h264" in out, "Walkthrough video must be H.264"
+    assert "1920x1080" in out, "Walkthrough resolution must be 1920x1080"
+    assert "Audio: aac" in out, "Walkthrough audio must be AAC"
+
+    # Check companion deliverables
+    assert (VIDEO_DIR / "live_website_walkthrough_voiceover.txt").exists(), "live_website_walkthrough_voiceover.txt missing"
+    assert (VIDEO_DIR / "live_website_walkthrough_captions.srt").exists(), "live_website_walkthrough_captions.srt missing"
+    assert (VIDEO_DIR / "live_website_walkthrough_manifest.json").exists(), "live_website_walkthrough_manifest.json missing"
+    assert (VIDEO_DIR / "live_website_walkthrough_qa.txt").exists(), "live_website_walkthrough_qa.txt missing"
+    print("    [+] Live Website Walkthrough Video & Companion Assets: PASS")
+
+
 def main():
     print("==================================================")
     print("RUNNING DEMO VIDEO QA CHECKS (SECTION 5)")
@@ -134,6 +162,7 @@ def main():
     test_truth_matching()
     test_captions_and_dwell()
     test_project_explainer()
+    test_live_walkthrough()
     print("==================================================")
     print("[+] ALL VIDEO QA CHECKS PASSED DETERMINISTICALLY.")
     print("==================================================")
