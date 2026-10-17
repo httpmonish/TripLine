@@ -564,9 +564,9 @@ export default function EnterpriseHomePage() {
         id="product"
         className="relative px-4 sm:px-6 pt-14 pb-16 md:pt-20 md:pb-24 border-b border-[#CDD2D8] bg-[#FFFFFF] overflow-hidden"
       >
-        <div className="max-w-[1280px] mx-auto grid grid-cols-1 xl:grid-cols-12 gap-10 items-center">
-          {/* Left Column: Product Explanation */}
-          <div className="xl:col-span-5 space-y-6">
+        <div className="max-w-[1280px] mx-auto space-y-10">
+          {/* Top Hero: Product Explanation & CTAs */}
+          <div className="max-w-3xl space-y-6">
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
               <span className="px-2.5 py-1 rounded bg-[#65BCE7]/10 border border-[#65BCE7]/30 text-[#20252B] font-semibold flex items-center gap-1.5">
@@ -584,18 +584,18 @@ export default function EnterpriseHomePage() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#20252B] leading-[1.1]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-[#20252B] leading-[1.1]">
               AI agents. Governed actions.<br />
               <span className="text-[#20252B]">Verifiable proof.</span>
             </h1>
 
             {/* Supporting Statement */}
-            <p className="text-base text-[#59636E] max-w-xl leading-relaxed">
+            <p className="text-base sm:text-lg text-[#59636E] max-w-2xl leading-relaxed">
               TripLine adds independent containment and verifiable execution evidence to governed AI workflows. ArmorIQ authorizes an action; TripLine’s implemented controls protect the applicable execution boundary and preserve evidence of what happened.
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-4 pt-1">
               <a
                 href="#demo-console"
                 onClick={(e) => {
@@ -632,15 +632,15 @@ export default function EnterpriseHomePage() {
             </div>
 
             {/* Invariants */}
-            <div className="pt-2 flex flex-wrap items-center gap-4 text-xs font-mono text-[#747F8D]">
+            <div className="pt-1 flex flex-wrap items-center gap-4 text-xs font-mono text-[#747F8D]">
               <span>// Fail-Closed Security</span>
               <span>// Zero Fabricated Fallbacks</span>
               <span>// RFC 8785 Canonical JSON</span>
             </div>
           </div>
 
-          {/* Right Column: Authentic ArmorIQ API Usage Dashboard */}
-          <div className="xl:col-span-7 flex justify-center xl:justify-end w-full">
+          {/* Prominent Authentic ArmorIQ API Usage Dashboard */}
+          <div className="w-full pt-2">
             <ArmorIQUsageDashboard />
           </div>
         </div>

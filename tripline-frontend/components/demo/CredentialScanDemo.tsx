@@ -813,52 +813,62 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
         </div>
       )}
 
-      {/* ── Section 4: Interactive AI Document Security Intelligence Chatbot ── */}
-      <div className="bg-white dark:bg-[#161B22] rounded-2xl border border-[#D0D7DE] dark:border-[#30363D] p-5 shadow-sm space-y-4">
+      {/* ── Section 4: Interactive AI Document Security Intelligence Chatbot (CollectUI Inspired) ── */}
+      <div className="relative rounded-3xl bg-[#090D16] border border-[#1E2738] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden backdrop-blur-2xl">
+        {/* Ambient Subtle Cyber Glows */}
+        <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl" />
+
         {/* Chatbot Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E1E4E8] dark:border-[#21262D] pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-sky-500 to-teal-400 flex items-center justify-center text-white shadow-sm">
-              <Bot className="w-5 h-5" />
+        <div className="relative z-10 px-5 md:px-6 py-4 md:py-5 border-b border-[#1A2334] bg-[#0C121E]/85 backdrop-blur-md flex flex-wrap items-center justify-between gap-4">
+          {/* Avatar & Title */}
+          <div className="flex items-center gap-3.5">
+            <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-teal-400 p-[1.5px] shadow-lg shadow-sky-500/20 shrink-0">
+              <div className="w-full h-full bg-[#090D16] rounded-[14px] flex items-center justify-center text-sky-400">
+                <Bot className="w-5 h-5" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#090D16] ring-2 ring-emerald-400/30 animate-pulse" />
             </div>
+
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-[#0D1117] dark:text-[#F0F6FC] flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm md:text-base font-bold text-white tracking-tight flex items-center gap-2">
                   TripLine AI Document Security Assistant
                 </h3>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0284C7]/10 text-[#0284C7] border border-[#0284C7]/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-pulse"></span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   Active In-MCP
                 </span>
               </div>
-              <p className="text-xs text-[#59636E] dark:text-[#8B949E]">
-                Ask questions about document block status, ArmorIQ policy decisions, detected secrets, and cryptographic receipts.
+              <p className="text-xs text-[#94A3B8] mt-0.5">
+                Real-time forensic reasoning over ArmorIQ policy decisions, detected secrets, and cryptographic proofs.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Context Capsule & Action Controls */}
+          <div className="flex flex-wrap items-center gap-2.5">
             {/* Target File Badge */}
-            <div className="px-2.5 py-1 rounded-md text-xs font-mono bg-[#F6F8FA] dark:bg-[#0D1117] border border-[#D0D7DE] dark:border-[#30363D] text-[#59636E] dark:text-[#8B949E] flex items-center gap-1.5">
-              <FileCode className="w-3.5 h-3.5 text-[#0284C7]" />
-              <span className="font-semibold text-[#0D1117] dark:text-[#F0F6FC]">{selectedFile.name}</span>
+            <div className="px-3 py-1.5 rounded-xl text-xs font-mono bg-[#131A26] border border-[#232D3F] text-[#94A3B8] flex items-center gap-2 shadow-xs">
+              <FileCode className="w-3.5 h-3.5 text-sky-400" />
+              <span className="font-semibold text-white truncate max-w-[150px] sm:max-w-[210px]">{selectedFile.name}</span>
             </div>
 
             {/* Block Verdict Badge */}
             {scanResult ? (
               <span
-                className={`px-2.5 py-1 rounded-md text-xs font-mono font-bold flex items-center gap-1 border ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 border shadow-sm ${
                   scanResult.blocked
-                    ? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-800'
-                    : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
+                    ? 'bg-red-950/60 text-red-300 border-red-500/50 shadow-red-950/30'
+                    : 'bg-emerald-950/60 text-emerald-300 border-emerald-500/50 shadow-emerald-950/30'
                 }`}
               >
-                {scanResult.blocked ? <ShieldAlert className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                {scanResult.blocked ? <ShieldAlert className="w-3.5 h-3.5 text-red-400" /> : <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />}
                 {scanResult.blocked ? 'BLOCKED (DENIED)' : 'PERMITTED (ALLOW)'}
               </span>
             ) : (
-              <span className="px-2.5 py-1 rounded-md text-xs font-mono bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 flex items-center gap-1">
-                <HelpCircle className="w-3.5 h-3.5" />
+              <span className="px-3 py-1.5 rounded-xl text-xs font-mono font-medium bg-amber-950/40 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
                 Awaiting Scan
               </span>
             )}
@@ -867,174 +877,299 @@ export function CredentialScanDemo({ onScanComplete, compact = false }: Credenti
             <button
               type="button"
               onClick={handleClearChat}
-              title="Clear chat history"
-              className="p-1.5 rounded-lg text-[#59636E] dark:text-[#8B949E] hover:text-[#0D1117] dark:hover:text-[#F0F6FC] hover:bg-[#F6F8FA] dark:hover:bg-[#21262D] transition-colors cursor-pointer"
+              title="Reset conversation"
+              className="p-2 rounded-xl text-[#94A3B8] hover:text-white bg-[#131A26] hover:bg-[#1C2637] border border-[#232D3F] hover:border-sky-500/40 transition-all cursor-pointer shadow-xs active:scale-95"
             >
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Suggested Prompt Chips */}
-        <div>
-          <div className="flex items-center gap-1.5 mb-2 text-[11px] font-semibold text-[#59636E] dark:text-[#8B949E]">
-            <Sparkles className="w-3.5 h-3.5 text-[#0284C7]" />
-            <span>Suggested Questions:</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {SUGGESTED_PROMPTS.map((prompt, idx) => (
-              <button
-                key={idx}
-                type="button"
-                data-local={`btn-prompt-suggestion-${idx}`}
-                disabled={isChatting}
-                onClick={() => handleSendMessage(prompt.query)}
-                className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[#F6F8FA] dark:bg-[#0D1117] hover:bg-sky-50 dark:hover:bg-sky-950/30 text-[#24292F] dark:text-[#C9D1D9] hover:text-[#0284C7] dark:hover:text-[#38BDF8] border border-[#D0D7DE] dark:border-[#30363D] hover:border-[#0284C7]/50 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {prompt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Chat History Viewport */}
-        <div
-          ref={chatScrollRef}
-          className="bg-[#F6F8FA]/60 dark:bg-[#0D1117]/60 rounded-xl border border-[#D0D7DE] dark:border-[#30363D] p-4 max-h-[360px] min-h-[220px] overflow-y-auto space-y-3.5 font-sans"
-        >
-          {chatMessages.map((msg) => {
-            const isUser = msg.role === 'user'
-            return (
-              <div
-                key={msg.id}
-                className={`flex items-start gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
-              >
-                {/* Avatar */}
-                <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
-                    isUser
-                      ? 'bg-gradient-to-r from-sky-600 to-blue-700 text-white'
-                      : 'bg-[#1E293B] text-sky-400 border border-sky-500/30'
-                  }`}
+        <div className="p-4 md:p-6 space-y-4 md:space-y-5">
+          {/* Suggested Prompt Chips */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2.5 text-[11px] font-semibold text-[#94A3B8]">
+              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+              <span>Suggested Inquiries:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTED_PROMPTS.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  data-local={`btn-prompt-suggestion-${idx}`}
+                  disabled={isChatting}
+                  onClick={() => handleSendMessage(prompt.query)}
+                  className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#121824] hover:bg-[#1A2334] text-[#94A3B8] hover:text-white border border-[#212B3D] hover:border-sky-500/40 shadow-sm transition-all duration-200 cursor-pointer disabled:opacity-40 flex items-center gap-1.5 active:scale-95"
                 >
-                  {isUser ? 'U' : <Bot className="w-4 h-4" />}
-                </div>
+                  {prompt.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                {/* Message Bubble */}
+          {/* Chat History Viewport */}
+          <div
+            ref={chatScrollRef}
+            className="bg-[#070A10]/90 rounded-2xl border border-[#182130] p-4 md:p-6 max-h-[440px] min-h-[260px] overflow-y-auto space-y-4 font-sans shadow-inner scroll-smooth"
+          >
+            {chatMessages.map((msg) => {
+              const isUser = msg.role === 'user'
+              const isCopied = copiedMessageId === msg.id
+
+              return (
                 <div
-                  className={`max-w-[85%] rounded-2xl p-3.5 shadow-xs ${
-                    isUser
-                      ? 'bg-gradient-to-r from-sky-600 to-blue-700 text-white rounded-tr-none'
-                      : 'bg-white dark:bg-[#161B22] text-[#24292F] dark:text-[#C9D1D9] border border-[#D0D7DE] dark:border-[#30363D] rounded-tl-none'
-                  }`}
+                  key={msg.id}
+                  className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  <div className="flex items-center justify-between gap-3 mb-1 text-[10px] opacity-75">
-                    <span className="font-semibold">{isUser ? 'You' : 'TripLine Security Bot'}</span>
-                    <span>{msg.timestamp}</span>
+                  {/* Avatar */}
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold shadow-md ${
+                      isUser
+                        ? 'bg-gradient-to-br from-sky-400 to-blue-600 ring-2 ring-sky-400/30 text-white'
+                        : 'bg-gradient-to-tr from-sky-500/20 to-indigo-500/20 border border-sky-500/40 text-sky-400 shadow-sky-500/10'
+                    }`}
+                  >
+                    {isUser ? 'U' : <Bot className="w-4 h-4" />}
                   </div>
 
-                  {isUser ? (
-                    <p className="text-xs leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                  ) : (
-                    renderMarkdown(msg.text)
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                  {/* Message Bubble Card */}
+                  <div
+                    className={`max-w-[88%] rounded-2xl p-4 shadow-xl transition-all ${
+                      isUser
+                        ? 'bg-gradient-to-br from-sky-600 via-sky-500 to-blue-600 text-white rounded-tr-sm shadow-sky-500/20'
+                        : 'bg-[#101622]/95 text-[#CBD5E1] border border-[#1E283A] rounded-tl-sm backdrop-blur-md'
+                    }`}
+                  >
+                    {/* Header Strip inside Bubble */}
+                    <div className="flex items-center justify-between gap-4 mb-2 pb-1.5 border-b border-white/10 text-[10px]">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold tracking-wide text-white">
+                          {isUser ? 'You' : 'TripLine Security Bot'}
+                        </span>
+                        {!isUser && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                            ARMORIQ-MCP
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-[#94A3B8]">
+                        <span>{msg.timestamp}</span>
+                        {!isUser && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(msg.id, msg.text)}
+                            title="Copy message response"
+                            className="p-1 rounded hover:bg-white/10 text-[#94A3B8] hover:text-white transition-colors cursor-pointer"
+                          >
+                            {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
-          {/* Typing Indicator */}
-          {isChatting && (
-            <div className="flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#1E293B] text-sky-400 border border-sky-500/30 flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4" />
-              </div>
-              <div className="bg-white dark:bg-[#161B22] border border-[#D0D7DE] dark:border-[#30363D] rounded-2xl rounded-tl-none p-3 shadow-xs">
-                <div className="flex items-center gap-2 text-xs text-[#59636E] dark:text-[#8B949E]">
-                  <span className="inline-flex gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#0284C7] animate-bounce"></span>
-                  </span>
-                  <span>ArmorIQ SDK evaluating security invariants...</span>
+                    {/* Content */}
+                    {isUser ? (
+                      <p className="text-xs leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    ) : (
+                      renderMarkdown(msg.text)
+                    )}
+                  </div>
                 </div>
+              )
+            })}
+
+            {/* Typing Indicator */}
+            {isChatting && (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500/20 to-indigo-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center shrink-0 shadow-sm">
+                  <Bot className="w-4 h-4" />
+                </div>
+                <div className="bg-[#101622]/95 border border-[#1E283A] rounded-2xl rounded-tl-sm p-3.5 shadow-xl">
+                  <div className="flex items-center gap-3 text-xs text-[#94A3B8]">
+                    <span className="inline-flex gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-sky-400 animate-bounce [animation-delay:-0.3s] shadow-[0_0_8px_rgba(56,189,248,0.8)]"></span>
+                      <span className="w-2 h-2 rounded-full bg-sky-400 animate-bounce [animation-delay:-0.15s] shadow-[0_0_8px_rgba(56,189,248,0.8)]"></span>
+                      <span className="w-2 h-2 rounded-full bg-sky-400 animate-bounce shadow-[0_0_8px_rgba(56,189,248,0.8)]"></span>
+                    </span>
+                    <span className="font-mono text-[11px] text-sky-300">ArmorIQ SDK evaluating security invariants...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Floating CollectUI-Style Input Container */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSendMessage()
+            }}
+            className="relative rounded-2xl bg-[#0F1522]/95 border border-[#222B3D] focus-within:border-sky-500/70 focus-within:ring-2 focus-within:ring-sky-500/20 p-2.5 shadow-2xl backdrop-blur-xl transition-all"
+          >
+            {/* Top context sub-strip */}
+            <div className="flex items-center justify-between px-2 pb-2 text-[10px] text-[#64748B] border-b border-[#1A2232] font-mono">
+              <div className="flex items-center gap-1.5">
+                <Lock className="w-3 h-3 text-sky-400" />
+                <span>Guarded File:</span>
+                <span className="text-sky-300 font-semibold">{selectedFile.name}</span>
+              </div>
+              <div className="hidden sm:flex items-center gap-2 text-[#64748B]">
+                <span>ArmorIQ Intent Gate (L0)</span>
+                <span>•</span>
+                <span className="text-[#94A3B8] flex items-center gap-1">
+                  <span>Enter</span>
+                  <CornerDownLeft className="w-2.5 h-2.5" />
+                </span>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Input Bar */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleSendMessage()
-          }}
-          className="flex items-center gap-2"
-        >
-          <div className="relative flex-1">
-            <input
-              type="text"
-              data-local="input-demo-chat"
-              value={chatInput}
-              disabled={isChatting}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder={`Ask about ${selectedFile.name} (e.g. "Is this document blocked?", "Why was it blocked?")...`}
-              className="w-full px-3.5 py-2.5 rounded-xl text-xs bg-white dark:bg-[#0D1117] border border-[#D0D7DE] dark:border-[#30363D] text-[#24292F] dark:text-[#C9D1D9] placeholder-[#8B949E] focus:outline-none focus:ring-2 focus:ring-[#0284C7] focus:border-transparent transition-all disabled:opacity-60"
-            />
-          </div>
-          <button
-            type="submit"
-            data-api="POST /api/demo/chat"
-            data-testid="btn-demo-chat-send"
-            disabled={!chatInput.trim() || isChatting}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white text-xs font-semibold shadow-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Ask Bot</span>
-          </button>
-        </form>
+            {/* Input Row */}
+            <div className="flex items-center gap-2 pt-1.5 px-1">
+              <input
+                type="text"
+                data-local="input-demo-chat"
+                value={chatInput}
+                disabled={isChatting}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder={`Ask about ${selectedFile.name} (e.g. "Is this document blocked?", "Why was it blocked?")...`}
+                className="w-full px-2 py-1.5 text-xs bg-transparent border-0 text-[#F0F6FC] placeholder-[#64748B] focus:outline-none focus:ring-0 disabled:opacity-50"
+              />
+
+              <button
+                type="submit"
+                data-api="POST /api/demo/chat"
+                data-testid="btn-demo-chat-send"
+                disabled={!chatInput.trim() || isChatting}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-95 text-white text-xs font-semibold shadow-lg shadow-sky-500/25 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer shrink-0"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Ask Bot</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )
 }
 
 /**
- * Lightweight deterministic markdown-to-JSX renderer
+ * Advanced deterministic markdown & telemetry renderer for TripLine Security Assistant
  */
 function renderMarkdown(text: string) {
   const lines = text.split('\n')
   return (
-    <div className="space-y-1.5 text-xs leading-relaxed">
+    <div className="space-y-2 text-xs leading-relaxed text-[#CBD5E1]">
       {lines.map((line, idx) => {
+        // Headings: ### Title
         if (line.startsWith('### ')) {
           return (
-            <h4 key={idx} className="font-bold text-sm text-[#0D1117] dark:text-[#F0F6FC] mt-2 mb-1 flex items-center gap-1.5">
-              {formatInline(line.replace('### ', ''))}
-            </h4>
-          )
-        }
-        if (line.startsWith('- ') || line.startsWith('* ')) {
-          return (
-            <div key={idx} className="flex items-start gap-1.5 ml-2">
-              <span className="text-[#0284C7] dark:text-[#38BDF8] font-bold">•</span>
-              <span>{formatInline(line.slice(2))}</span>
+            <div key={idx} className="mt-3 mb-1.5 first:mt-0 pb-1.5 border-b border-[#243044]">
+              <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#38BDF8] shadow-[0_0_8px_rgba(56,189,248,0.8)]"></span>
+                <span>{formatInline(line.replace('### ', ''))}</span>
+              </h4>
             </div>
           )
         }
+
+        // Threat highlight line: "- **Threat:** `...`" or "- Threat: ..."
+        if (line.includes('**Threat:**') || line.includes('Threat:')) {
+          const content = line.replace(/^[-*]\s*/, '')
+          return (
+            <div key={idx} className="my-1.5 p-2.5 rounded-xl bg-red-950/40 border border-red-500/30 flex items-start gap-2.5 shadow-xs">
+              <span className="p-1 rounded-md bg-red-500/20 text-red-400 mt-0.5 shrink-0">
+                <ShieldAlert className="w-3.5 h-3.5" />
+              </span>
+              <div className="flex-1 text-red-200">
+                {formatInline(content)}
+              </div>
+            </div>
+          )
+        }
+
+        // Entropy metric line: "- **Shannon Token Entropy:** `5.05 bits/byte`"
+        if (line.includes('Entropy') && (line.includes('bits/byte') || line.includes('score'))) {
+          const content = line.replace(/^[-*]\s*/, '')
+          const scoreMatch = line.match(/(\d+\.?\d*)\s*bits\/byte/)
+          const scoreNum = scoreMatch ? parseFloat(scoreMatch[1]) : null
+          const pct = scoreNum ? Math.min(100, Math.round((scoreNum / 8.0) * 100)) : 65
+
+          return (
+            <div key={idx} className="my-1.5 p-2.5 rounded-xl bg-[#0D1522] border border-sky-500/30 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-semibold text-sky-300 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-sky-400" />
+                  {formatInline(content)}
+                </span>
+                {scoreNum && (
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                    scoreNum > 4.5
+                      ? 'bg-red-500/20 text-red-300 border border-red-500/40'
+                      : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  }`}>
+                    {scoreNum > 4.5 ? 'CRITICAL HIGH ENTROPY' : 'NORMAL RANGE'}
+                  </span>
+                )}
+              </div>
+              {scoreNum && (
+                <div className="w-full h-1.5 rounded-full bg-[#1A2333] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      scoreNum > 4.5
+                        ? 'bg-gradient-to-r from-amber-500 to-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]'
+                        : 'bg-gradient-to-r from-teal-400 to-emerald-400'
+                    }`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        // Policy / Receipt proof bullet: Receipt ID, Canonical Hash, Invariant
+        if (line.includes('Receipt ID:') || line.includes('Canonical Hash') || line.includes('ArmorIQ Policy Enforced') || line.includes('TripLine Invariant')) {
+          const content = line.replace(/^[-*]\s*/, '')
+          return (
+            <div key={idx} className="my-1 p-2 rounded-lg bg-[#0F1726] border border-[#212E45] font-mono text-[11px] text-[#93C5FD] flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0"></span>
+              <div className="flex-1 truncate">{formatInline(content)}</div>
+            </div>
+          )
+        }
+
+        // Bullet lists: - item or * item
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          return (
+            <div key={idx} className="flex items-start gap-2 ml-1 my-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-400/80 mt-1.5 shrink-0 shadow-[0_0_6px_rgba(56,189,248,0.6)]" />
+              <div className="flex-1">{formatInline(line.slice(2))}</div>
+            </div>
+          )
+        }
+
+        // Numbered steps: 1. ... 2. ...
         if (/^\d+\.\s/.test(line)) {
           const num = line.match(/^(\d+)\.\s/)?.[1]
           const rest = line.replace(/^\d+\.\s/, '')
           return (
-            <div key={idx} className="flex items-start gap-1.5 ml-2">
-              <span className="text-[#0284C7] dark:text-[#38BDF8] font-bold text-[11px] min-w-[14px]">{num}.</span>
-              <span>{formatInline(rest)}</span>
+            <div key={idx} className="flex items-start gap-2.5 ml-1 my-1.5">
+              <span className="w-5 h-5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                {num}
+              </span>
+              <div className="flex-1">{formatInline(rest)}</div>
             </div>
           )
         }
+
+        // Blank lines
         if (line.trim() === '') {
-          return <div key={idx} className="h-1" />
+          return <div key={idx} className="h-1.5" />
         }
-        return <p key={idx}>{formatInline(line)}</p>
+
+        return <p key={idx} className="leading-relaxed">{formatInline(line)}</p>
       })}
     </div>
   )
@@ -1044,14 +1179,34 @@ function formatInline(str: string) {
   const parts = str.split(/(`[^`]+`|\*\*[^*]+\*\*)/g)
   return parts.map((part, i) => {
     if (part.startsWith('`') && part.endsWith('`')) {
+      const code = part.slice(1, -1)
+      const isPolicy = code.includes('ARMORIQ') || code.includes('POLICY')
+      const isHash = code.startsWith('SHA256:') || code.startsWith('RCP-')
+      const isBlock = code === 'DENY' || code === 'BLOCKED'
+
       return (
-        <code key={i} className="px-1.5 py-0.5 rounded text-[11px] font-mono bg-[#0F172A]/10 dark:bg-[#1E293B] text-[#0369A1] dark:text-[#38BDF8] border border-[#0284C7]/20">
-          {part.slice(1, -1)}
+        <code
+          key={i}
+          className={`px-1.5 py-0.5 rounded text-[11px] font-mono border mx-0.5 ${
+            isBlock
+              ? 'bg-red-950/60 text-red-300 border-red-500/40 font-bold'
+              : isPolicy
+              ? 'bg-cyan-950/60 text-cyan-300 border-cyan-500/40'
+              : isHash
+              ? 'bg-[#0B101B] text-sky-300 border-sky-500/30'
+              : 'bg-[#0F172A] text-sky-300 border-sky-500/20'
+          }`}
+        >
+          {code}
         </code>
       )
     }
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={i} className="font-semibold text-[#0F172A] dark:text-white">{part.slice(2, -2)}</strong>
+      return (
+        <strong key={i} className="font-semibold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      )
     }
     return part
   })
